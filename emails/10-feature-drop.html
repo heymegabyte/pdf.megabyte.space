@@ -1,0 +1,34 @@
+{
+  "alias": "feature-drop",
+  "subject": "New: {{ .Tx.Data.event.feature_name }}",
+  "preheader": "{{ .Tx.Data.event.feature_tagline }}"
+}
+---
+<div class="body">
+  <p class="eyebrow">Just shipped · v{{ .Tx.Data.event.version }}</p>
+  <h1 class="h1">{{ .Tx.Data.event.feature_name }}.</h1>
+  <p class="lede">{{ .Tx.Data.event.feature_tagline }}</p>
+</div>
+<div class="card" style="padding:0; overflow:hidden;">
+  <img src="{{ .Tx.Data.event.feature_hero_image }}" alt="{{ .Tx.Data.event.feature_name }}" class="card-img" style="margin-bottom:0; border-radius:14px;" />
+</div>
+<div class="body">
+  <h2 class="h2">Why we built it</h2>
+  <p class="p">{{ .Tx.Data.event.why_we_built_it }}</p>
+  <h2 class="h2">How to use it</h2>
+  <p class="p">{{ .Tx.Data.event.how_to_use }}</p>
+</div>
+<div class="card" style="padding:18px 22px;">
+  <p class="small" style="margin-bottom:8px; color:#9aa0c3;">Try it now:</p>
+  <p class="p" style="font-family:'JetBrains Mono',monospace; font-size:13px; background:#060610; padding:14px 18px; border-radius:10px; color:#00E5FF; margin:0;">{{ .Tx.Data.event.try_prompt }}</p>
+</div>
+<div class="cta-row">
+  <a href="{{ .Tx.Data.event.feature_url }}" class="cta">Try {{ .Tx.Data.event.feature_name }}</a>
+  <a href="{{ .Tx.Data.event.changelog_url }}" class="cta-secondary">Read changelog</a>
+</div>
+<hr class="divider" />
+<div class="body">
+  <h2 class="h2">What's next on the roadmap</h2>
+  <p class="p">{{ .Tx.Data.event.roadmap_teaser }}</p>
+  <p class="small">Feature requests? Just reply — this address goes straight to the team. <a href="{{ .Tx.Data.prefs_url }}">Mute product updates</a> if you'd rather hear about them in the changelog only.</p>
+</div>

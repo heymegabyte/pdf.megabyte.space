@@ -1,0 +1,28 @@
+{
+  "alias": "trending-milestone",
+  "subject": "Your PDF just crossed {{ .Tx.Data.event.milestone_label }} views",
+  "preheader": "Trending in the public feed. Share it before it cools."
+}
+---
+<div class="body">
+  <p class="eyebrow">Trending — {{ .Tx.Data.event.milestone_label }} views</p>
+  <h1 class="h1">{{ .Tx.Data.event.project_title }} is trending.</h1>
+  <p class="lede">{{ .Tx.Data.user.first_name }}, your PDF just crossed {{ .Tx.Data.event.milestone_label }} views and is ranked #{{ .Tx.Data.event.rank }} in <a href="{{ .Tx.Data.app_url }}/explore">/explore</a>. The brand card below is what people see when you share the link.</p>
+</div>
+<div class="card" style="padding:0; overflow:hidden;">
+  <img src="{{ .Tx.Data.event.og_image_url }}" alt="{{ .Tx.Data.event.project_title }}" class="card-img" style="margin-bottom:0; border-radius:14px;" />
+</div>
+<div class="stat-grid">
+  <div class="stat"><div class="stat-n">{{ .Tx.Data.event.view_count }}</div><div class="stat-l">Total views</div></div>
+  <div class="stat"><div class="stat-n">#{{ .Tx.Data.event.rank }}</div><div class="stat-l">Explore rank</div></div>
+</div>
+<div class="cta-row">
+  <a href="{{ .Tx.Data.event.share_url }}" class="cta">View live PDF</a>
+  <a href="{{ .Tx.Data.event.tweet_url }}" class="cta-secondary">Share on X</a>
+</div>
+<hr class="divider" />
+<div class="body">
+  <h2 class="h2">Keep it climbing</h2>
+  <p class="p">Trending PDFs that hit 10× more views over the next 48 hours usually do one thing: the author drops the link into one tight audience (their Slack, a niche subreddit, a tweet thread). One drop, well-targeted, beats ten generic shares.</p>
+  <p class="small">Don't want trending alerts? <a href="{{ .Tx.Data.prefs_url }}">Mute community mail</a>.</p>
+</div>

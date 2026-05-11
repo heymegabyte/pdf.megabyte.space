@@ -1,0 +1,32 @@
+{
+  "alias": "share-expiring",
+  "subject": "\"{{ .Tx.Data.event.project_title }}\" link expires in {{ .Tx.Data.event.hours_until_expiry }}h",
+  "preheader": "Extend it, make it permanent, or let it lapse — one click each."
+}
+---
+<div class="body">
+  <p class="eyebrow">Heads up · expires {{ .Tx.Data.event.expires_at_human }}</p>
+  <h1 class="h1">Your share link is about to lapse.</h1>
+  <p class="lede">{{ .Tx.Data.user.first_name }}, the temporary link for <strong>{{ .Tx.Data.event.project_title }}</strong> expires in {{ .Tx.Data.event.hours_until_expiry }} hours. After that, the URL stops resolving — no warning to whoever has the link.</p>
+</div>
+<div class="card" style="padding:0; overflow:hidden;">
+  <img src="{{ .Tx.Data.event.og_image_url }}" alt="{{ .Tx.Data.event.project_title }}" class="card-img" style="margin-bottom:0; border-radius:14px;" />
+</div>
+<div class="stat-grid">
+  <div class="stat"><div class="stat-n">{{ .Tx.Data.event.view_count }}</div><div class="stat-l">Views so far</div></div>
+  <div class="stat"><div class="stat-n">{{ .Tx.Data.event.unique_visitors }}</div><div class="stat-l">Unique visitors</div></div>
+</div>
+<div class="body">
+  <h2 class="h2">Three options</h2>
+  <p class="p"><strong style="color:#00E5FF;">Extend 7 days</strong> — same link, fresh expiry. Anyone who already has it keeps access.</p>
+  <p class="p"><strong style="color:#00E5FF;">Make permanent</strong> — link never expires, appears in your public feed if marked public.</p>
+  <p class="p"><strong style="color:#9aa0c3;">Let it expire</strong> — link 404s at {{ .Tx.Data.event.expires_at_human }}, the PDF stays safe in your dashboard.</p>
+</div>
+<div class="cta-row">
+  <a href="{{ .Tx.Data.event.extend_url }}" class="cta">Extend 7 days</a>
+  <a href="{{ .Tx.Data.event.permanent_url }}" class="cta-secondary">Make permanent</a>
+</div>
+<hr class="divider" />
+<div class="body">
+  <p class="small">If this PDF was for a one-shot send (interview, RFP, signed contract), letting it expire is the right move — the recipient already has what they need. <a href="{{ .Tx.Data.prefs_url }}">Mute expiry warnings</a>.</p>
+</div>

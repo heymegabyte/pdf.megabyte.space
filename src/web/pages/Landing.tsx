@@ -1,10 +1,37 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Logo } from "../components/Logo";
-import { ArrowRight, FileText, MessageSquare, Download, Layers, Sparkles, Check, Crown, ChevronDown, Code2 } from "lucide-react";
+import { ArrowRight, FileText, MessageSquare, Download, Layers, Sparkles, Check, Crown, ChevronDown, Code2, Eye, X, Music, Mail, Globe, Ghost } from "lucide-react";
 import { captureEvent } from "../lib/analytics";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { Footer } from "../components/Footer";
+
+interface FeaturedPdf {
+  slug: string;
+  title: string;
+  description: string | null;
+  viewCount: number;
+  tags: string[];
+  author: { name: string | null; imageUrl: string | null } | null;
+}
+
+const COMPETITORS = [
+  { feature: "Chat-to-PDF (plain English prompt)", us: true, panda: false, doc: false, acro: false, jas: true },
+  { feature: "Live page-by-page preview (8.5×11)", us: true, panda: false, doc: false, acro: true, jas: false },
+  { feature: "Edit raw HTML/CSS source", us: true, panda: false, doc: false, acro: false, jas: false },
+  { feature: "Real PDF export (selectable text)", us: true, panda: true, doc: true, acro: true, jas: true },
+  { feature: "Version snapshot per AI turn", us: true, panda: false, doc: false, acro: false, jas: false },
+  { feature: "Public share link", us: true, panda: true, doc: true, acro: false, jas: false },
+  { feature: "Anonymous trial — no signup", us: true, panda: false, doc: false, acro: false, jas: false },
+  { feature: "Starts at $9/mo (or free)", us: true, panda: false, doc: false, acro: false, jas: false },
+];
+
+const SISTER_SITES = [
+  { url: "https://megabyte.space", title: "Megabyte Labs", desc: "Open-source studio & engineering crew.", icon: Globe, accent: "var(--color-cyan)" },
+  { url: "https://music.megabyte.space", title: "Megabyte Music", desc: "Generative scores & lossless web player.", icon: Music, accent: "#7C3AED" },
+  { url: "https://ghost.megabyte.space", title: "Megabyte Ghost", desc: "Long-form journal — engineering essays.", icon: Ghost, accent: "#50AAE3" },
+  { url: "https://hello.megabyte.space", title: "Hello Megabyte", desc: "Brian's portfolio + contact bridge.", icon: Mail, accent: "var(--color-cyan)" },
+];
 
 const FAQ_ITEMS = [
   {
@@ -158,6 +185,82 @@ export default function Landing() {
           </div>
         </section>
 
+        {/* Featured PDFs from the community */}
+        <FeaturedSection />
+
+        {/* Competitor comparison */}
+        <section className="max-w-6xl mx-auto px-6 lg:px-10 pb-24" id="vs">
+          <div className="text-center mb-10">
+            <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-cyan)] mb-3">Honest comparison</p>
+            <h2 className="text-3xl lg:text-4xl font-bold mb-3 text-balance" style={{ fontFamily: "var(--font-display)" }}>
+              How Megabyte PDF stacks up.
+            </h2>
+            <p className="text-[var(--color-muted)] max-w-xl mx-auto text-pretty">
+              Other tools want you to drag boxes around a canvas. We let you type a sentence.
+            </p>
+          </div>
+          <div className="card overflow-x-auto">
+            <table className="w-full text-sm min-w-[680px]">
+              <thead>
+                <tr className="border-b border-[var(--color-line)]">
+                  <th scope="col" className="text-left px-5 py-4 font-semibold">Capability</th>
+                  <th scope="col" className="px-3 py-4 font-semibold text-[var(--color-cyan)]">Megabyte PDF</th>
+                  <th scope="col" className="px-3 py-4 font-medium text-[var(--color-muted)]">PandaDoc</th>
+                  <th scope="col" className="px-3 py-4 font-medium text-[var(--color-muted)]">DocuSign</th>
+                  <th scope="col" className="px-3 py-4 font-medium text-[var(--color-muted)]">Adobe Acrobat</th>
+                  <th scope="col" className="px-3 py-4 font-medium text-[var(--color-muted)]">Jasper</th>
+                </tr>
+              </thead>
+              <tbody>
+                {COMPETITORS.map((row) => (
+                  <tr key={row.feature} className="border-b border-[var(--color-line)]/60 last:border-0">
+                    <td className="px-5 py-3 text-left">{row.feature}</td>
+                    <Cell yes={row.us} highlight />
+                    <Cell yes={row.panda} />
+                    <Cell yes={row.doc} />
+                    <Cell yes={row.acro} />
+                    <Cell yes={row.jas} />
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-xs text-[var(--color-muted)] mt-4 text-center">
+            Verified against vendor docs and pricing pages, May 2026. Tell us if we got something wrong — <a href="mailto:hey@megabyte.space" className="underline-hover text-[var(--color-cyan)]">hey@megabyte.space</a>.
+          </p>
+        </section>
+
+        {/* Sister sites — interlinking */}
+        <section className="max-w-6xl mx-auto px-6 lg:px-10 pb-24">
+          <div className="text-center mb-10">
+            <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-muted)] mb-3">From the Megabyte ecosystem</p>
+            <h2 className="text-2xl lg:text-3xl font-bold mb-3 text-balance" style={{ fontFamily: "var(--font-display)" }}>
+              More tools, same studio.
+            </h2>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {SISTER_SITES.map((s) => (
+              <a
+                key={s.url}
+                href={s.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="card p-5 group transition-colors hover:border-[var(--color-cyan)]/40"
+                onClick={() => captureEvent("landing_sister_click", { site: s.title })}
+              >
+                <div className="size-10 rounded-lg grid place-items-center mb-3" style={{ backgroundColor: `${s.accent}1A`, color: s.accent }}>
+                  <s.icon size={18} />
+                </div>
+                <h3 className="font-semibold text-sm mb-1 flex items-center gap-1.5">
+                  {s.title}
+                  <ArrowRight size={12} className="opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition motion-reduce:transition-none text-[var(--color-cyan)]" />
+                </h3>
+                <p className="text-xs text-[var(--color-muted)] text-pretty leading-relaxed">{s.desc}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
         {/* Pricing */}
         <section className="max-w-6xl mx-auto px-6 lg:px-10 pb-24" id="pricing">
           <div className="text-center mb-12">
@@ -266,6 +369,115 @@ export default function Landing() {
 
       <Footer />
     </div>
+  );
+}
+
+function Cell({ yes, highlight = false }: { yes: boolean; highlight?: boolean }) {
+  return (
+    <td className={`px-3 py-3 text-center ${highlight ? "bg-[var(--color-cyan)]/[0.04]" : ""}`}>
+      {yes ? (
+        <Check size={16} className={`inline ${highlight ? "text-[var(--color-cyan)]" : "text-[var(--color-fg)]/80"}`} aria-label="Supported" />
+      ) : (
+        <X size={16} className="inline text-[var(--color-muted)]/50" aria-label="Not supported" />
+      )}
+    </td>
+  );
+}
+
+function FeaturedSection() {
+  const [items, setItems] = useState<FeaturedPdf[] | null>(null);
+  const [errored, setErrored] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/explore?sort=trending&limit=6")
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+      .then((data: unknown) => {
+        if (cancelled) return;
+        const projects = (data as { projects?: FeaturedPdf[] } | null)?.projects;
+        setItems(Array.isArray(projects) ? projects.slice(0, 6) : []);
+      })
+      .catch(() => {
+        if (!cancelled) setErrored(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (errored || (items && items.length === 0)) return null;
+
+  return (
+    <section className="max-w-6xl mx-auto px-6 lg:px-10 pb-24">
+      <div className="flex items-end justify-between gap-4 mb-8 flex-wrap">
+        <div>
+          <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-cyan)] mb-2">Trending this week</p>
+          <h2 className="text-3xl lg:text-4xl font-bold text-balance" style={{ fontFamily: "var(--font-display)" }}>
+            Featured PDFs.
+          </h2>
+        </div>
+        <Link
+          to="/explore?sort=trending"
+          className="btn btn-ghost text-sm px-3 py-2 underline-hover"
+          onClick={() => captureEvent("landing_featured_explore_all")}
+        >
+          Explore all <ArrowRight size={14} />
+        </Link>
+      </div>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {(items ?? Array.from({ length: 6 })).map((p, i) => (
+          <FeaturedCard key={(p as FeaturedPdf | undefined)?.slug ?? `s-${i}`} item={p as FeaturedPdf | undefined} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function FeaturedCard({ item }: { item: FeaturedPdf | undefined }) {
+  if (!item) {
+    return (
+      <div className="card p-0 overflow-hidden">
+        <div className="aspect-[4/3] bg-[var(--color-bg-card)] animate-pulse" />
+        <div className="p-4 space-y-2">
+          <div className="h-4 w-3/4 rounded bg-[var(--color-bg-card)] animate-pulse" />
+          <div className="h-3 w-1/2 rounded bg-[var(--color-bg-card)] animate-pulse" />
+        </div>
+      </div>
+    );
+  }
+  return (
+    <Link
+      to={`/c/${item.slug}`}
+      className="card p-0 overflow-hidden group transition-colors hover:border-[var(--color-cyan)]/40"
+      onClick={() => captureEvent("landing_featured_card_click", { slug: item.slug })}
+    >
+      <div className="aspect-[4/3] bg-[var(--color-bg-card)] overflow-hidden relative">
+        <img
+          src={`/s/thumb/${item.slug}.svg`}
+          alt={`Preview of ${item.title}`}
+          loading="lazy"
+          decoding="async"
+          width={1200}
+          height={900}
+          className="w-full h-full object-cover transition-transform duration-300 motion-reduce:transition-none group-hover:scale-[1.02]"
+        />
+      </div>
+      <div className="p-4">
+        <h3 className="font-semibold text-sm mb-1 line-clamp-1">{item.title}</h3>
+        {item.description && (
+          <p className="text-xs text-[var(--color-muted)] mb-3 line-clamp-2 text-pretty leading-relaxed">
+            {item.description}
+          </p>
+        )}
+        <div className="flex items-center justify-between text-xs text-[var(--color-muted)]">
+          <span className="truncate">
+            {item.author?.name ?? "Anonymous"}
+          </span>
+          <span className="flex items-center gap-1 shrink-0">
+            <Eye size={12} aria-hidden="true" /> {item.viewCount.toLocaleString()}
+          </span>
+        </div>
+      </div>
+    </Link>
   );
 }
 

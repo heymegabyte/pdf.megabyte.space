@@ -25,6 +25,15 @@ export interface Env {
   GA4_MEASUREMENT_ID?: string;
   TRENDING_HALFLIFE_DAYS?: string;
   TRENDING_CANDIDATE_POOL?: string;
+  LISTMONK_BASE_URL?: string;
+  LISTMONK_API_USER?: string;
+  LISTMONK_API_TOKEN?: string;
+  LISTMONK_FROM_EMAIL?: string;
+  LISTMONK_FROM_NAME?: string;
+  LISTMONK_LIST_ID?: string;
+  EMAIL_UNSUB_SECRET?: string;
+  ADMIN_EMAIL?: string;
+  CRON_SECRET?: string;
 }
 
 export interface Variables {

@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en" xmlns:v="urn:schemas-microsoft-com:vml">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="x-apple-disable-message-reformatting" />
+    <meta name="color-scheme" content="dark only" />
+    <meta name="supported-color-schemes" content="dark only" />
+    <title>{{ .Subject }}</title>
+    <!--[if mso]><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml><![endif]-->
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap');
+      :root { color-scheme: dark; }
+      body { margin:0; padding:0; background:#060610; color:#e8eaf0; font-family:'Inter',-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif; -webkit-font-smoothing:antialiased; }
+      a { color:#00E5FF; text-decoration:none; }
+      img { border:0; line-height:1; outline:none; text-decoration:none; -ms-interpolation-mode:bicubic; display:block; max-width:100%; height:auto; }
+      table { border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt; }
+      .container { max-width:600px; margin:0 auto; background:#0a0a18; border:1px solid #1a1a2e; border-radius:20px; overflow:hidden; }
+      .container-outer { background:#060610; padding:32px 12px; }
+      .hero-grad { background:linear-gradient(135deg,#060610 0%,#0a0a18 45%,#11112a 100%); padding:40px 36px 28px 36px; position:relative; }
+      .brand-row { font-family:'Sora','Inter',sans-serif; font-weight:700; color:#ffffff; font-size:13px; letter-spacing:2px; text-transform:uppercase; }
+      .brand-mark { display:inline-block; width:32px; height:32px; background:#00E5FF; border-radius:8px; color:#060610; font-weight:900; font-size:16px; line-height:32px; text-align:center; vertical-align:middle; margin-right:12px; }
+      .eyebrow { font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:2.5px; text-transform:uppercase; color:#00E5FF; margin:0 0 14px 0; padding:0; }
+      .h1 { font-family:'Sora',sans-serif; font-weight:800; font-size:36px; line-height:1.08; letter-spacing:-1px; color:#ffffff; margin:0 0 18px 0; }
+      .h2 { font-family:'Sora',sans-serif; font-weight:700; font-size:22px; line-height:1.25; color:#ffffff; margin:28px 0 12px 0; }
+      .lede { font-size:17px; line-height:1.55; color:#b8bccd; margin:0 0 28px 0; }
+      .p { font-size:15px; line-height:1.65; color:#d0d4e0; margin:0 0 18px 0; }
+      .small { font-size:13px; line-height:1.5; color:#7c8090; }
+      .body { padding:36px 36px 8px 36px; }
+      .cta-row { padding:8px 36px 36px 36px; }
+      .cta { display:inline-block; background:#00E5FF; color:#060610 !important; font-family:'Sora',sans-serif; font-weight:700; font-size:15px; letter-spacing:0.3px; padding:16px 28px; border-radius:12px; text-decoration:none; }
+      .cta-secondary { display:inline-block; background:transparent; color:#00E5FF !important; font-family:'Sora',sans-serif; font-weight:600; font-size:14px; padding:14px 22px; border:1px solid rgba(0,229,255,0.4); border-radius:12px; text-decoration:none; margin-left:8px; }
+      .card { background:#10102a; border:1px solid #1f1f3a; border-radius:14px; padding:20px; margin:0 36px 16px 36px; }
+      .card-img { width:100%; height:auto; border-radius:10px; display:block; margin-bottom:14px; }
+      .stat-grid { padding:8px 36px 24px 36px; font-size:0; }
+      .stat { display:inline-block; width:47%; padding:18px 16px; background:#10102a; border:1px solid #1f1f3a; border-radius:12px; margin:6px 1%; vertical-align:top; font-size:15px; box-sizing:border-box; }
+      .stat-n { font-family:'Sora',sans-serif; font-weight:800; font-size:28px; color:#00E5FF; line-height:1; margin-bottom:4px; }
+      .stat-l { font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:#7c8090; }
+      .divider { height:1px; background:linear-gradient(90deg,transparent 0%,#1f1f3a 50%,transparent 100%); margin:8px 36px; border:0; }
+      .footer { padding:32px 36px 40px 36px; border-top:1px solid #1a1a2e; }
+      .footer-brand { font-family:'Sora',sans-serif; font-weight:800; font-size:16px; color:#ffffff; margin-bottom:8px; }
+      .footer-tag { font-size:12px; color:#7c8090; margin-bottom:18px; line-height:1.5; }
+      .footer-links { font-size:12px; color:#7c8090; }
+      .footer-links a { color:#7c8090 !important; text-decoration:underline; margin-right:14px; }
+      .quote { border-left:3px solid #00E5FF; padding:6px 16px; font-family:'Sora',sans-serif; font-style:italic; color:#d0d4e0; font-size:16px; line-height:1.5; margin:0 36px 18px 36px; }
+      .pill { display:inline-block; background:rgba(0,229,255,0.12); color:#00E5FF; font-family:'JetBrains Mono',monospace; font-size:11px; padding:5px 10px; border-radius:999px; letter-spacing:1px; text-transform:uppercase; }
+      @media (max-width:599px) {
+        .h1 { font-size:28px; }
+        .body, .cta-row, .footer, .stat-grid { padding-left:24px !important; padding-right:24px !important; }
+        .card { margin-left:24px !important; margin-right:24px !important; }
+        .quote { margin-left:24px !important; margin-right:24px !important; }
+        .stat { width:100% !important; margin:6px 0 !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container-outer">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+        <tr><td align="center">
+          <div class="container">
+            <div class="hero-grad">
+              <div class="brand-row"><span class="brand-mark">M</span>{{ .Tx.Data.app_name }}</div>
+            </div>
+<!-- CONTENT -->
+            <div class="footer">
+              <div class="footer-brand">{{ .Tx.Data.app_name }}</div>
+              <div class="footer-tag">Chat to PDF. Built on Cloudflare Workers. Brewed by Megabyte Labs.</div>
+              <div class="footer-links">
+                <a href="{{ .Tx.Data.app_url }}">Open app</a>
+                <a href="{{ .Tx.Data.prefs_url }}">Email preferences</a>
+                <a href="{{ .Tx.Data.unsubscribe_url }}">Unsubscribe</a>
+              </div>
+            </div>
+          </div>
+        </td></tr>
+      </table>
+    </div>
+  </body>
+</html>

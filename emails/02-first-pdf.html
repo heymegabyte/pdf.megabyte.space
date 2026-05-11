@@ -1,0 +1,29 @@
+{
+  "alias": "first-pdf",
+  "subject": "Your first PDF just rendered — {{ .Tx.Data.event.project_title }}",
+  "preheader": "Built in seconds. Shareable in one click."
+}
+---
+<div class="body">
+  <p class="eyebrow">First render — locked in</p>
+  <h1 class="h1">{{ .Tx.Data.user.first_name }}, that's your first PDF.</h1>
+  <p class="lede">{{ .Tx.Data.event.project_title }} — rendered, signed, sealed. Here's the brand card the world sees when you share it.</p>
+</div>
+<div class="card" style="padding:0; overflow:hidden;">
+  <img src="{{ .Tx.Data.event.og_image_url }}" alt="{{ .Tx.Data.event.project_title }}" class="card-img" style="margin-bottom:0; border-radius:14px;" />
+</div>
+<div class="cta-row">
+  <a href="{{ .Tx.Data.event.share_url }}" class="cta">View the PDF</a>
+  <a href="{{ .Tx.Data.event.edit_url }}" class="cta-secondary">Keep editing</a>
+</div>
+<hr class="divider" />
+<div class="body">
+  <h2 class="h2">Three things you can do right now</h2>
+  <p class="p"><strong style="color:#fff;">1. Make it public.</strong> Flip the toggle, get a permanent share link, show up in <a href="{{ .Tx.Data.app_url }}/explore">/explore</a>.</p>
+  <p class="p"><strong style="color:#fff;">2. Share the link.</strong> Drop it in Slack, in a tweet, in an email signature. Each share gets a custom brand card preview.</p>
+  <p class="p"><strong style="color:#fff;">3. Make another.</strong> The hard part — figuring out what to build — is over. Now you're just prompting.</p>
+</div>
+<div class="quote">"Building this took six minutes. The invoice took six hours last time." — every user, ever</div>
+<div class="cta-row">
+  <a href="{{ .Tx.Data.app_url }}/dashboard" class="cta">Build the next one</a>
+</div>

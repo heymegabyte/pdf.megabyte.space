@@ -1,0 +1,43 @@
+{
+  "alias": "privacy-report",
+  "subject": "Your {{ .Tx.Data.event.quarter }} privacy report",
+  "preheader": "What we stored, who we shared with, and how to wipe any of it."
+}
+---
+<div class="body">
+  <p class="eyebrow">Quarterly transparency · {{ .Tx.Data.event.quarter }}</p>
+  <h1 class="h1">Here's what we have on you.</h1>
+  <p class="lede">{{ .Tx.Data.user.first_name }}, every 90 days we send the same thing to every Pro account: a plain-English readout of your data, our subprocessors, and the buttons to wipe any of it.</p>
+</div>
+<div class="card" style="padding:24px;">
+  <h2 class="h2" style="margin:0 0 14px 0;">Data we store about you</h2>
+  <p class="small" style="margin-bottom:6px;"><strong style="color:#fff;">Account:</strong> {{ .Tx.Data.user.email }} · created {{ .Tx.Data.event.account_created }}</p>
+  <p class="small" style="margin-bottom:6px;"><strong style="color:#fff;">PDFs stored in R2:</strong> {{ .Tx.Data.event.pdfs_stored }} files ({{ .Tx.Data.event.storage_mb }} MB)</p>
+  <p class="small" style="margin-bottom:6px;"><strong style="color:#fff;">Chat transcripts:</strong> {{ .Tx.Data.event.chat_count }} (retained 90 days, then auto-purged)</p>
+  <p class="small" style="margin-bottom:6px;"><strong style="color:#fff;">Billing records:</strong> {{ .Tx.Data.event.invoice_count }} invoices (retained 7 years for tax compliance)</p>
+  <p class="small" style="margin-bottom:0;"><strong style="color:#fff;">Login events:</strong> last 30 days kept, older purged</p>
+</div>
+<div class="card" style="padding:24px;">
+  <h2 class="h2" style="margin:0 0 14px 0;">Who we share with</h2>
+  <p class="small" style="margin-bottom:6px;"><strong style="color:#00E5FF;">Cloudflare</strong> — Workers, R2 storage, D1 DB ({{ .Tx.Data.event.region }} region)</p>
+  <p class="small" style="margin-bottom:6px;"><strong style="color:#00E5FF;">Stripe</strong> — billing, never sees PDF contents</p>
+  <p class="small" style="margin-bottom:6px;"><strong style="color:#00E5FF;">Anthropic</strong> — chat prompts only, never trained on, deleted within 30 days</p>
+  <p class="small" style="margin-bottom:6px;"><strong style="color:#00E5FF;">Resend</strong> — this email, account notifications</p>
+  <p class="small" style="margin-bottom:0;"><strong style="color:#9aa0c3;">No ad networks · no data brokers · no LLM training partners.</strong></p>
+</div>
+<hr class="divider" />
+<div class="body">
+  <h2 class="h2">Wipe any of it</h2>
+  <p class="p">One-click buttons, no support ticket required. Action is irreversible — we'll show a confirm screen.</p>
+</div>
+<div class="cta-row">
+  <a href="{{ .Tx.Data.event.export_data_url }}" class="cta-secondary">Export everything (.zip)</a>
+  <a href="{{ .Tx.Data.event.delete_account_url }}" class="cta-secondary">Delete account</a>
+</div>
+<div class="cta-row">
+  <a href="{{ .Tx.Data.event.purge_chats_url }}" class="cta-secondary">Purge chat history</a>
+  <a href="{{ .Tx.Data.event.privacy_policy_url }}" class="cta-secondary">Full privacy policy</a>
+</div>
+<div class="body">
+  <p class="small">This email is required for Pro accounts and bypasses email preferences — it's the only transparency report we send and it goes to everyone, every quarter. Questions? Reply directly.</p>
+</div>

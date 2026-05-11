@@ -6,7 +6,51 @@ import * as Sentry from "@sentry/cloudflare";
 import { getDb, schema } from "../db";
 import { requireAuth } from "../middleware/auth";
 import { buildSharePreviewDoc, wrapDocument, pageDimensionsIn } from "../lib/templates";
+import { sendEmail } from "../lib/emails";
 import type { Env, Variables } from "../types";
+
+const TRENDING_MILESTONES = [100, 1000, 10000] as const;
+const MILESTONE_LABELS: Record<number, string> = { 100: "100", 1000: "1,000", 10000: "10,000" };
+
+async function maybeFireTrendingMilestone(
+  env: Env,
+  projectId: string,
+  slug: string,
+  nextViews: number
+): Promise<void> {
+  const hit = TRENDING_MILESTONES.find((m) => nextViews === m);
+  if (!hit) return;
+  const db = getDb(env.DB);
+  const project = await db.query.projects.findFirst({ where: eq(schema.projects.id, projectId) });
+  if (!project) return;
+  try {
+    await db.insert(schema.projectMilestones).values({
+      id: `mst_${nanoid(10)}`,
+      projectId,
+      milestone: hit,
+    });
+  } catch {
+    return; // UNIQUE collision = already fired
+  }
+  await sendEmail(env, {
+    userId: project.userId,
+    template: "trending-milestone",
+    dedupKey: `trending:${projectId}:${hit}`,
+    data: {
+      project_title: project.title,
+      milestone_label: MILESTONE_LABELS[hit],
+      view_count: nextViews,
+      rank: 1,
+      og_image_url: project.isPublic && project.slug
+        ? `${env.APP_URL}/s/og/${project.slug}.png`
+        : `${env.APP_URL}/og.jpg`,
+      share_url: `${env.APP_URL}/s/${slug}`,
+      tweet_url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+        `${project.title} just crossed ${MILESTONE_LABELS[hit]} views on @megabytepdf`
+      )}&url=${encodeURIComponent(`${env.APP_URL}/s/${slug}`)}`,
+    },
+  });
+}
 
 export const shareApi = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -392,9 +436,18 @@ sharePublic.get("/:slug", async (c) => {
   });
   if (!project) return c.html(notFound, 404);
   c.executionCtx?.waitUntil(
-    db.update(schema.shareLinks)
-      .set({ views: sql`${schema.shareLinks.views} + 1` })
-      .where(eq(schema.shareLinks.slug, slug))
+    (async () => {
+      await db
+        .update(schema.shareLinks)
+        .set({ views: sql`${schema.shareLinks.views} + 1` })
+        .where(eq(schema.shareLinks.slug, slug));
+      const nextViews = (link.views ?? 0) + 1;
+      if (TRENDING_MILESTONES.includes(nextViews as 100 | 1000 | 10000)) {
+        await maybeFireTrendingMilestone(c.env, link.projectId, slug, nextViews).catch((err) => {
+          Sentry.captureException(err, { tags: { trigger: "trending_milestone", slug } });
+        });
+      }
+    })()
   );
 
   const shareUrl = `${c.env.APP_URL}/s/${slug}`;

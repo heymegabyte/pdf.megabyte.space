@@ -6,6 +6,7 @@ export interface AuthUser {
   name: string | null;
   imageUrl: string | null;
   plan: "free" | "pro";
+  isAdmin?: boolean;
 }
 
 export interface AuthMe {

@@ -1,0 +1,26 @@
+{
+  "alias": "free-limit",
+  "subject": "You hit the free limit — keep building for $8/month",
+  "preheader": "Upgrade in two clicks. Cancel anytime. Keep your existing PDFs forever."
+}
+---
+<div class="body">
+  <p class="eyebrow">Free limit reached</p>
+  <h1 class="h1">You out-built the free plan, {{ .Tx.Data.user.first_name }}.</h1>
+  <p class="lede">One free PDF was enough to test. Now you want another one — and another. Pro lifts the cap to {{ .Tx.Data.event.paid_limit }} active projects and unlocks priority rendering.</p>
+</div>
+<div class="cta-row">
+  <a href="{{ .Tx.Data.event.checkout_url }}" class="cta">Upgrade to Pro</a>
+  <a href="{{ .Tx.Data.app_url }}/dashboard" class="cta-secondary">Open dashboard</a>
+</div>
+<hr class="divider" />
+<div class="stat-grid">
+  <div class="stat"><div class="stat-n">{{ .Tx.Data.event.paid_limit }}</div><div class="stat-l">Active projects</div></div>
+  <div class="stat"><div class="stat-n">∞</div><div class="stat-l">Edits + shares</div></div>
+  <div class="stat"><div class="stat-n">P1</div><div class="stat-l">Render priority</div></div>
+  <div class="stat"><div class="stat-n">$8</div><div class="stat-l">Per month</div></div>
+</div>
+<div class="body">
+  <p class="p"><strong style="color:#fff;">Already built:</strong> "{{ .Tx.Data.event.last_project_title }}" — still yours. Free or Pro, your work is permanent.</p>
+  <p class="small">Annual is $72 (saves $24). Cancel from <a href="{{ .Tx.Data.app_url }}/account">/account</a> any time. We don't do dark patterns.</p>
+</div>

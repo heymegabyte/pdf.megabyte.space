@@ -1,0 +1,41 @@
+{
+  "alias": "new-follower",
+  "subject": "{{ .Tx.Data.event.follower_name }} is following your PDFs",
+  "preheader": "They'll get notified when you publish something new."
+}
+---
+<div class="body">
+  <p class="eyebrow">New follower</p>
+  <h1 class="h1">{{ .Tx.Data.event.follower_name }} just followed you.</h1>
+  <p class="lede">{{ .Tx.Data.user.first_name }}, when you publish a new public PDF, <a href="{{ .Tx.Data.event.follower_profile_url }}">{{ .Tx.Data.event.follower_name }}</a> gets the notification. Here's their profile in case you'd like to follow back.</p>
+</div>
+<div class="card" style="padding:22px; text-align:center;">
+  <img src="{{ .Tx.Data.event.follower_avatar_url }}" alt="{{ .Tx.Data.event.follower_name }}" style="width:88px; height:88px; border-radius:50%; border:2px solid #00E5FF; margin:0 auto 14px auto; display:block;" />
+  <h2 class="h2" style="margin:0 0 4px 0; font-size:20px;">{{ .Tx.Data.event.follower_name }}</h2>
+  <p class="small" style="margin-bottom:14px;">{{ .Tx.Data.event.follower_bio }}</p>
+  <p class="small"><strong style="color:#fff;">{{ .Tx.Data.event.follower_public_pdfs }}</strong> public PDFs · <strong style="color:#fff;">{{ .Tx.Data.event.follower_total_views }}</strong> total views · <strong style="color:#fff;">{{ .Tx.Data.event.follower_followers }}</strong> followers</p>
+</div>
+<div class="cta-row">
+  <a href="{{ .Tx.Data.event.follow_back_url }}" class="cta">Follow back</a>
+  <a href="{{ .Tx.Data.event.follower_profile_url }}" class="cta-secondary">View profile</a>
+</div>
+{{ if .Tx.Data.event.recent_pdfs }}
+<hr class="divider" />
+<div class="body">
+  <h2 class="h2">Their recent work</h2>
+</div>
+{{ range $i, $p := .Tx.Data.event.recent_pdfs }}
+<div class="card" style="padding:0; overflow:hidden;">
+  <a href="{{ $p.url }}" style="text-decoration:none; color:inherit;">
+    <img src="{{ $p.image }}" alt="{{ $p.title }}" class="card-img" style="margin-bottom:0; border-radius:14px 14px 0 0;" />
+    <div style="padding:16px 20px 18px 20px;">
+      <h2 class="h2" style="margin:0 0 4px 0; font-size:18px;">{{ $p.title }}</h2>
+      <p class="small">{{ $p.views }} views · {{ $p.published_at_human }}</p>
+    </div>
+  </a>
+</div>
+{{ end }}
+{{ end }}
+<div class="body">
+  <p class="small">Too many follower pings? <a href="{{ .Tx.Data.prefs_url }}">Mute community mail</a> — your followers list still updates in the app.</p>
+</div>

@@ -1,0 +1,35 @@
+{
+  "alias": "win-back-30d",
+  "subject": "{{ .Tx.Data.user.first_name }}, here's a free month of Pro on us",
+  "preheader": "We missed you. Three trending PDFs to remix while you're back."
+}
+---
+<div class="body">
+  <p class="eyebrow">30 days quiet — one offer</p>
+  <h1 class="h1">It's been a minute, {{ .Tx.Data.user.first_name }}.</h1>
+  <p class="lede">You haven't opened the app in 30+ days. No guilt-trip, no "we miss you" spam. One offer, one button, then we'll leave you alone:</p>
+</div>
+<div class="card" style="text-align:center; padding:28px;">
+  <p class="pill" style="margin-bottom:14px;">Limited offer</p>
+  <h2 class="h2" style="margin:0 0 6px 0; font-size:30px;">One free month of Pro</h2>
+  <p class="small" style="margin-bottom:18px;">No card needed. Use code <code style="font-family:'JetBrains Mono',monospace; background:#060610; color:#00E5FF; padding:3px 8px; border-radius:6px;">{{ .Tx.Data.event.promo_code }}</code> at checkout. Expires {{ .Tx.Data.event.promo_expires }}.</p>
+  <a href="{{ .Tx.Data.event.redeem_url }}" class="cta">Claim free month</a>
+</div>
+<hr class="divider" />
+<div class="body">
+  <h2 class="h2">Three PDFs to spark something</h2>
+</div>
+{{ range $i, $p := .Tx.Data.event.inspiration }}
+<div class="card" style="padding:0; overflow:hidden;">
+  <a href="{{ $p.url }}" style="text-decoration:none; color:inherit;">
+    <img src="{{ $p.image }}" alt="{{ $p.title }}" class="card-img" style="margin-bottom:0; border-radius:14px 14px 0 0;" />
+    <div style="padding:16px 20px 18px 20px;">
+      <h2 class="h2" style="margin:0 0 4px 0; font-size:18px;">{{ $p.title }}</h2>
+      <p class="small">{{ $p.author }} · {{ $p.views }} views</p>
+    </div>
+  </a>
+</div>
+{{ end }}
+<div class="body">
+  <p class="small">If this isn't the right time, totally fine. We'll back off — <a href="{{ .Tx.Data.prefs_url }}">tune your mail here</a> or just hit reply.</p>
+</div>

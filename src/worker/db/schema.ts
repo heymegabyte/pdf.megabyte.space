@@ -17,6 +17,14 @@ export const users = sqliteTable(
     stripeSubscriptionId: text("stripe_subscription_id"),
     editCredits: integer("edit_credits").notNull().default(0),
     lastCreditGrantAt: integer("last_credit_grant_at", { mode: "timestamp_ms" }),
+    emailPrefs: text("email_prefs")
+      .notNull()
+      .default(
+        '{"transactional":true,"product":true,"digest":true,"marketing":true,"community":true,"boost":true}'
+      ),
+    lastSeenAt: integer("last_seen_at", { mode: "timestamp_ms" }),
+    welcomeSentAt: integer("welcome_sent_at", { mode: "timestamp_ms" }),
+    unsubscribeToken: text("unsubscribe_token"),
     createdAt: integer("created_at", { mode: "timestamp_ms" })
       .notNull()
       .default(sql`(unixepoch() * 1000)`),
@@ -27,6 +35,8 @@ export const users = sqliteTable(
   (t) => [
     index("users_stripe_customer_idx").on(t.stripeCustomerId),
     index("users_google_sub_idx").on(t.googleSub),
+    uniqueIndex("users_unsub_token_idx").on(t.unsubscribeToken),
+    index("users_last_seen_idx").on(t.lastSeenAt),
   ]
 );
 
@@ -67,6 +77,8 @@ export const projects = sqliteTable(
     thumbnailKey: text("thumbnail_key"),
     presentMode: integer("present_mode", { mode: "boolean" }).notNull().default(false),
     lastIndexedAt: integer("last_indexed_at", { mode: "timestamp_ms" }),
+    lastPromptAt: integer("last_prompt_at", { mode: "timestamp_ms" }),
+    lastRenderAt: integer("last_render_at", { mode: "timestamp_ms" }),
     deletedAt: integer("deleted_at", { mode: "timestamp_ms" }),
     createdAt: integer("created_at", { mode: "timestamp_ms" })
       .notNull()
@@ -79,6 +91,7 @@ export const projects = sqliteTable(
     index("projects_user_idx").on(t.userId, t.deletedAt),
     uniqueIndex("projects_slug_unique").on(t.slug),
     index("projects_public_idx").on(t.isPublic, t.updatedAt),
+    index("projects_abandoned_idx").on(t.lastPromptAt, t.lastRenderAt),
   ]
 );
 
@@ -132,11 +145,15 @@ export const shareLinks = sqliteTable(
       .references(() => projects.id, { onDelete: "cascade" }),
     snapshotId: text("snapshot_id"),
     views: integer("views").notNull().default(0),
+    expiresAt: integer("expires_at", { mode: "timestamp_ms" }),
     createdAt: integer("created_at", { mode: "timestamp_ms" })
       .notNull()
       .default(sql`(unixepoch() * 1000)`),
   },
-  (t) => [index("share_project_idx").on(t.projectId)]
+  (t) => [
+    index("share_project_idx").on(t.projectId),
+    index("share_expires_idx").on(t.expiresAt),
+  ]
 );
 
 export const exports = sqliteTable("exports", {
@@ -151,9 +168,74 @@ export const exports = sqliteTable("exports", {
     .default(sql`(unixepoch() * 1000)`),
 });
 
+export const emailEvents = sqliteTable(
+  "email_events",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    template: text("template").notNull(),
+    dedupKey: text("dedup_key").notNull(),
+    status: text("status", { enum: ["queued", "sent", "failed", "skipped"] })
+      .notNull()
+      .default("queued"),
+    providerId: text("provider_id"),
+    error: text("error"),
+    payload: text("payload"),
+    sentAt: integer("sent_at", { mode: "timestamp_ms" }),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
+  },
+  (t) => [
+    uniqueIndex("email_events_dedup_idx").on(t.dedupKey),
+    index("email_events_user_idx").on(t.userId, t.createdAt),
+    index("email_events_template_idx").on(t.template, t.createdAt),
+  ]
+);
+
+export const projectMilestones = sqliteTable(
+  "project_milestones",
+  {
+    id: text("id").primaryKey(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    milestone: integer("milestone").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
+  },
+  (t) => [uniqueIndex("project_milestones_unique").on(t.projectId, t.milestone)]
+);
+
+export const follows = sqliteTable(
+  "follows",
+  {
+    id: text("id").primaryKey(),
+    followerId: text("follower_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    followingId: text("following_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
+  },
+  (t) => [
+    uniqueIndex("follows_unique").on(t.followerId, t.followingId),
+    index("follows_following_idx").on(t.followingId, t.createdAt),
+  ]
+);
+
 export type User = typeof users.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
 export type Project = typeof projects.$inferSelect;
 export type Turn = typeof turns.$inferSelect;
 export type Snapshot = typeof snapshots.$inferSelect;
 export type ShareLink = typeof shareLinks.$inferSelect;
+export type EmailEvent = typeof emailEvents.$inferSelect;
+export type ProjectMilestone = typeof projectMilestones.$inferSelect;
+export type Follow = typeof follows.$inferSelect;

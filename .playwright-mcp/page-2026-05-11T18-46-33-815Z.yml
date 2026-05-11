@@ -1,0 +1,701 @@
+- generic [ref=e5]:
+  - banner [ref=e6]:
+    - link "Skip to content" [ref=e7] [cursor=pointer]:
+      - /url: "#main-content"
+    - link "Megabyte PDF dashboard" [ref=e8] [cursor=pointer]:
+      - /url: /dashboard
+      - generic [ref=e9]:
+        - img [ref=e10]
+        - generic [ref=e14]: MegabytePDF
+    - link "Templates" [ref=e15] [cursor=pointer]:
+      - /url: /templates
+    - link "Explore — new trending PDFs" [ref=e16] [cursor=pointer]:
+      - /url: /explore?sort=trending
+      - generic [ref=e17]: Explore
+    - button "Enable sound cues" [ref=e21]:
+      - img [ref=e22]
+  - main [ref=e26]:
+    - generic [ref=e28]:
+      - generic [ref=e29]:
+        - img [ref=e30]
+        - generic [ref=e32]: Community PDFs
+      - heading "Explore PDFs the community built." [level=1] [ref=e33]
+      - paragraph [ref=e34]: Real documents — resumes, reports, decks — designed in plain English. Open one, remix it, make it yours.
+      - generic [ref=e35]:
+        - img [ref=e36]
+        - searchbox "Search public PDFs" [ref=e39]
+      - generic [ref=e41]:
+        - generic [ref=e42]: Sort
+        - button "Trending" [ref=e43]
+        - button "Newest" [ref=e44]
+        - button "Popular" [ref=e45]
+    - generic [ref=e46]:
+      - complementary [ref=e47]:
+        - heading "Tags" [level=2] [ref=e48]
+        - generic [ref=e49]:
+          - button "template24" [ref=e50]:
+            - img [ref=e51]
+            - text: template24
+          - button "event5" [ref=e54]:
+            - img [ref=e55]
+            - text: event5
+          - button "education5" [ref=e58]:
+            - img [ref=e59]
+            - text: education5
+          - button "business4" [ref=e62]:
+            - img [ref=e63]
+            - text: business4
+          - button "personal3" [ref=e66]:
+            - img [ref=e67]
+            - text: personal3
+          - button "food3" [ref=e70]:
+            - img [ref=e71]
+            - text: food3
+          - button "sales3" [ref=e74]:
+            - img [ref=e75]
+            - text: sales3
+          - button "kids2" [ref=e78]:
+            - img [ref=e79]
+            - text: kids2
+          - button "recipe-card2" [ref=e82]:
+            - img [ref=e83]
+            - text: recipe-card2
+          - button "study-guide2" [ref=e86]:
+            - img [ref=e87]
+            - text: study-guide2
+          - button "student2" [ref=e90]:
+            - img [ref=e91]
+            - text: student2
+          - button "proposal2" [ref=e94]:
+            - img [ref=e95]
+            - text: proposal2
+          - button "teacher2" [ref=e98]:
+            - img [ref=e99]
+            - text: teacher2
+          - button "certificate2" [ref=e102]:
+            - img [ref=e103]
+            - text: certificate2
+          - button "achievement2" [ref=e106]:
+            - img [ref=e107]
+            - text: achievement2
+          - button "poster1" [ref=e110]:
+            - img [ref=e111]
+            - text: poster1
+          - button "music1" [ref=e114]:
+            - img [ref=e115]
+            - text: music1
+          - button "community1" [ref=e118]:
+            - img [ref=e119]
+            - text: community1
+          - button "baby-announcement1" [ref=e122]:
+            - img [ref=e123]
+            - text: baby-announcement1
+          - button "birth1" [ref=e126]:
+            - img [ref=e127]
+            - text: birth1
+          - button "celebration1" [ref=e130]:
+            - img [ref=e131]
+            - text: celebration1
+          - button "party-invitation1" [ref=e134]:
+            - img [ref=e135]
+            - text: party-invitation1
+          - button "birthday1" [ref=e138]:
+            - img [ref=e139]
+            - text: birthday1
+          - button "kitchen1" [ref=e142]:
+            - img [ref=e143]
+            - text: kitchen1
+          - button "wedding-invitation1" [ref=e146]:
+            - img [ref=e147]
+            - text: wedding-invitation1
+          - button "invitation1" [ref=e150]:
+            - img [ref=e151]
+            - text: invitation1
+          - button "biology1" [ref=e154]:
+            - img [ref=e155]
+            - text: biology1
+          - button "menu-card1" [ref=e158]:
+            - img [ref=e159]
+            - text: menu-card1
+          - button "restaurant1" [ref=e162]:
+            - img [ref=e163]
+            - text: restaurant1
+          - button "hospitality1" [ref=e166]:
+            - img [ref=e167]
+            - text: hospitality1
+      - generic [ref=e170]:
+        - heading "Featured" [level=2] [ref=e171]
+        - generic [ref=e172]:
+          - button "Wedding invitation — botanical, gilded A botanical-gilded wedding invite in Cormorant Garamond — A5, centered card, hairline gold rule, italic kicker line. by Megabyte Showcase · 5d ago · 3984 · 12 wedding-invitation event personal" [ref=e173] [cursor=pointer]:
+            - generic [ref=e175]:
+              - heading "Wedding invitation — botanical, gilded" [level=3] [ref=e176]
+              - paragraph [ref=e177]: A botanical-gilded wedding invite in Cormorant Garamond — A5, centered card, hairline gold rule, italic kicker line.
+              - generic [ref=e178]:
+                - generic [ref=e179]: by Megabyte Showcase
+                - generic [ref=e180]: ·
+                - generic [ref=e181]: 5d ago
+                - generic [ref=e182]: ·
+                - generic [ref=e183]:
+                  - img [ref=e184]
+                  - text: "3984"
+                - generic [ref=e187]: ·
+                - generic [ref=e188]:
+                  - img [ref=e189]
+                  - text: "12"
+              - generic [ref=e192]:
+                - generic [ref=e193]: wedding-invitation
+                - generic [ref=e194]: event
+                - generic [ref=e195]: personal
+          - button "Study guide — APUSH Reconstruction (1865–1877) A one-page APUSH study guide for Reconstruction — big ideas, key amendments, key people, cause-effect chain, two DBQ prompts. by Megabyte Showcase · 4d ago · 3214 · 41 study-guide education history" [ref=e196] [cursor=pointer]:
+            - generic [ref=e198]:
+              - heading "Study guide — APUSH Reconstruction (1865–1877)" [level=3] [ref=e199]
+              - paragraph [ref=e200]: A one-page APUSH study guide for Reconstruction — big ideas, key amendments, key people, cause-effect chain, two DBQ prompts.
+              - generic [ref=e201]:
+                - generic [ref=e202]: by Megabyte Showcase
+                - generic [ref=e203]: ·
+                - generic [ref=e204]: 4d ago
+                - generic [ref=e205]: ·
+                - generic [ref=e206]:
+                  - img [ref=e207]
+                  - text: "3214"
+                - generic [ref=e210]: ·
+                - generic [ref=e211]:
+                  - img [ref=e212]
+                  - text: "41"
+              - generic [ref=e215]:
+                - generic [ref=e216]: study-guide
+                - generic [ref=e217]: education
+                - generic [ref=e218]: history
+          - button "Save the date — modern type couple A dark, gold-on-black save-the-date in Space Grotesk — chunky 60pt names, hairline gold divider, Mexico City headline. by Megabyte Showcase · 3d ago · 2147 · 22 save-the-date wedding event" [ref=e219] [cursor=pointer]:
+            - generic [ref=e221]:
+              - heading "Save the date — modern type couple" [level=3] [ref=e222]
+              - paragraph [ref=e223]: A dark, gold-on-black save-the-date in Space Grotesk — chunky 60pt names, hairline gold divider, Mexico City headline.
+              - generic [ref=e224]:
+                - generic [ref=e225]: by Megabyte Showcase
+                - generic [ref=e226]: ·
+                - generic [ref=e227]: 3d ago
+                - generic [ref=e228]: ·
+                - generic [ref=e229]:
+                  - img [ref=e230]
+                  - text: "2147"
+                - generic [ref=e233]: ·
+                - generic [ref=e234]:
+                  - img [ref=e235]
+                  - text: "22"
+              - generic [ref=e238]:
+                - generic [ref=e239]: save-the-date
+                - generic [ref=e240]: wedding
+                - generic [ref=e241]: event
+        - heading "All" [level=2] [ref=e242]
+        - generic [ref=e243]:
+          - button "Designer résumé — two-column, cinematic A two-column résumé in Garamond + Inter — left rail for tools and awards, right side a narrative of impact with numbers, not noise. by Megabyte Showcase · 3d ago · 2103 · 31 resume design career" [ref=e244] [cursor=pointer]:
+            - generic [ref=e246]:
+              - heading "Designer résumé — two-column, cinematic" [level=3] [ref=e247]
+              - paragraph [ref=e248]: A two-column résumé in Garamond + Inter — left rail for tools and awards, right side a narrative of impact with numbers, not noise.
+              - generic [ref=e249]:
+                - generic [ref=e250]: by Megabyte Showcase
+                - generic [ref=e251]: ·
+                - generic [ref=e252]: 3d ago
+                - generic [ref=e253]: ·
+                - generic [ref=e254]:
+                  - img [ref=e255]
+                  - text: "2103"
+                - generic [ref=e258]: ·
+                - generic [ref=e259]:
+                  - img [ref=e260]
+                  - text: "31"
+              - generic [ref=e263]:
+                - generic [ref=e264]: resume
+                - generic [ref=e265]: design
+                - generic [ref=e266]: career
+          - button "Certificate of completion — UX bootcamp A landscape certificate of completion — double gold border, calligraphic name, dual signature line, program ID — print-and-frame ready. by Megabyte Showcase · 3d ago · 1834 · 17 certificate education achievement" [ref=e267] [cursor=pointer]:
+            - generic [ref=e269]:
+              - heading "Certificate of completion — UX bootcamp" [level=3] [ref=e270]
+              - paragraph [ref=e271]: A landscape certificate of completion — double gold border, calligraphic name, dual signature line, program ID — print-and-frame ready.
+              - generic [ref=e272]:
+                - generic [ref=e273]: by Megabyte Showcase
+                - generic [ref=e274]: ·
+                - generic [ref=e275]: 3d ago
+                - generic [ref=e276]: ·
+                - generic [ref=e277]:
+                  - img [ref=e278]
+                  - text: "1834"
+                - generic [ref=e281]: ·
+                - generic [ref=e282]:
+                  - img [ref=e283]
+                  - text: "17"
+              - generic [ref=e286]:
+                - generic [ref=e287]: certificate
+                - generic [ref=e288]: education
+                - generic [ref=e289]: achievement
+          - button "Real estate listing — 17 Birch Lane, Hudson NY A boutique real-estate one-sheet — Hudson NY Dutch Colonial, 5-stat hero, inside/outside columns, taxes + open-house line, signature footer. by Megabyte Showcase · 2d ago · 1428 · 16 real-estate listing property" [ref=e290] [cursor=pointer]:
+            - generic [ref=e292]:
+              - heading "Real estate listing — 17 Birch Lane, Hudson NY" [level=3] [ref=e293]
+              - paragraph [ref=e294]: A boutique real-estate one-sheet — Hudson NY Dutch Colonial, 5-stat hero, inside/outside columns, taxes + open-house line, signature footer.
+              - generic [ref=e295]:
+                - generic [ref=e296]: by Megabyte Showcase
+                - generic [ref=e297]: ·
+                - generic [ref=e298]: 2d ago
+                - generic [ref=e299]: ·
+                - generic [ref=e300]:
+                  - img [ref=e301]
+                  - text: "1428"
+                - generic [ref=e304]: ·
+                - generic [ref=e305]:
+                  - img [ref=e306]
+                  - text: "16"
+              - generic [ref=e309]:
+                - generic [ref=e310]: real-estate
+                - generic [ref=e311]: listing
+                - generic [ref=e312]: property
+          - button "Mutual NDA — short-form, founder-friendly A short-form mutual NDA in Times — five numbered sections, founder-friendly two-year term, side-by-side signature block. by Megabyte Showcase · yesterday · 1106 · 14 nda legal contract" [ref=e313] [cursor=pointer]:
+            - generic [ref=e315]:
+              - heading "Mutual NDA — short-form, founder-friendly" [level=3] [ref=e316]
+              - paragraph [ref=e317]: A short-form mutual NDA in Times — five numbered sections, founder-friendly two-year term, side-by-side signature block.
+              - generic [ref=e318]:
+                - generic [ref=e319]: by Megabyte Showcase
+                - generic [ref=e320]: ·
+                - generic [ref=e321]: yesterday
+                - generic [ref=e322]: ·
+                - generic [ref=e323]:
+                  - img [ref=e324]
+                  - text: "1106"
+                - generic [ref=e327]: ·
+                - generic [ref=e328]:
+                  - img [ref=e329]
+                  - text: "14"
+              - generic [ref=e332]:
+                - generic [ref=e333]: nda
+                - generic [ref=e334]: legal
+                - generic [ref=e335]: contract
+          - button "Baby announcement — pastel arch A 5×7 birth announcement in Cormorant — soft pink-to-yellow gradient arch backdrop, name + stats + a charming family line. by Megabyte Showcase · 7d ago · 2890 · 19 baby-announcement personal birth" [ref=e336] [cursor=pointer]:
+            - generic [ref=e338]:
+              - heading "Baby announcement — pastel arch" [level=3] [ref=e339]
+              - paragraph [ref=e340]: A 5×7 birth announcement in Cormorant — soft pink-to-yellow gradient arch backdrop, name + stats + a charming family line.
+              - generic [ref=e341]:
+                - generic [ref=e342]: by Megabyte Showcase
+                - generic [ref=e343]: ·
+                - generic [ref=e344]: 7d ago
+                - generic [ref=e345]: ·
+                - generic [ref=e346]:
+                  - img [ref=e347]
+                  - text: "2890"
+                - generic [ref=e350]: ·
+                - generic [ref=e351]:
+                  - img [ref=e352]
+                  - text: "19"
+              - generic [ref=e355]:
+                - generic [ref=e356]: baby-announcement
+                - generic [ref=e357]: personal
+                - generic [ref=e358]: birth
+          - button "Recipe card — brown butter chocolate chip cookies A 5×7 recipe card in Lora — handwritten kitchen header, ingredients sidebar with chef-tip, 6-step method, brown-butter tested. by Megabyte Showcase · 6d ago · 2451 · 24 recipe-card food personal" [ref=e359] [cursor=pointer]:
+            - generic [ref=e361]:
+              - heading "Recipe card — brown butter chocolate chip cookies" [level=3] [ref=e362]
+              - paragraph [ref=e363]: A 5×7 recipe card in Lora — handwritten kitchen header, ingredients sidebar with chef-tip, 6-step method, brown-butter tested.
+              - generic [ref=e364]:
+                - generic [ref=e365]: by Megabyte Showcase
+                - generic [ref=e366]: ·
+                - generic [ref=e367]: 6d ago
+                - generic [ref=e368]: ·
+                - generic [ref=e369]:
+                  - img [ref=e370]
+                  - text: "2451"
+                - generic [ref=e373]: ·
+                - generic [ref=e374]:
+                  - img [ref=e375]
+                  - text: "24"
+              - generic [ref=e378]:
+                - generic [ref=e379]: recipe-card
+                - generic [ref=e380]: food
+                - generic [ref=e381]: personal
+          - button "Stripe-style invoice — Megabyte Labs A clean Stripe-inspired invoice with tax breakdown, ACH details, and a violet-cyan brand mark. Pay-by-prompt in 30 seconds. by Megabyte Showcase · 2d ago · 1247 · 18 invoice business billing" [ref=e382] [cursor=pointer]:
+            - generic [ref=e384]:
+              - heading "Stripe-style invoice — Megabyte Labs" [level=3] [ref=e385]
+              - paragraph [ref=e386]: A clean Stripe-inspired invoice with tax breakdown, ACH details, and a violet-cyan brand mark. Pay-by-prompt in 30 seconds.
+              - generic [ref=e387]:
+                - generic [ref=e388]: by Megabyte Showcase
+                - generic [ref=e389]: ·
+                - generic [ref=e390]: 2d ago
+                - generic [ref=e391]: ·
+                - generic [ref=e392]:
+                  - img [ref=e393]
+                  - text: "1247"
+                - generic [ref=e396]: ·
+                - generic [ref=e397]:
+                  - img [ref=e398]
+                  - text: "18"
+              - generic [ref=e401]:
+                - generic [ref=e402]: invoice
+                - generic [ref=e403]: business
+                - generic [ref=e404]: billing
+          - button "Study guide — cellular respiration cheatsheet A numbered four-step cellular respiration cheatsheet — glycolysis through oxidative phosphorylation, net-yield callout, misconceptions panel. by Megabyte Showcase · 5d ago · 1976 · 28 study-guide education biology" [ref=e405] [cursor=pointer]:
+            - generic [ref=e407]:
+              - heading "Study guide — cellular respiration cheatsheet" [level=3] [ref=e408]
+              - paragraph [ref=e409]: A numbered four-step cellular respiration cheatsheet — glycolysis through oxidative phosphorylation, net-yield callout, misconceptions panel.
+              - generic [ref=e410]:
+                - generic [ref=e411]: by Megabyte Showcase
+                - generic [ref=e412]: ·
+                - generic [ref=e413]: 5d ago
+                - generic [ref=e414]: ·
+                - generic [ref=e415]:
+                  - img [ref=e416]
+                  - text: "1976"
+                - generic [ref=e419]: ·
+                - generic [ref=e420]:
+                  - img [ref=e421]
+                  - text: "28"
+              - generic [ref=e424]:
+                - generic [ref=e425]: study-guide
+                - generic [ref=e426]: education
+                - generic [ref=e427]: biology
+          - button "Bistro Lune — supper menu, single page A single-page French bistro supper menu in Cormorant Garamond — three sections, hairline rule, italic dish descriptions, no clutter. by Megabyte Showcase · 4d ago · 1567 · 22 menu-card restaurant food" [ref=e428] [cursor=pointer]:
+            - generic [ref=e430]:
+              - heading "Bistro Lune — supper menu, single page" [level=3] [ref=e431]
+              - paragraph [ref=e432]: A single-page French bistro supper menu in Cormorant Garamond — three sections, hairline rule, italic dish descriptions, no clutter.
+              - generic [ref=e433]:
+                - generic [ref=e434]: by Megabyte Showcase
+                - generic [ref=e435]: ·
+                - generic [ref=e436]: 4d ago
+                - generic [ref=e437]: ·
+                - generic [ref=e438]:
+                  - img [ref=e439]
+                  - text: "1567"
+                - generic [ref=e442]: ·
+                - generic [ref=e443]:
+                  - img [ref=e444]
+                  - text: "22"
+              - generic [ref=e447]:
+                - generic [ref=e448]: menu-card
+                - generic [ref=e449]: restaurant
+                - generic [ref=e450]: food
+          - button "Travel itinerary — 5 days in Lisbon A five-day Lisbon itinerary — day-by-day timed blocks for Alfama, Belém, Sintra, LX Factory, and a slow Friday — printable, foldable. by Megabyte Showcase · today · 854 · 13 itinerary travel vacation" [ref=e451] [cursor=pointer]:
+            - generic [ref=e453]:
+              - heading "Travel itinerary — 5 days in Lisbon" [level=3] [ref=e454]
+              - paragraph [ref=e455]: A five-day Lisbon itinerary — day-by-day timed blocks for Alfama, Belém, Sintra, LX Factory, and a slow Friday — printable, foldable.
+              - generic [ref=e456]:
+                - generic [ref=e457]: by Megabyte Showcase
+                - generic [ref=e458]: ·
+                - generic [ref=e459]: today
+                - generic [ref=e460]: ·
+                - generic [ref=e461]:
+                  - img [ref=e462]
+                  - text: "854"
+                - generic [ref=e465]: ·
+                - generic [ref=e466]:
+                  - img [ref=e467]
+                  - text: "13"
+              - generic [ref=e470]:
+                - generic [ref=e471]: itinerary
+                - generic [ref=e472]: travel
+                - generic [ref=e473]: vacation
+          - button "Spotify (bZ) by Brian Zalewski · today · 766 · 1" [ref=e474] [cursor=pointer]:
+            - generic [ref=e476]:
+              - heading "Spotify (bZ)" [level=3] [ref=e477]
+              - generic [ref=e478]:
+                - generic [ref=e479]: by Brian Zalewski
+                - generic [ref=e480]: ·
+                - generic [ref=e481]: today
+                - generic [ref=e482]: ·
+                - generic [ref=e483]:
+                  - img [ref=e484]
+                  - text: "766"
+                - generic [ref=e487]: ·
+                - generic [ref=e488]:
+                  - img [ref=e489]
+                  - text: "1"
+          - button "Q1 2026 quarterly report — executive summary A four-stat hero, three highlights, two slipped items, three Q2 priorities — the quarterly board read in one page. by Megabyte Showcase · yesterday · 894 · 14 report business executive" [ref=e492] [cursor=pointer]:
+            - generic [ref=e494]:
+              - heading "Q1 2026 quarterly report — executive summary" [level=3] [ref=e495]
+              - paragraph [ref=e496]: A four-stat hero, three highlights, two slipped items, three Q2 priorities — the quarterly board read in one page.
+              - generic [ref=e497]:
+                - generic [ref=e498]: by Megabyte Showcase
+                - generic [ref=e499]: ·
+                - generic [ref=e500]: yesterday
+                - generic [ref=e501]: ·
+                - generic [ref=e502]:
+                  - img [ref=e503]
+                  - text: "894"
+                - generic [ref=e506]: ·
+                - generic [ref=e507]:
+                  - img [ref=e508]
+                  - text: "14"
+              - generic [ref=e511]:
+                - generic [ref=e512]: report
+                - generic [ref=e513]: business
+                - generic [ref=e514]: executive
+          - button "Recipe card — sheet-pan harissa salmon A landscape A5 recipe card — sheet-pan harissa salmon with chickpeas, dual-column ingredients, five-step method, drink pairing. by Megabyte Showcase · 2d ago · 1043 · 12 recipe-card food cooking" [ref=e515] [cursor=pointer]:
+            - generic [ref=e517]:
+              - heading "Recipe card — sheet-pan harissa salmon" [level=3] [ref=e518]
+              - paragraph [ref=e519]: A landscape A5 recipe card — sheet-pan harissa salmon with chickpeas, dual-column ingredients, five-step method, drink pairing.
+              - generic [ref=e520]:
+                - generic [ref=e521]: by Megabyte Showcase
+                - generic [ref=e522]: ·
+                - generic [ref=e523]: 2d ago
+                - generic [ref=e524]: ·
+                - generic [ref=e525]:
+                  - img [ref=e526]
+                  - text: "1043"
+                - generic [ref=e529]: ·
+                - generic [ref=e530]:
+                  - img [ref=e531]
+                  - text: "12"
+              - generic [ref=e534]:
+                - generic [ref=e535]: recipe-card
+                - generic [ref=e536]: food
+                - generic [ref=e537]: cooking
+          - button "Course syllabus — CS 142 Web Systems A clean Stanford CS 142 syllabus — instructors, prereqs, grading, ten-week schedule with readings + due dates, late-work policy. by Megabyte Showcase · 4d ago · 1283 · 19 syllabus education teacher" [ref=e538] [cursor=pointer]:
+            - generic [ref=e540]:
+              - heading "Course syllabus — CS 142 Web Systems" [level=3] [ref=e541]
+              - paragraph [ref=e542]: A clean Stanford CS 142 syllabus — instructors, prereqs, grading, ten-week schedule with readings + due dates, late-work policy.
+              - generic [ref=e543]:
+                - generic [ref=e544]: by Megabyte Showcase
+                - generic [ref=e545]: ·
+                - generic [ref=e546]: 4d ago
+                - generic [ref=e547]: ·
+                - generic [ref=e548]:
+                  - img [ref=e549]
+                  - text: "1283"
+                - generic [ref=e552]: ·
+                - generic [ref=e553]:
+                  - img [ref=e554]
+                  - text: "19"
+              - generic [ref=e557]:
+                - generic [ref=e558]: syllabus
+                - generic [ref=e559]: education
+                - generic [ref=e560]: teacher
+          - button "Certificate of achievement — youth soccer champion A youth-soccer achievement certificate — orange ribbon corner, big \"Champion\" headline, three season stats, dual coach signatures. by Megabyte Showcase · yesterday · 612 · 8 certificate sports kids" [ref=e561] [cursor=pointer]:
+            - generic [ref=e563]:
+              - heading "Certificate of achievement — youth soccer champion" [level=3] [ref=e564]
+              - paragraph [ref=e565]: A youth-soccer achievement certificate — orange ribbon corner, big "Champion" headline, three season stats, dual coach signatures.
+              - generic [ref=e566]:
+                - generic [ref=e567]: by Megabyte Showcase
+                - generic [ref=e568]: ·
+                - generic [ref=e569]: yesterday
+                - generic [ref=e570]: ·
+                - generic [ref=e571]:
+                  - img [ref=e572]
+                  - text: "612"
+                - generic [ref=e575]: ·
+                - generic [ref=e576]:
+                  - img [ref=e577]
+                  - text: "8"
+              - generic [ref=e580]:
+                - generic [ref=e581]: certificate
+                - generic [ref=e582]: sports
+                - generic [ref=e583]: kids
+          - button "5th-grade lesson plan — fractions through pizza A one-page Grade 5 fractions lesson with Common Core mapping, a five-block timeline, materials list, and differentiation notes for EL and above-grade learners. by Megabyte Showcase · yesterday · 612 · 9 lesson-plan education teacher" [ref=e584] [cursor=pointer]:
+            - generic [ref=e586]:
+              - heading "5th-grade lesson plan — fractions through pizza" [level=3] [ref=e587]
+              - paragraph [ref=e588]: A one-page Grade 5 fractions lesson with Common Core mapping, a five-block timeline, materials list, and differentiation notes for EL and above-grade learners.
+              - generic [ref=e589]:
+                - generic [ref=e590]: by Megabyte Showcase
+                - generic [ref=e591]: ·
+                - generic [ref=e592]: yesterday
+                - generic [ref=e593]: ·
+                - generic [ref=e594]:
+                  - img [ref=e595]
+                  - text: "612"
+                - generic [ref=e598]: ·
+                - generic [ref=e599]:
+                  - img [ref=e600]
+                  - text: "9"
+              - generic [ref=e603]:
+                - generic [ref=e604]: lesson-plan
+                - generic [ref=e605]: education
+                - generic [ref=e606]: teacher
+          - button "Conference badge — DevWorld 2026 A 4×6 portrait conference badge — gradient backdrop, role pill, big name, company, three meta tags — print, punch, hand out. by Megabyte Showcase · today · 421 · 6 conference-badge event corporate" [ref=e607] [cursor=pointer]:
+            - generic [ref=e609]:
+              - heading "Conference badge — DevWorld 2026" [level=3] [ref=e610]
+              - paragraph [ref=e611]: A 4×6 portrait conference badge — gradient backdrop, role pill, big name, company, three meta tags — print, punch, hand out.
+              - generic [ref=e612]:
+                - generic [ref=e613]: by Megabyte Showcase
+                - generic [ref=e614]: ·
+                - generic [ref=e615]: today
+                - generic [ref=e616]: ·
+                - generic [ref=e617]:
+                  - img [ref=e618]
+                  - text: "421"
+                - generic [ref=e621]: ·
+                - generic [ref=e622]:
+                  - img [ref=e623]
+                  - text: "6"
+              - generic [ref=e626]:
+                - generic [ref=e627]: conference-badge
+                - generic [ref=e628]: event
+                - generic [ref=e629]: corporate
+          - button "Press release — Series B announcement A wire-ready Series B announcement — embargo line, dateline, lede, three traction bullets, a Q4 plan, and a boilerplate close. by Megabyte Showcase · today · 421 · 7 press-release marketing template" [ref=e630] [cursor=pointer]:
+            - generic [ref=e632]:
+              - heading "Press release — Series B announcement" [level=3] [ref=e633]
+              - paragraph [ref=e634]: A wire-ready Series B announcement — embargo line, dateline, lede, three traction bullets, a Q4 plan, and a boilerplate close.
+              - generic [ref=e635]:
+                - generic [ref=e636]: by Megabyte Showcase
+                - generic [ref=e637]: ·
+                - generic [ref=e638]: today
+                - generic [ref=e639]: ·
+                - generic [ref=e640]:
+                  - img [ref=e641]
+                  - text: "421"
+                - generic [ref=e644]: ·
+                - generic [ref=e645]:
+                  - img [ref=e646]
+                  - text: "7"
+              - generic [ref=e649]:
+                - generic [ref=e650]: press-release
+                - generic [ref=e651]: marketing
+                - generic [ref=e652]: template
+          - button "Consulting proposal — brand sprint A two-week brand sprint proposal — kickoff, scope, three-phase plan, deliverables block, investment $48k, hand-signature footer. by Megabyte Showcase · 2d ago · 543 · 9 proposal consulting business" [ref=e653] [cursor=pointer]:
+            - generic [ref=e655]:
+              - heading "Consulting proposal — brand sprint" [level=3] [ref=e656]
+              - paragraph [ref=e657]: A two-week brand sprint proposal — kickoff, scope, three-phase plan, deliverables block, investment $48k, hand-signature footer.
+              - generic [ref=e658]:
+                - generic [ref=e659]: by Megabyte Showcase
+                - generic [ref=e660]: ·
+                - generic [ref=e661]: 2d ago
+                - generic [ref=e662]: ·
+                - generic [ref=e663]:
+                  - img [ref=e664]
+                  - text: "543"
+                - generic [ref=e667]: ·
+                - generic [ref=e668]:
+                  - img [ref=e669]
+                  - text: "9"
+              - generic [ref=e672]:
+                - generic [ref=e673]: proposal
+                - generic [ref=e674]: consulting
+                - generic [ref=e675]: business
+          - button "Kids birthday invite — dinosaur dig party A 5×7 kids birthday invite with a green-and-gold paleontology theme — RSVP card, dashed dividers, and a slightly tilted hero title. by Megabyte Showcase · 6d ago · 762 · 11 party-invitation kids event" [ref=e676] [cursor=pointer]:
+            - generic [ref=e678]:
+              - heading "Kids birthday invite — dinosaur dig party" [level=3] [ref=e679]
+              - paragraph [ref=e680]: A 5×7 kids birthday invite with a green-and-gold paleontology theme — RSVP card, dashed dividers, and a slightly tilted hero title.
+              - generic [ref=e681]:
+                - generic [ref=e682]: by Megabyte Showcase
+                - generic [ref=e683]: ·
+                - generic [ref=e684]: 6d ago
+                - generic [ref=e685]: ·
+                - generic [ref=e686]:
+                  - img [ref=e687]
+                  - text: "762"
+                - generic [ref=e690]: ·
+                - generic [ref=e691]:
+                  - img [ref=e692]
+                  - text: "11"
+              - generic [ref=e695]:
+                - generic [ref=e696]: party-invitation
+                - generic [ref=e697]: kids
+                - generic [ref=e698]: event
+          - button "Event poster — neighborhood jazz night A tabloid-size jazz poster — purple-to-navy gradient, Space Grotesk 120pt headline, Lora italic subtitle, four-column event meta block. by Megabyte Showcase · 8d ago · 887 · 11 poster event music" [ref=e699] [cursor=pointer]:
+            - generic [ref=e701]:
+              - heading "Event poster — neighborhood jazz night" [level=3] [ref=e702]
+              - paragraph [ref=e703]: A tabloid-size jazz poster — purple-to-navy gradient, Space Grotesk 120pt headline, Lora italic subtitle, four-column event meta block.
+              - generic [ref=e704]:
+                - generic [ref=e705]: by Megabyte Showcase
+                - generic [ref=e706]: ·
+                - generic [ref=e707]: 8d ago
+                - generic [ref=e708]: ·
+                - generic [ref=e709]:
+                  - img [ref=e710]
+                  - text: "887"
+                - generic [ref=e713]: ·
+                - generic [ref=e714]:
+                  - img [ref=e715]
+                  - text: "11"
+              - generic [ref=e718]:
+                - generic [ref=e719]: poster
+                - generic [ref=e720]: event
+                - generic [ref=e721]: music
+        - button "Load more PDFs" [ref=e723] [cursor=pointer]: Load more
+  - contentinfo [ref=e724]:
+    - generic [ref=e725]:
+      - generic [ref=e726]:
+        - generic [ref=e727]:
+          - link "Megabyte PDF home" [ref=e728] [cursor=pointer]:
+            - /url: /
+            - generic [ref=e729]:
+              - img [ref=e730]
+              - generic [ref=e734]: MegabytePDF
+          - paragraph [ref=e735]: Describe a PDF in plain English. Megabyte writes the HTML and renders it. No templates, no design software.
+          - generic "Social links" [ref=e736]:
+            - link "Megabyte Labs on GitHub" [ref=e737] [cursor=pointer]:
+              - /url: https://github.com/heymegabyte
+              - img [ref=e738]
+            - link "Megabyte Labs on X" [ref=e740] [cursor=pointer]:
+              - /url: https://x.com/megabytelabs
+              - img [ref=e741]
+            - link "Megabyte Labs on LinkedIn" [ref=e743] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/megabyte-labs
+              - img [ref=e744]
+            - link "Megabyte Labs on YouTube" [ref=e746] [cursor=pointer]:
+              - /url: https://www.youtube.com/@megabytelabs
+              - img [ref=e747]
+            - link "Megabyte Labs on Instagram" [ref=e749] [cursor=pointer]:
+              - /url: https://www.instagram.com/megabytelabs
+              - img [ref=e750]
+            - link "Megabyte Labs on Facebook" [ref=e752] [cursor=pointer]:
+              - /url: https://www.facebook.com/megabytelabs
+              - img [ref=e753]
+            - link "Megabyte Labs on Reddit" [ref=e755] [cursor=pointer]:
+              - /url: https://www.reddit.com/r/megabytelabs
+              - img [ref=e756]
+            - link "Megabyte Labs on Discord" [ref=e758] [cursor=pointer]:
+              - /url: https://discord.gg/megabytelabs
+              - img [ref=e759]
+            - link "Megabyte Labs on Telegram" [ref=e761] [cursor=pointer]:
+              - /url: https://t.me/megabytelabs
+              - img [ref=e762]
+            - link "Megabyte Labs on Threads" [ref=e764] [cursor=pointer]:
+              - /url: https://www.threads.net/@megabytelabs
+              - img [ref=e765]
+            - link "Megabyte Labs on GitLab" [ref=e767] [cursor=pointer]:
+              - /url: https://gitlab.com/megabytelabs
+              - img [ref=e768]
+            - link "Megabyte Labs on npm" [ref=e770] [cursor=pointer]:
+              - /url: https://www.npmjs.com/org/megabytelabs
+              - img [ref=e771]
+            - link "Megabyte Labs on Pinterest" [ref=e773] [cursor=pointer]:
+              - /url: https://www.pinterest.com/megabytelabs
+              - img [ref=e774]
+            - link "Megabyte Labs on RSS" [ref=e776] [cursor=pointer]:
+              - /url: https://megabyte.space/rss.xml
+              - img [ref=e777]
+        - generic [ref=e779]:
+          - heading "Product" [level=3] [ref=e780]
+          - list [ref=e781]:
+            - listitem [ref=e782]:
+              - link "Dashboard" [ref=e783] [cursor=pointer]:
+                - /url: /dashboard
+            - listitem [ref=e784]:
+              - link "Explore" [ref=e785] [cursor=pointer]:
+                - /url: /explore?sort=trending
+            - listitem [ref=e786]:
+              - link "Templates" [ref=e787] [cursor=pointer]:
+                - /url: /templates
+            - listitem [ref=e788]:
+              - link "Try without signup" [ref=e789] [cursor=pointer]:
+                - /url: /guest
+        - generic [ref=e790]:
+          - heading "Company" [level=3] [ref=e791]
+          - list [ref=e792]:
+            - listitem [ref=e793]:
+              - link "Megabyte Labs" [ref=e794] [cursor=pointer]:
+                - /url: https://megabyte.space
+            - listitem [ref=e795]:
+              - link "Contact" [ref=e796] [cursor=pointer]:
+                - /url: mailto:hey@megabyte.space
+            - listitem [ref=e797]:
+              - link "Open source" [ref=e798] [cursor=pointer]:
+                - /url: https://github.com/heymegabyte
+        - generic [ref=e799]:
+          - heading "Legal" [level=3] [ref=e800]
+          - list [ref=e801]:
+            - listitem [ref=e802]:
+              - link "Privacy" [ref=e803] [cursor=pointer]:
+                - /url: /privacy
+            - listitem [ref=e804]:
+              - link "Terms" [ref=e805] [cursor=pointer]:
+                - /url: /terms
+            - listitem [ref=e806]:
+              - link "Security" [ref=e807] [cursor=pointer]:
+                - /url: /.well-known/security.txt
+      - generic [ref=e808]:
+        - generic [ref=e809]: © 2026 Megabyte Labs · Built in one prompt.
+        - generic [ref=e812]: pdf.megabyte.space — live

@@ -1,0 +1,38 @@
+{
+  "alias": "welcome",
+  "subject": "Welcome to {{ .Tx.Data.app_name }} — your first PDF in 60 seconds",
+  "preheader": "Three prompts that build a PDF before your coffee cools."
+}
+---
+<div class="body">
+  <p class="eyebrow">First contact</p>
+  <h1 class="h1">Hey {{ .Tx.Data.user.first_name }} — let's build the first one.</h1>
+  <p class="lede">You signed up. Now the fun part. Type one sentence, watch it become a PDF. No templates, no drag-and-drop, no DocuSign-grade pain.</p>
+</div>
+<div class="cta-row">
+  <a href="{{ .Tx.Data.app_url }}/dashboard" class="cta">Open your dashboard</a>
+</div>
+<hr class="divider" />
+<div class="body">
+  <p class="eyebrow">Three prompts that work</p>
+  <h2 class="h2">Pick one. Paste it. Hit return.</h2>
+</div>
+<div class="card">
+  <p class="pill">Invoice</p>
+  <p class="p" style="margin-top:10px;"><strong style="color:#fff;">Invoice for $4,200 — branding sprint for Maple &amp; Oak Bakery, due Net 30.</strong></p>
+  <p class="small">→ Full line-item invoice, your address up top, payment terms at the bottom.</p>
+</div>
+<div class="card">
+  <p class="pill">Résumé</p>
+  <p class="p" style="margin-top:10px;"><strong style="color:#fff;">Résumé for a senior frontend engineer, 8 years React, ex-Stripe, looking for staff roles.</strong></p>
+  <p class="small">→ Single page, dark accents, hireable on the spot.</p>
+</div>
+<div class="card">
+  <p class="pill">Proposal</p>
+  <p class="p" style="margin-top:10px;"><strong style="color:#fff;">10-page proposal for a SaaS rebrand — scope, timeline, three pricing tiers.</strong></p>
+  <p class="small">→ Cover page, executive summary, signature block. Reads like Stripe wrote it.</p>
+</div>
+<div class="body">
+  <p class="p">Watch the first one render. It takes ~4 seconds. If it's not right, just say so — the chat keeps the context.</p>
+  <p class="small">PS — you're on the <strong style="color:#fff;">free plan</strong> ({{ .Tx.Data.user.plan }}): one project, unlimited edits, unlimited shares. Upgrade when you outgrow it, not before.</p>
+</div>

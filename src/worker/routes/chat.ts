@@ -88,6 +88,11 @@ app.post("/projects/:id/chat", requireAuth, zValidator("json", chatBody), async 
     role: "user",
     content: message,
   });
+  // Track last-prompt-at so the abandoned-prompt cron can find drafts.
+  await db
+    .update(schema.projects)
+    .set({ lastPromptAt: new Date() })
+    .where(eq(schema.projects.id, projectId));
 
   const docContext = `CURRENT DOCUMENT STATE
 Page size: ${project.pageSize} | Print margins: ${project.margin} (applied by runtime @page rule — do NOT add @page or body padding)

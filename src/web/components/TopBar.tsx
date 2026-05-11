@@ -8,7 +8,10 @@ import { captureEvent } from "../lib/analytics";
 
 export function TopBar({ children }: { children?: React.ReactNode }) {
   return (
-    <header className="px-4 lg:px-6 py-3 border-b border-[var(--color-line)] flex items-center justify-between gap-3 bg-[var(--color-bg)]/80 backdrop-blur sticky top-0 z-30">
+    <header
+      data-vt="site-header"
+      className="px-4 lg:px-6 py-3 border-b border-[var(--color-line)] flex items-center justify-between gap-3 bg-[var(--color-bg)]/80 backdrop-blur sticky top-0 z-30"
+    >
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-[var(--color-cyan)] focus:text-[#060610] focus:rounded-md focus:font-semibold focus:text-sm"
@@ -87,8 +90,9 @@ function SoundToggle() {
 }
 
 function UserMenu() {
-  const { me, signOut, status } = useAuth();
+  const { me, signOut, refresh, status } = useAuth();
   const [open, setOpen] = useState(false);
+  const [flipping, setFlipping] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -147,6 +151,70 @@ function UserMenu() {
               Plan: <span className="text-[var(--color-fg)] capitalize">{user.plan}</span>
             </div>
           </div>
+          {user.isAdmin && (
+            <div
+              role="group"
+              aria-label="Admin: simulate plan"
+              className="px-4 py-3 border-b border-[var(--color-line)] bg-white/[0.02]"
+            >
+              <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-muted)] font-semibold mb-2">
+                Admin · Simulate plan
+              </div>
+              <div
+                role="switch"
+                aria-checked={user.plan === "pro"}
+                aria-label={user.plan === "pro" ? "Switch to free" : "Switch to pro"}
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === " " || e.key === "Enter") {
+                    e.preventDefault();
+                    (e.currentTarget as HTMLDivElement).click();
+                  }
+                }}
+                onClick={async () => {
+                  if (flipping) return;
+                  setFlipping(true);
+                  const next = user.plan === "pro" ? "free" : "pro";
+                  try {
+                    await fetch("/api/admin/plan", {
+                      method: "POST",
+                      credentials: "include",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ plan: next }),
+                    });
+                    await refresh();
+                    captureEvent("admin_plan_toggled", { plan: next });
+                  } finally {
+                    setFlipping(false);
+                  }
+                }}
+                className={`relative inline-flex items-center w-full h-9 rounded-full border border-[var(--color-line)] bg-[var(--color-bg)] cursor-pointer select-none transition-colors ${
+                  flipping ? "opacity-60 pointer-events-none" : ""
+                }`}
+              >
+                <span
+                  className={`absolute top-1 left-1 h-7 rounded-full bg-[var(--color-cyan)] transition-[transform,width] duration-200 ease-out ${
+                    user.plan === "pro" ? "translate-x-full w-[calc(50%-4px)]" : "translate-x-0 w-[calc(50%-4px)]"
+                  }`}
+                  aria-hidden="true"
+                />
+                <span
+                  className={`relative z-10 w-1/2 text-center text-xs font-semibold ${
+                    user.plan === "free" ? "text-black" : "text-[var(--color-muted)]"
+                  }`}
+                >
+                  Free
+                </span>
+                <span
+                  className={`relative z-10 w-1/2 text-center text-xs font-semibold ${
+                    user.plan === "pro" ? "text-black" : "text-[var(--color-muted)]"
+                  }`}
+                >
+                  Pro
+                </span>
+              </div>
+            </div>
+          )}
           <Link
             to="/dashboard"
             role="menuitem"

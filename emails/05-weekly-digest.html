@@ -1,0 +1,32 @@
+{
+  "alias": "weekly-digest",
+  "subject": "This week on Megabyte PDF — {{ .Tx.Data.event.top_title }}",
+  "preheader": "Five PDFs the community shipped this week. Fork any of them."
+}
+---
+<div class="body">
+  <p class="eyebrow">Saturday digest · Issue {{ .Tx.Data.event.issue }}</p>
+  <h1 class="h1">Five PDFs worth stealing.</h1>
+  <p class="lede">Curated from the public feed by view count, share velocity, and quality score. Click any one to remix it into your own.</p>
+</div>
+{{ range $i, $p := .Tx.Data.event.picks }}
+<div class="card" style="padding:0; overflow:hidden;">
+  <a href="{{ $p.url }}" style="text-decoration:none; color:inherit;">
+    <img src="{{ $p.image }}" alt="{{ $p.title }}" class="card-img" style="margin-bottom:0; border-radius:14px 14px 0 0;" />
+    <div style="padding:18px 20px 20px 20px;">
+      <p class="pill">{{ $p.tag }}</p>
+      <h2 class="h2" style="margin:10px 0 6px 0; font-size:20px;">{{ $p.title }}</h2>
+      <p class="small">by {{ $p.author }} · {{ $p.views }} views</p>
+    </div>
+  </a>
+</div>
+{{ end }}
+<div class="cta-row">
+  <a href="{{ .Tx.Data.app_url }}/explore" class="cta">Open the full feed</a>
+</div>
+<hr class="divider" />
+<div class="body">
+  <h2 class="h2">Built this week by you all</h2>
+  <p class="p">{{ .Tx.Data.event.weekly_total }} new public PDFs · {{ .Tx.Data.event.weekly_authors }} authors · {{ .Tx.Data.event.weekly_views }} total views</p>
+  <p class="small">Don't want the digest? <a href="{{ .Tx.Data.prefs_url }}">Mute it</a> — transactional mail keeps flowing.</p>
+</div>

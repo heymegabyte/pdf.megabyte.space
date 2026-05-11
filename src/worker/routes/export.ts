@@ -7,6 +7,7 @@ import { getDb, schema } from "../db";
 import { requireAuth } from "../middleware/auth";
 import { wrapDocument, pageDimensionsIn } from "../lib/templates";
 import { ensureFreshAccessToken, uploadPdfToDrive } from "../lib/drive";
+import { sendEmail } from "../lib/emails";
 import type { Env, Variables } from "../types";
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -92,6 +93,10 @@ app.post("/projects/:id/export", requireAuth, async (c) => {
       r2Key,
       bytes: pdf.byteLength,
     });
+    await db
+      .update(schema.projects)
+      .set({ lastRenderAt: new Date() })
+      .where(eq(schema.projects.id, id));
   } catch (err) {
     Sentry.captureException(err, { tags: { route: "export", step: "store_pdf" } });
     return c.json({ error: "PDF generated but could not be saved. Please try again." }, 502);
@@ -99,6 +104,24 @@ app.post("/projects/:id/export", requireAuth, async (c) => {
 
   // Only consume the rate quota after successful storage
   await c.env.CACHE.put(rateKey, String(used + 1), { expirationTtl: 60 * 60 * 26 });
+
+  // First-pdf trigger: fires once per user on first successful export.
+  // Dedup key is per-user, so subsequent exports won't re-trigger.
+  c.executionCtx.waitUntil(
+    sendEmail(c.env, {
+      userId,
+      template: "first-pdf",
+      dedupKey: `first-pdf:${userId}`,
+      data: {
+        project_title: project.title,
+        project_url: `${c.env.APP_URL}/projects/${id}`,
+        og_image_url: `${c.env.APP_URL}/s/og/${id}.png`,
+        share_url: `${c.env.APP_URL}/projects/${id}`,
+        download_url: `${c.env.APP_URL}/api/projects/${id}/export/${exportId}/download`,
+        pdf_bytes: pdf.byteLength,
+      },
+    }).catch(() => {})
+  );
 
   return c.json(
     {

@@ -1,0 +1,45 @@
+{
+  "alias": "annual-summary",
+  "subject": "{{ .Tx.Data.user.first_name }}, your year on Megabyte PDF",
+  "preheader": "{{ .Tx.Data.event.pdfs_generated }} PDFs · {{ .Tx.Data.event.total_views }} views · ${{ .Tx.Data.event.saved_vs_docusign }} saved."
+}
+---
+<div class="body">
+  <p class="eyebrow">One year in · {{ .Tx.Data.event.year }}</p>
+  <h1 class="h1">You shipped, {{ .Tx.Data.user.first_name }}.</h1>
+  <p class="lede">A year ago today you signed up for Pro. Here's everything you built — and what it would have cost you anywhere else.</p>
+</div>
+<div class="stat-grid">
+  <div class="stat"><div class="stat-n">{{ .Tx.Data.event.pdfs_generated }}</div><div class="stat-l">PDFs generated</div></div>
+  <div class="stat"><div class="stat-n">{{ .Tx.Data.event.total_views }}</div><div class="stat-l">Total views</div></div>
+</div>
+<div class="stat-grid">
+  <div class="stat"><div class="stat-n">{{ .Tx.Data.event.public_forks }}</div><div class="stat-l">Times forked</div></div>
+  <div class="stat"><div class="stat-n">${{ .Tx.Data.event.saved_vs_docusign }}</div><div class="stat-l">Saved vs DocuSign</div></div>
+</div>
+<hr class="divider" />
+<div class="body">
+  <h2 class="h2">Your top PDF this year</h2>
+</div>
+<div class="card" style="padding:0; overflow:hidden;">
+  <a href="{{ .Tx.Data.event.top_project_url }}" style="text-decoration:none; color:inherit;">
+    <img src="{{ .Tx.Data.event.top_project_og }}" alt="{{ .Tx.Data.event.top_project_title }}" class="card-img" style="margin-bottom:0; border-radius:14px 14px 0 0;" />
+    <div style="padding:18px 22px 20px 22px;">
+      <h2 class="h2" style="margin:0 0 4px 0; font-size:20px;">{{ .Tx.Data.event.top_project_title }}</h2>
+      <p class="small">{{ .Tx.Data.event.top_project_views }} views · forked {{ .Tx.Data.event.top_project_forks }} times</p>
+    </div>
+  </a>
+</div>
+<hr class="divider" />
+<div class="body">
+  <h2 class="h2">Behind the numbers</h2>
+  <p class="p">Your Pro subscription ran ${{ .Tx.Data.event.annual_cost }} this year. The same volume in DocuSign + Canva Pro + Notion Business would have run ${{ .Tx.Data.event.competitor_cost }}. You came out <strong style="color:#00E5FF;">${{ .Tx.Data.event.saved_vs_docusign }} ahead</strong>, with no per-seat fees and no per-document caps.</p>
+  <p class="small"><a href="{{ .Tx.Data.event.receipt_url }}">Download annual receipt (PDF)</a> · <a href="{{ .Tx.Data.app_url }}/account/billing">Manage subscription</a></p>
+</div>
+<div class="cta-row">
+  <a href="{{ .Tx.Data.app_url }}/dashboard" class="cta">Open dashboard</a>
+  <a href="{{ .Tx.Data.event.share_recap_url }}" class="cta-secondary">Share your recap</a>
+</div>
+<div class="body">
+  <p class="p" style="font-style:italic; color:#9aa0c3;">Thanks for a year of trusting us with your documents. Here's to the next one.</p>
+</div>

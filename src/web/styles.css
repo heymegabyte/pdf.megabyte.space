@@ -309,11 +309,19 @@ body[data-cinema="on"] [data-cinema-stage] {
   @keyframes vt-fade-out { to { opacity: 0; } }
   @keyframes vt-fade-in { from { opacity: 0; } }
   ::view-transition-old(root) {
-    animation: 120ms ease-out vt-fade-out;
+    animation: 180ms cubic-bezier(0.4, 0, 0.2, 1) vt-fade-out;
   }
   ::view-transition-new(root) {
-    animation: 120ms ease-in vt-fade-in;
+    animation: 220ms 80ms cubic-bezier(0.16, 1, 0.3, 1) vt-fade-in both;
   }
+  /* Pin navbar/footer so they don't participate in the cross-fade —
+     they get their own snapshot region and stay visually still. */
+  header[data-vt="site-header"] { view-transition-name: site-header; }
+  footer[data-vt="site-footer"] { view-transition-name: site-footer; }
+  ::view-transition-old(site-header),
+  ::view-transition-new(site-header),
+  ::view-transition-old(site-footer),
+  ::view-transition-new(site-footer) { animation: none; }
   @media (prefers-reduced-motion: reduce) {
     ::view-transition-old(root),
     ::view-transition-new(root) { animation: none; }

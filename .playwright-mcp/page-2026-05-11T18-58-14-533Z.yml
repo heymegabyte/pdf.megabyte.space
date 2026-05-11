@@ -1,0 +1,338 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - link "Skip to content" [ref=e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=e5]:
+      - link "Megabyte PDF home" [ref=e6] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e7]:
+          - img [ref=e8]
+          - generic [ref=e12]: MegabytePDF
+      - navigation "Main navigation" [ref=e13]:
+        - link "Sign in" [ref=e14] [cursor=pointer]:
+          - /url: /sign-in
+        - link "Get started" [ref=e15] [cursor=pointer]:
+          - /url: /sign-in
+          - text: Get started
+          - img [ref=e16]
+    - main [ref=e18]:
+      - generic [ref=e20]:
+        - paragraph [ref=e21]: Print-perfect PDFs from a chat
+        - heading "Chat your way to a printable PDF ." [level=1] [ref=e23]:
+          - text: Chat your way to a
+          - generic [ref=e24]: printable PDF
+          - text: .
+        - paragraph [ref=e25]: Prompt the AI. Watch every page render in real time at 8.5 × 11. Download a real PDF — text-selectable, print-ready, your name on it.
+        - generic [ref=e26]:
+          - link "Try it now — no signup" [ref=e27] [cursor=pointer]:
+            - /url: /guest
+            - img [ref=e28]
+            - text: Try it now — no signup
+          - link "Create an account" [ref=e30] [cursor=pointer]:
+            - /url: /sign-in
+            - text: Create an account
+            - img [ref=e31]
+        - paragraph [ref=e33]: 10 free guest prompts a day. Sign in to save, share, and download real PDFs.
+      - generic [ref=e35]:
+        - generic [ref=e36]:
+          - img [ref=e38]
+          - heading "Prompt, don't fuss" [level=3] [ref=e40]
+          - paragraph [ref=e41]: Tell the AI what you need. It writes print-ready HTML and CSS — you just review and adjust.
+        - generic [ref=e42]:
+          - img [ref=e44]
+          - heading "Every page on screen" [level=3] [ref=e48]
+          - paragraph [ref=e49]: See each page in a vertical stack at 8.5 × 11. Scroll through like a stack of paper.
+        - generic [ref=e50]:
+          - img [ref=e52]
+          - heading "Real PDFs" [level=3] [ref=e55]
+          - paragraph [ref=e56]: True PDF export — text-selectable, embedded fonts, exact page dimensions. Not a screenshot.
+        - generic [ref=e57]:
+          - img [ref=e59]
+          - heading "Edit the source" [level=3] [ref=e63]
+          - paragraph [ref=e64]: Open the code panel, tweak HTML and CSS directly, see the preview update in real time.
+      - generic [ref=e65]:
+        - paragraph [ref=e66]: Works for any document
+        - generic [ref=e67]:
+          - generic [ref=e68]: Invoice
+          - generic [ref=e69]: Resume
+          - generic [ref=e70]: Cover letter
+          - generic [ref=e71]: NDA
+          - generic [ref=e72]: Contract
+          - generic [ref=e73]: Business proposal
+          - generic [ref=e74]: Report
+          - generic [ref=e75]: Statement of work
+          - generic [ref=e76]: Meeting agenda
+          - generic [ref=e77]: Certificate
+          - generic [ref=e78]: Letterhead
+          - generic [ref=e79]: Spec sheet
+      - generic [ref=e80]:
+        - generic [ref=e81]:
+          - heading "Simple pricing." [level=2] [ref=e82]
+          - paragraph [ref=e83]: Start free. Pay when you need real PDFs.
+        - generic [ref=e84]:
+          - generic [ref=e85]:
+            - generic [ref=e86]:
+              - paragraph [ref=e87]: Guest
+              - generic [ref=e88]:
+                - generic [ref=e89]: Free
+                - generic [ref=e90]: no account needed
+            - list [ref=e91]:
+              - listitem [ref=e92]:
+                - img [ref=e93]
+                - text: 10 AI prompts per day
+              - listitem [ref=e95]:
+                - img [ref=e96]
+                - text: Live preview in browser
+              - listitem [ref=e98]:
+                - img [ref=e99]
+                - text: Sonnet model
+              - listitem [ref=e101]: Save projects
+              - listitem [ref=e103]: PDF download
+              - listitem [ref=e105]: Share links
+            - link "Try now" [ref=e107] [cursor=pointer]:
+              - /url: /guest
+          - generic [ref=e108]:
+            - generic [ref=e109]:
+              - paragraph [ref=e110]: Free
+              - generic [ref=e111]:
+                - generic [ref=e112]: $0
+                - generic [ref=e113]: sign in required
+            - list [ref=e114]:
+              - listitem [ref=e115]:
+                - img [ref=e116]
+                - text: 1 saved project
+              - listitem [ref=e118]:
+                - img [ref=e119]
+                - text: Full chat history
+              - listitem [ref=e121]:
+                - img [ref=e122]
+                - text: Sonnet model
+              - listitem [ref=e124]:
+                - img [ref=e125]
+                - text: Version snapshots
+              - listitem [ref=e127]: PDF download
+              - listitem [ref=e129]: Share links
+              - listitem [ref=e131]: Opus model
+            - link "Create account" [ref=e133] [cursor=pointer]:
+              - /url: /sign-in
+          - generic [ref=e134]:
+            - generic [ref=e135]:
+              - img [ref=e136]
+              - text: Most popular
+            - generic [ref=e138]:
+              - paragraph [ref=e139]: Pro
+              - generic [ref=e140]:
+                - generic [ref=e141]: $9
+                - generic [ref=e142]: per month
+            - list [ref=e143]:
+              - listitem [ref=e144]:
+                - img [ref=e145]
+                - text: 10 projects
+              - listitem [ref=e147]:
+                - img [ref=e148]
+                - text: PDF export (real files)
+              - listitem [ref=e150]:
+                - img [ref=e151]
+                - text: Public share links
+              - listitem [ref=e153]:
+                - img [ref=e154]
+                - text: Claude Opus 4.7
+              - listitem [ref=e156]:
+                - img [ref=e157]
+                - text: Sonnet + version history
+              - listitem [ref=e159]:
+                - img [ref=e160]
+                - text: Cancel anytime
+            - link "Upgrade to Pro" [ref=e162] [cursor=pointer]:
+              - /url: /sign-in
+              - text: Upgrade to Pro
+              - img [ref=e163]
+      - generic [ref=e165]:
+        - heading "Common questions." [level=2] [ref=e167]
+        - generic [ref=e168]:
+          - generic [ref=e169]:
+            - term [ref=e170]:
+              - button "How does Megabyte PDF work?" [ref=e171]:
+                - generic [ref=e172]: How does Megabyte PDF work?
+                - img [ref=e173]
+            - paragraph [ref=e175]: Type a prompt — "create a two-page invoice for $4,500 of consulting work" — and the AI writes the HTML and CSS for a print-ready 8.5 × 11 document. You see every page render in real time. Hit Download to get a real PDF.
+          - generic [ref=e176]:
+            - term [ref=e177]:
+              - button "Do I need an account to try it?" [ref=e178]:
+                - generic [ref=e179]: Do I need an account to try it?
+                - img [ref=e180]
+            - paragraph [ref=e182]: No. Guest mode gives you 10 AI prompts per day with live preview in your browser. Sign up (free) to save projects and build on them across sessions.
+          - generic [ref=e183]:
+            - term [ref=e184]:
+              - button "Can I download a real PDF?" [ref=e185]:
+                - generic [ref=e186]: Can I download a real PDF?
+                - img [ref=e187]
+            - paragraph [ref=e189]: Yes — Pro users ($9/mo) get true PDF exports generated by Cloudflare Browser Rendering. The file has selectable text, embedded fonts, and correct page dimensions. Guest and Free tiers see the live preview only.
+          - generic [ref=e190]:
+            - term [ref=e191]:
+              - button "What kinds of documents can it make?" [ref=e192]:
+                - generic [ref=e193]: What kinds of documents can it make?
+                - img [ref=e194]
+            - paragraph [ref=e196]: Invoices, resumes, reports, contracts, proposals, cover letters, technical specs — anything that maps to a printed page. If you can describe it in plain English, Megabyte PDF can draft it.
+          - generic [ref=e197]:
+            - term [ref=e198]:
+              - button "Can I share a document with a client?" [ref=e199]:
+                - generic [ref=e200]: Can I share a document with a client?
+                - img [ref=e201]
+            - paragraph [ref=e203]: Pro users get a public share link. Recipients see a read-only preview of your document — no account required on their end.
+          - generic [ref=e204]:
+            - term [ref=e205]:
+              - button "How do version snapshots work?" [ref=e206]:
+                - generic [ref=e207]: How do version snapshots work?
+                - img [ref=e208]
+            - paragraph [ref=e210]: Every AI response creates a snapshot. You can restore any previous version of your document with one click — handy when a prompt takes the design in the wrong direction.
+      - generic [ref=e212]:
+        - img [ref=e213]
+        - heading "Built for documents that ship." [level=2] [ref=e216]
+        - paragraph [ref=e217]: Every project has its own AI chat history. Snapshots on every turn — restore any version. Public share links when you want feedback before you print.
+        - link "Try it free" [ref=e218] [cursor=pointer]:
+          - /url: /guest
+          - text: Try it free
+          - img [ref=e219]
+    - contentinfo [ref=e221]:
+      - generic [ref=e222]:
+        - generic [ref=e223]:
+          - generic [ref=e224]:
+            - link "Megabyte PDF home" [ref=e225] [cursor=pointer]:
+              - /url: /
+              - generic [ref=e226]:
+                - img [ref=e227]
+                - generic [ref=e231]: MegabytePDF
+            - paragraph [ref=e232]: Describe a PDF in plain English. Megabyte writes the HTML and renders it. No templates, no design software.
+            - generic "Social links" [ref=e233]:
+              - link "Megabyte Labs on GitHub" [ref=e234] [cursor=pointer]:
+                - /url: https://github.com/heymegabyte
+                - img [ref=e235]
+              - link "Megabyte Labs on X" [ref=e237] [cursor=pointer]:
+                - /url: https://x.com/megabytelabs
+                - img [ref=e238]
+              - link "Megabyte Labs on LinkedIn" [ref=e240] [cursor=pointer]:
+                - /url: https://www.linkedin.com/company/megabyte-labs
+                - img [ref=e241]
+              - link "Megabyte Labs on YouTube" [ref=e243] [cursor=pointer]:
+                - /url: https://www.youtube.com/@megabytelabs
+                - img [ref=e244]
+              - link "Megabyte Labs on Instagram" [ref=e246] [cursor=pointer]:
+                - /url: https://www.instagram.com/megabytelabs
+                - img [ref=e247]
+              - link "Megabyte Labs on Facebook" [ref=e249] [cursor=pointer]:
+                - /url: https://www.facebook.com/megabytelabs
+                - img [ref=e250]
+              - link "Megabyte Labs on Reddit" [ref=e252] [cursor=pointer]:
+                - /url: https://www.reddit.com/r/megabytelabs
+                - img [ref=e253]
+              - link "Megabyte Labs on Discord" [ref=e255] [cursor=pointer]:
+                - /url: https://discord.gg/megabytelabs
+                - img [ref=e256]
+              - link "Megabyte Labs on Telegram" [ref=e258] [cursor=pointer]:
+                - /url: https://t.me/megabytelabs
+                - img [ref=e259]
+              - link "Megabyte Labs on Threads" [ref=e261] [cursor=pointer]:
+                - /url: https://www.threads.net/@megabytelabs
+                - img [ref=e262]
+              - link "Megabyte Labs on GitLab" [ref=e264] [cursor=pointer]:
+                - /url: https://gitlab.com/megabytelabs
+                - img [ref=e265]
+              - link "Megabyte Labs on npm" [ref=e267] [cursor=pointer]:
+                - /url: https://www.npmjs.com/org/megabytelabs
+                - img [ref=e268]
+              - link "Megabyte Labs on Pinterest" [ref=e270] [cursor=pointer]:
+                - /url: https://www.pinterest.com/megabytelabs
+                - img [ref=e271]
+              - link "Megabyte Labs on RSS" [ref=e273] [cursor=pointer]:
+                - /url: https://megabyte.space/rss.xml
+                - img [ref=e274]
+          - generic [ref=e276]:
+            - heading "Product" [level=3] [ref=e277]
+            - list [ref=e278]:
+              - listitem [ref=e279]:
+                - link "Dashboard" [ref=e280] [cursor=pointer]:
+                  - /url: /dashboard
+              - listitem [ref=e281]:
+                - link "Explore" [ref=e282] [cursor=pointer]:
+                  - /url: /explore?sort=trending
+              - listitem [ref=e283]:
+                - link "Templates" [ref=e284] [cursor=pointer]:
+                  - /url: /templates
+              - listitem [ref=e285]:
+                - link "Try without signup" [ref=e286] [cursor=pointer]:
+                  - /url: /guest
+          - generic [ref=e287]:
+            - heading "Company" [level=3] [ref=e288]
+            - list [ref=e289]:
+              - listitem [ref=e290]:
+                - link "Megabyte Labs" [ref=e291] [cursor=pointer]:
+                  - /url: https://megabyte.space
+              - listitem [ref=e292]:
+                - link "Contact" [ref=e293] [cursor=pointer]:
+                  - /url: mailto:hey@megabyte.space
+              - listitem [ref=e294]:
+                - link "Open source" [ref=e295] [cursor=pointer]:
+                  - /url: https://github.com/heymegabyte
+          - generic [ref=e296]:
+            - heading "Legal" [level=3] [ref=e297]
+            - list [ref=e298]:
+              - listitem [ref=e299]:
+                - link "Privacy" [ref=e300] [cursor=pointer]:
+                  - /url: /privacy
+              - listitem [ref=e301]:
+                - link "Terms" [ref=e302] [cursor=pointer]:
+                  - /url: /terms
+              - listitem [ref=e303]:
+                - link "Security" [ref=e304] [cursor=pointer]:
+                  - /url: /.well-known/security.txt
+        - generic [ref=e305]:
+          - generic [ref=e306]: © 2026 Megabyte Labs · Built in one prompt.
+          - generic [ref=e309]: pdf.megabyte.space — live
+  - button "Open AI assistant" [ref=e310]:
+    - img [ref=e311]
+    - generic [ref=e313]: Ask Megabyte
+    - generic [ref=e314]:
+      - img [ref=e315]
+      - text: K
+  - dialog "Megabyte AssistAnon":
+    - banner:
+      - img
+      - heading "Megabyte AssistAnon" [level=2]
+      - button "Threads":
+        - img
+      - button "New thread":
+        - img
+      - button "Export thread as markdown" [disabled]:
+        - img
+      - button "Close assistant":
+        - img
+    - generic:
+      - generic:
+        - generic:
+          - paragraph:
+            - text: Ask anything about
+            - strong: Megabyte PDF
+            - text: — drafting a document, exporting a real PDF, picking the right plan, or boosting your prompts.
+          - paragraph:
+            - text: "Tip: type"
+            - code: /help
+            - text: for commands.
+        - generic:
+          - paragraph: Try one
+          - button "Draft a one-page invoice for $4,500 of design work"
+          - button "Make a two-column resume for a senior backend engineer"
+          - button "Write a one-page client proposal for a logo redesign"
+          - button "Add a table of contents to my document"
+          - button "Suggest 3 layouts for a quarterly report cover"
+    - generic:
+      - generic:
+        - textbox "Message":
+          - /placeholder: Ask Megabyte… (Enter to send, Shift+Enter newline)
+        - button "Send message" [disabled]:
+          - img
+      - generic:
+        - generic:
+          - text: Sign in for higher limits ·
+          - link "Sign in":
+            - /url: /sign-in

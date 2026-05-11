@@ -14,6 +14,7 @@ import {
   SESSION_COOKIE,
   SESSION_TTL_DAYS,
 } from "../lib/auth";
+import { sendEmail } from "../lib/emails";
 import type { Env, Variables } from "../types";
 
 const auth = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -185,8 +186,25 @@ auth.get("/google/callback", async (c) => {
         googleAccessToken: tokens.access_token,
         googleAccessTokenExpiresAt: accessExp,
         googleRefreshToken: tokens.refresh_token ?? null,
+        welcomeSentAt: new Date(),
         updatedAt: now,
       });
+      // Fire welcome email after user is created. waitUntil keeps the response fast
+      // and lets Listmonk respond on its own clock.
+      const newUserId = userId;
+      c.executionCtx.waitUntil(
+        sendEmail(c.env, {
+          userId: newUserId,
+          template: "welcome",
+          dedupKey: `welcome:${newUserId}`,
+          data: {
+            signin_method: "google",
+            dashboard_url: `${c.env.APP_URL}/dashboard`,
+          },
+        }).catch((err) => {
+          Sentry.captureException(err, { tags: { trigger: "welcome_email", userId: newUserId } });
+        })
+      );
     }
   }
 

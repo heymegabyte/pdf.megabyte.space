@@ -1,11 +1,13 @@
 import React, { Suspense, lazy } from "react";
 import ReactDOM from "react-dom/client";
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import "./styles.css";
 import Landing from "./pages/Landing";
 import { ConfigProvider } from "./lib/config";
 import { AuthProvider, useAuth } from "./lib/auth";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { attachViewTransitions } from "./lib/view-transitions";
+import { AiAssistantDrawer } from "./components/AiAssistantDrawer";
 
 const SignInPage = lazy(() => import("./pages/SignIn"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -86,11 +88,19 @@ function AppRoutes() {
   );
 }
 
+function ViewTransitionBridge() {
+  const navigate = useNavigate();
+  React.useEffect(() => attachViewTransitions(navigate), [navigate]);
+  return null;
+}
+
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <ViewTransitionBridge />
         <AppRoutes />
+        <AiAssistantDrawer />
       </AuthProvider>
     </BrowserRouter>
   );

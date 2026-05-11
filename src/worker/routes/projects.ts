@@ -11,6 +11,7 @@ import { generateAiTitle } from "../lib/ai-title";
 import { generateAiMeta } from "../lib/ai-meta";
 import { generateAiPrettier } from "../lib/ai-prettier";
 import { generateAiBlock, ALLOWED_BLOCK_KINDS, type BlockKind } from "../lib/ai-block";
+import { sendEmail } from "../lib/emails";
 import type { Env, Variables } from "../types";
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -90,6 +91,23 @@ app.post("/", async (c) => {
     .from(schema.projects)
     .where(and(eq(schema.projects.userId, userId), isNull(schema.projects.deletedAt)));
   if ((existing[0]?.n ?? 0) >= limit) {
+    if (user.plan !== "pro") {
+      // Dedup at the limit threshold (one nudge per user, not per click).
+      c.executionCtx.waitUntil(
+        sendEmail(c.env, {
+          userId,
+          template: "free-limit",
+          dedupKey: `free-limit:${userId}`,
+          data: {
+            current_pdfs: existing[0]?.n ?? limit,
+            free_limit: limit,
+            paid_limit: c.env.PAID_PROJECT_LIMIT,
+            upgrade_url: `${c.env.APP_URL}/account/billing`,
+            pricing_url: `${c.env.APP_URL}/pricing`,
+          },
+        }).catch(() => {})
+      );
+    }
     return c.json(
       { error: "PROJECT_LIMIT_REACHED", limit, plan: user.plan },
       402
@@ -104,6 +122,7 @@ app.post("/", async (c) => {
     css: STARTER_CSS,
     pageSize: "Letter",
     margin: "0.75in",
+    lastPromptAt: new Date(),
   });
   await db.insert(schema.snapshots).values({
     id: nanoid(12),

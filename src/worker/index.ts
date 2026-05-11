@@ -11,6 +11,9 @@ import explore from "./routes/explore";
 import billing from "./routes/billing";
 import guest from "./routes/guest";
 import auth from "./routes/auth";
+import follows from "./routes/follows";
+import email from "./routes/email";
+import assistant from "./routes/assistant";
 import puppeteer from "@cloudflare/puppeteer";
 import { buildSharePreviewDoc, wrapDocument, pageDimensionsIn } from "./lib/templates";
 import { optionalAuth, requireAuth } from "./middleware/auth";
@@ -162,12 +165,30 @@ app.get("/api/me", optionalAuth, async (c) => {
       name: user.name,
       imageUrl: user.imageUrl,
       plan: user.plan,
+      isAdmin: Boolean(c.env.ADMIN_EMAIL && user.email === c.env.ADMIN_EMAIL),
     },
     usage: {
       projectCount: projectCount[0]?.n ?? 0,
       projectLimit: limit,
     },
   });
+});
+
+// Admin-only: flip the signed-in admin's own plan between free/pro for
+// testing plan-gated UI without touching Stripe. Locked to ADMIN_EMAIL.
+app.post("/api/admin/plan", optionalAuth, async (c) => {
+  const userId = c.get("userId");
+  if (!userId) return c.json({ error: "Unauthorized" }, 401);
+  const db = getDb(c.env.DB);
+  const user = await db.query.users.findFirst({ where: eq(schema.users.id, userId) });
+  if (!user || !c.env.ADMIN_EMAIL || user.email !== c.env.ADMIN_EMAIL) {
+    return c.json({ error: "Forbidden" }, 403);
+  }
+  const body = (await c.req.json().catch(() => null)) as { plan?: unknown } | null;
+  const plan = body?.plan === "pro" ? "pro" : body?.plan === "free" ? "free" : null;
+  if (!plan) return c.json({ error: "plan must be 'free' or 'pro'" }, 400);
+  await db.update(schema.users).set({ plan }).where(eq(schema.users.id, userId));
+  return c.json({ ok: true, plan });
 });
 
 app.route("/api/auth", auth);
@@ -178,6 +199,9 @@ app.route("/api", shareApi);
 app.route("/api/explore", explore);
 app.route("/api/billing", billing);
 app.route("/api/guest", guest);
+app.route("/api/follows", follows);
+app.route("/api/email", email);
+app.route("/api/assistant", assistant);
 
 // Public-PDF iframe preview (served by /p/:slug client page)
 app.get("/api/public/:slug/render", async (c) => {
@@ -574,6 +598,15 @@ app.notFound((c) => {
   return c.env.ASSETS.fetch(c.req.raw);
 });
 
+import { runCron } from "./cron";
+
+const handler = {
+  fetch: app.fetch,
+  async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext) {
+    ctx.waitUntil(runCron(env, controller));
+  },
+};
+
 export default Sentry.withSentry(
   (env: Env) => ({
     dsn: env.SENTRY_DSN ?? "",
@@ -581,5 +614,5 @@ export default Sentry.withSentry(
     tracesSampleRate: 0.1,
     sendDefaultPii: false,
   }),
-  app
+  handler
 );

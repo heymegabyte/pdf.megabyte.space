@@ -1,0 +1,25 @@
+{
+  "alias": "abandoned-prompt",
+  "subject": "Finish what you started — \"{{ .Tx.Data.event.prompt_preview }}\"",
+  "preheader": "Your draft is still there. One click resumes it."
+}
+---
+<div class="body">
+  <p class="eyebrow">Draft still warm</p>
+  <h1 class="h1">You started something, {{ .Tx.Data.user.first_name }}.</h1>
+  <p class="lede">A few hours ago you typed this and walked away. The chat is still open — pick up exactly where you left off.</p>
+</div>
+<div class="quote">"{{ .Tx.Data.event.prompt_preview }}"</div>
+<div class="cta-row">
+  <a href="{{ .Tx.Data.event.resume_url }}" class="cta">Resume this PDF</a>
+  <a href="{{ .Tx.Data.app_url }}/dashboard" class="cta-secondary">Start fresh</a>
+</div>
+<hr class="divider" />
+<div class="body">
+  <h2 class="h2">Stuck on what to write?</h2>
+  <p class="p">Add one of these to the prompt and hit return — the chat takes it from there:</p>
+  <p class="p" style="font-family:'JetBrains Mono',monospace; font-size:13px; background:#10102a; padding:14px 18px; border-radius:10px; color:#00E5FF;">add a signature block at the bottom</p>
+  <p class="p" style="font-family:'JetBrains Mono',monospace; font-size:13px; background:#10102a; padding:14px 18px; border-radius:10px; color:#00E5FF;">make it landscape A4</p>
+  <p class="p" style="font-family:'JetBrains Mono',monospace; font-size:13px; background:#10102a; padding:14px 18px; border-radius:10px; color:#00E5FF;">use my brand color #0a84ff for headings</p>
+  <p class="small">Nothing is auto-deleted. Your drafts wait as long as you do.</p>
+</div>
