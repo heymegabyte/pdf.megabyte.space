@@ -18,6 +18,7 @@ import { useApi, ApiError } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { captureEvent } from "../lib/analytics";
 import { TopBar } from "../components/TopBar";
+import { Footer } from "../components/Footer";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import type { PublicProjectSummary } from "../lib/types";
 
@@ -83,7 +84,7 @@ export default function Community() {
 
     const desc =
       (project.description ?? `Community PDF: ${project.title}. Remix it in the editor.`).slice(0, 156);
-    const ogImage = `${window.location.origin}/api/og/${slug}`;
+    const ogImage = `${window.location.origin}/s/og/${slug}.png`;
     upsertMeta('meta[name="description"]', { name: "description", content: desc });
     upsertLink("canonical", canonicalUrl);
     upsertMeta('meta[property="og:type"]', { property: "og:type", content: "article" });
@@ -332,6 +333,18 @@ export default function Community() {
                       )}
                     </button>
                     <button
+                      onClick={() => {
+                        setShowEmbed(true);
+                        captureEvent("community_embed_open", { slug });
+                      }}
+                      className="btn btn-ghost text-sm justify-center"
+                      style={{ minHeight: 40 }}
+                      aria-label="Get embed code"
+                    >
+                      <Code size={14} />
+                      <span>Embed</span>
+                    </button>
+                    <button
                       onClick={async () => {
                         if (downloading || !slug) return;
                         setDownloading(true);
@@ -390,6 +403,7 @@ export default function Community() {
                   loading="lazy"
                 />
               </div>
+              {slug && <ReactionBar slug={slug} />}
               <p className="text-center text-xs text-[var(--color-muted)] mt-3">
                 Hit <kbd className="px-1.5 py-0.5 rounded bg-white/[0.06] border border-white/10 text-[10px]">Remix</kbd>{" "}
                 to open this in the editor and make it yours.
@@ -398,6 +412,210 @@ export default function Community() {
           </>
         )}
       </main>
+      <Footer />
+      {showEmbed && project && slug && (
+        <EmbedModal
+          slug={slug}
+          title={project.title}
+          pageSize={project.pageSize}
+          onClose={() => setShowEmbed(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+const REACTIONS: Array<{ kind: "fire" | "heart" | "target" | "sparkle"; emoji: string; label: string }> = [
+  { kind: "fire", emoji: "🔥", label: "Fire" },
+  { kind: "heart", emoji: "❤️", label: "Love it" },
+  { kind: "target", emoji: "🎯", label: "On point" },
+  { kind: "sparkle", emoji: "✨", label: "Beautiful" },
+];
+
+function ReactionBar({ slug }: { slug: string }) {
+  const api = useApi();
+  const storageKey = `megabyte-pdf:reactions:${slug}`;
+  const [counts, setCounts] = useState<Record<string, number>>({ fire: 0, heart: 0, target: 0, sparkle: 0 });
+  const [mine, setMine] = useState<Record<string, boolean>>(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      return JSON.parse(window.localStorage.getItem(storageKey) ?? "{}") as Record<string, boolean>;
+    } catch {
+      return {};
+    }
+  });
+  const [popping, setPopping] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    api<{ counts: Record<string, number> }>(`/api/explore/${slug}/reactions`)
+      .then((r) => {
+        if (!cancelled) setCounts(r.counts);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [slug, api]);
+
+  async function react(kind: "fire" | "heart" | "target" | "sparkle") {
+    if (mine[kind]) return;
+    setCounts((c) => ({ ...c, [kind]: (c[kind] ?? 0) + 1 }));
+    const nextMine = { ...mine, [kind]: true };
+    setMine(nextMine);
+    window.localStorage.setItem(storageKey, JSON.stringify(nextMine));
+    setPopping(kind);
+    setTimeout(() => setPopping((p) => (p === kind ? null : p)), 320);
+    captureEvent("community_react", { slug, kind });
+    try {
+      await api(`/api/explore/${slug}/react`, {
+        method: "POST",
+        body: JSON.stringify({ kind }),
+      });
+    } catch {
+      // optimistic, swallow
+    }
+  }
+
+  return (
+    <div className="mt-5 flex items-center justify-center flex-wrap gap-2">
+      {REACTIONS.map((r) => {
+        const active = !!mine[r.kind];
+        return (
+          <button
+            key={r.kind}
+            type="button"
+            onClick={() => react(r.kind)}
+            disabled={active}
+            aria-label={`React: ${r.label}`}
+            aria-pressed={active}
+            className={`group inline-flex items-center gap-2 px-3 py-2 rounded-full border text-sm transition-colors ${
+              active
+                ? "border-[var(--color-cyan)]/60 bg-[var(--color-cyan)]/10 text-[var(--color-cyan)] cursor-default"
+                : "border-[var(--color-line)] bg-[var(--color-bg-card)] text-[var(--color-muted)] hover:border-[var(--color-cyan)]/40 hover:text-[var(--color-fg)] cursor-pointer"
+            }`}
+          >
+            <span
+              aria-hidden="true"
+              className={`text-base inline-block ${popping === r.kind ? "reaction-pop" : ""}`}
+            >
+              {r.emoji}
+            </span>
+            <span className="tabular-nums text-xs font-medium">{counts[r.kind] ?? 0}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function EmbedModal({
+  slug,
+  title,
+  pageSize,
+  onClose,
+}: {
+  slug: string;
+  title: string;
+  pageSize: string;
+  onClose: () => void;
+}) {
+  const [width, setWidth] = useState("100%");
+  const [height, setHeight] = useState("700");
+  const [copied, setCopied] = useState(false);
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://pdf.megabyte.space";
+  const embedSrc = `${origin}/api/public/${slug}/render`;
+  const pageHref = `${origin}/c/${slug}`;
+  const safeTitle = title.replace(/"/g, "&quot;");
+  const code = `<iframe src="${embedSrc}" title="${safeTitle}" width="${width}" height="${height}" style="border:1px solid #e5e7eb;border-radius:8px;max-width:100%;" loading="lazy"></iframe>\n<p style="font:12px system-ui,sans-serif;color:#64748b;margin-top:6px"><a href="${pageHref}" rel="noopener">${safeTitle}</a> — made with <a href="https://pdf.megabyte.space" rel="noopener">Megabyte PDF</a></p>`;
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  async function copy() {
+    await navigator.clipboard.writeText(code);
+    setCopied(true);
+    captureEvent("community_embed_copy", { slug });
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="embed-modal-title"
+      className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm grid place-items-center px-4"
+      onClick={onClose}
+    >
+      <div
+        className="card w-full max-w-xl p-6 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h2 id="embed-modal-title" className="font-semibold text-lg">Embed this PDF</h2>
+          <button
+            autoFocus
+            onClick={onClose}
+            className="size-8 rounded-md hover:bg-white/5 grid place-items-center"
+            aria-label="Close"
+          >
+            <X size={16} />
+          </button>
+        </div>
+        <p className="text-sm text-[var(--color-muted)] mb-4">
+          Paste this snippet into any HTML page or Notion/Ghost/WordPress embed block.
+          Page size is {pageSize}.
+        </p>
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <label className="text-xs text-[var(--color-muted)]">
+            Width
+            <input
+              type="text"
+              value={width}
+              onChange={(e) => setWidth(e.target.value)}
+              className="input text-sm mt-1"
+              placeholder="100% or 640"
+              aria-label="Embed width"
+            />
+          </label>
+          <label className="text-xs text-[var(--color-muted)]">
+            Height (px)
+            <input
+              type="text"
+              value={height}
+              onChange={(e) => setHeight(e.target.value)}
+              className="input text-sm mt-1"
+              inputMode="numeric"
+              aria-label="Embed height"
+            />
+          </label>
+        </div>
+        <pre className="text-[11px] bg-black/40 border border-white/10 rounded-md p-3 overflow-x-auto whitespace-pre-wrap break-all max-h-48">
+          <code>{code}</code>
+        </pre>
+        <button
+          onClick={copy}
+          className="btn btn-primary w-full mt-4 text-sm"
+          style={{ minHeight: 40 }}
+        >
+          {copied ? (
+            <>
+              <Copy size={14} />
+              <span>Copied!</span>
+            </>
+          ) : (
+            <>
+              <Code size={14} />
+              <span>Copy embed code</span>
+            </>
+          )}
+        </button>
+      </div>
     </div>
   );
 }

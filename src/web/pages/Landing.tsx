@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Logo } from "../components/Logo";
 import { ArrowRight, FileText, MessageSquare, Download, Layers, Sparkles, Check, Crown, ChevronDown, Code2 } from "lucide-react";
 import { captureEvent } from "../lib/analytics";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
+import { Footer } from "../components/Footer";
 
 const FAQ_ITEMS = [
   {
@@ -34,6 +35,28 @@ const FAQ_ITEMS = [
 
 export default function Landing() {
   useDocumentTitle("Chat your way to print-perfect PDFs");
+  const heroRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    const el = heroRef.current;
+    if (!el || !window.matchMedia("(pointer: fine)").matches) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let raf = 0;
+    function onMove(e: PointerEvent) {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const rect = el!.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 100;
+        const y = ((e.clientY - rect.top) / rect.height) * 100;
+        el!.style.setProperty("--spot-x", `${x}%`);
+        el!.style.setProperty("--spot-y", `${y}%`);
+      });
+    }
+    el.addEventListener("pointermove", onMove);
+    return () => {
+      cancelAnimationFrame(raf);
+      el.removeEventListener("pointermove", onMove);
+    };
+  }, []);
   return (
     <div className="min-h-screen flex flex-col">
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-[var(--color-cyan)] focus:text-[#060610] focus:rounded-md focus:font-semibold focus:text-sm">Skip to content</a>
@@ -52,15 +75,10 @@ export default function Landing() {
       </header>
 
       <main id="main-content" className="flex-1">
-        <section className="relative overflow-hidden">
-          <div
-            className="absolute inset-0 -z-10 opacity-60"
-            style={{
-              background:
-                "radial-gradient(60% 50% at 50% 0%, rgba(0,229,255,0.15) 0%, transparent 70%), radial-gradient(40% 40% at 80% 30%, rgba(124,58,237,0.18) 0%, transparent 60%)",
-            }}
-          />
-          <div className="max-w-6xl mx-auto px-6 lg:px-10 pt-20 lg:pt-32 pb-16 text-center animate-fade-in-up">
+        <section ref={heroRef} className="relative overflow-hidden">
+          <div className="aurora" aria-hidden="true" />
+          <div className="spotlight" aria-hidden="true" />
+          <div className="max-w-6xl mx-auto px-6 lg:px-10 pt-20 lg:pt-32 pb-16 text-center animate-fade-in-up relative">
             <p className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-[var(--color-cyan)] mb-6">
               <span className="size-1.5 rounded-full bg-[var(--color-cyan)] animate-pulse" />
               Print-perfect PDFs from a chat
@@ -70,7 +88,10 @@ export default function Landing() {
               style={{ fontFamily: "var(--font-display)" }}
             >
               Chat your way to a{" "}
-              <span className="bg-gradient-to-r from-[var(--color-cyan)] to-[var(--color-violet)] bg-clip-text text-transparent">
+              <span
+                className="bg-gradient-to-r from-[var(--color-cyan)] to-[var(--color-violet)] bg-clip-text text-transparent type-on"
+                style={{ ["--type-dur" as string]: "1.1s", ["--type-steps" as string]: 13 }}
+              >
                 printable PDF
               </span>
               .
@@ -243,16 +264,7 @@ export default function Landing() {
         </section>
       </main>
 
-      <footer className="border-t border-[var(--color-line)] px-6 lg:px-10 py-8 text-center text-sm text-[var(--color-muted)]">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 max-w-6xl mx-auto">
-          <span>© {new Date().getFullYear()} Megabyte Labs</span>
-          <nav aria-label="Legal and contact" className="flex items-center gap-4">
-            <Link to="/privacy" className="underline-hover">Privacy</Link>
-            <Link to="/terms" className="underline-hover">Terms</Link>
-            <a href="mailto:hey@megabyte.space" className="underline-hover">hey@megabyte.space</a>
-          </nav>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

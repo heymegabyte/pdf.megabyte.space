@@ -5,6 +5,7 @@ import { useApi } from "../lib/api";
 import { captureEvent } from "../lib/analytics";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { TopBar } from "../components/TopBar";
+import { Footer } from "../components/Footer";
 import type { PublicProjectSummary } from "../lib/types";
 
 const ALLOWED_TAG_RE = /^[a-z0-9-]{1,40}$/;
@@ -166,6 +167,7 @@ export default function Tag() {
             <ArrowLeft size={14} /> Browse all PDFs
           </Link>
         </main>
+        <Footer />
       </div>
     );
   }
@@ -259,6 +261,7 @@ export default function Tag() {
           )}
         </section>
       </main>
+      <Footer />
     </div>
   );
 }

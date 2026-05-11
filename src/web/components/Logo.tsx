@@ -4,6 +4,7 @@ export function Logo({ size = 28, className = "" }: { size?: number; className?:
   const gradId = useId();
   return (
     <span
+      data-wordmark
       className={`inline-flex items-center gap-2 font-bold tracking-tight ${className}`}
       style={{ fontSize: size * 0.75, fontFamily: "var(--font-display)" }}
     >

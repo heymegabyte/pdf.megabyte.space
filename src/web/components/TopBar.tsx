@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { Volume2, VolumeX } from "lucide-react";
 import { Logo } from "./Logo";
 import { useAuth } from "../lib/auth";
+import { isSoundOn, setSoundOn } from "../lib/sound";
+import { captureEvent } from "../lib/analytics";
 
 export function TopBar({ children }: { children?: React.ReactNode }) {
   return (
@@ -23,6 +26,7 @@ export function TopBar({ children }: { children?: React.ReactNode }) {
         Templates
       </Link>
       <ExploreNavLink />
+      <SoundToggle />
       <UserMenu />
     </header>
   );
@@ -56,6 +60,29 @@ function ExploreNavLink() {
         </span>
       )}
     </Link>
+  );
+}
+
+function SoundToggle() {
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    setOn(isSoundOn());
+  }, []);
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        const next = !on;
+        setSoundOn(next);
+        setOn(next);
+        captureEvent("sound_toggled", { on: next });
+      }}
+      aria-label={on ? "Disable sound cues" : "Enable sound cues"}
+      title={on ? "Sound on" : "Sound off"}
+      className="hidden sm:inline-flex shrink-0 items-center justify-center w-8 h-8 rounded-md text-[var(--color-muted)] hover:text-[var(--color-cyan)] hover:bg-white/[0.04] transition-colors"
+    >
+      {on ? <Volume2 size={16} aria-hidden="true" /> : <VolumeX size={16} aria-hidden="true" />}
+    </button>
   );
 }
 

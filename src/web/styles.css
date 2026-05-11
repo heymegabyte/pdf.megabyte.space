@@ -216,6 +216,95 @@
   [role="dialog"] > * { animation: none; }
 }
 
+/* Aurora hero — slow drift of layered radials */
+@keyframes aurora-drift {
+  0%   { transform: translate3d(-3%, -2%, 0) scale(1); opacity: 0.55; }
+  50%  { transform: translate3d(4%, 3%, 0)  scale(1.08); opacity: 0.85; }
+  100% { transform: translate3d(-3%, -2%, 0) scale(1); opacity: 0.55; }
+}
+.aurora {
+  position: absolute;
+  inset: -10%;
+  z-index: -1;
+  background:
+    radial-gradient(60% 50% at 20% 20%, rgba(0,229,255,0.22) 0%, transparent 60%),
+    radial-gradient(50% 50% at 80% 30%, rgba(124,58,237,0.22) 0%, transparent 60%),
+    radial-gradient(45% 45% at 50% 90%, rgba(80,170,227,0.18) 0%, transparent 65%);
+  filter: blur(40px);
+  animation: aurora-drift 24s ease-in-out infinite;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .aurora { animation: none; }
+}
+
+/* Sticky scroll progress bar */
+.scroll-progress {
+  position: fixed;
+  top: 0; left: 0;
+  height: 2px;
+  z-index: 60;
+  background: linear-gradient(90deg, var(--color-cyan), var(--color-violet));
+  width: var(--scroll-progress, 0%);
+  transition: width 80ms linear;
+  pointer-events: none;
+  box-shadow: 0 0 12px rgba(0,229,255,0.5);
+}
+@media (prefers-reduced-motion: reduce) {
+  .scroll-progress { transition: none; }
+}
+
+/* Confetti — CSS particle burst */
+@keyframes confetti-fall {
+  0%   { transform: translate3d(0, -10vh, 0) rotate(0deg); opacity: 1; }
+  100% { transform: translate3d(var(--cx, 0), 110vh, 0) rotate(720deg); opacity: 0; }
+}
+.confetti-piece {
+  position: fixed;
+  top: 0;
+  width: 8px;
+  height: 14px;
+  border-radius: 2px;
+  z-index: 100;
+  animation: confetti-fall var(--dur, 2.4s) cubic-bezier(0.2, 0.6, 0.2, 1) forwards;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .confetti-piece { display: none; }
+}
+
+/* Magnetic primary button — slight cursor pull */
+.btn-primary {
+  --mag-x: 0px;
+  --mag-y: 0px;
+  transform: translate3d(var(--mag-x), var(--mag-y), 0);
+  transition: transform 200ms cubic-bezier(0.2, 0.6, 0.2, 1), box-shadow 200ms;
+}
+.btn-primary:hover:not(:disabled) {
+  transform: translate3d(var(--mag-x), calc(var(--mag-y) - 1px), 0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn-primary { transform: none !important; transition: none; }
+}
+
+/* Reaction-bar pop */
+@keyframes reaction-pop {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+.reaction-pop { animation: reaction-pop 320ms ease-out; }
+
+/* Cinema mode — dim everything except preview */
+body[data-cinema="on"] [data-cinema-hide] {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease-out;
+}
+body[data-cinema="on"] [data-cinema-stage] {
+  background: #000 !important;
+}
+
 @supports (view-transition-name: root) {
   @keyframes vt-fade-out { to { opacity: 0; } }
   @keyframes vt-fade-in { from { opacity: 0; } }
@@ -254,4 +343,56 @@
     page-break-inside: auto !important;
     break-inside: auto !important;
   }
+}
+
+/* Wordmark pulse — fires while AI is generating */
+@keyframes wordmark-pulse {
+  0%, 100% { filter: drop-shadow(0 0 0 rgba(0,229,255,0)); }
+  50% { filter: drop-shadow(0 0 8px rgba(0,229,255,0.65)); }
+}
+body[data-ai-busy="on"] [data-wordmark] {
+  animation: wordmark-pulse 1.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  body[data-ai-busy="on"] [data-wordmark] { animation: none; }
+}
+
+/* Spotlight cursor — Landing hero */
+.spotlight {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+    600px circle at var(--spot-x, 50%) var(--spot-y, 30%),
+    rgba(0,229,255,0.12),
+    transparent 55%
+  );
+  transition: background-position 80ms linear;
+  mix-blend-mode: screen;
+}
+@media (pointer: coarse), (prefers-reduced-motion: reduce) {
+  .spotlight { display: none; }
+}
+
+/* Type-on intro — hero headline */
+@keyframes type-on {
+  from { width: 0; }
+  to { width: 100%; }
+}
+@keyframes caret-blink {
+  50% { border-right-color: transparent; }
+}
+.type-on {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 2px solid var(--color-cyan);
+  vertical-align: bottom;
+  animation:
+    type-on var(--type-dur, 1.4s) steps(var(--type-steps, 24), end) 200ms both,
+    caret-blink 720ms steps(1, end) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .type-on { animation: none; border-right: 0; width: auto; }
 }

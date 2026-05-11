@@ -206,6 +206,122 @@ app.post("/projects/:id/drive", requireAuth, async (c) => {
   });
 });
 
+const PNG_DAILY_LIMIT = 30;
+
+app.post("/projects/:id/export-png", requireAuth, async (c) => {
+  const db = getDb(c.env.DB);
+  const userId = c.get("userId");
+  const id = c.req.param("id");
+  const project = await db.query.projects.findFirst({
+    where: and(eq(schema.projects.id, id), eq(schema.projects.userId, userId)),
+  });
+  if (!project) return c.json({ error: "Not found" }, 404);
+
+  const day = new Date().toISOString().slice(0, 10);
+  const rateKey = `ratelimit:export-png:${userId}:${day}`;
+  const used = Number((await c.env.CACHE.get(rateKey)) ?? "0");
+  if (used >= PNG_DAILY_LIMIT) {
+    return c.json(
+      { error: "Daily PNG export limit reached. Try again tomorrow.", code: "RATE_LIMIT" },
+      429
+    );
+  }
+
+  const pageIndex = Math.max(0, Number(c.req.query("page") ?? "0") | 0);
+  const fullHtml = wrapDocument(project.html, project.css, project.pageSize, project.margin);
+  const dims = pageDimensionsIn(project.pageSize);
+
+  Sentry.addBreadcrumb({
+    category: "png",
+    message: "puppeteer.screenshot",
+    data: { projectId: id, userId, pageSize: project.pageSize, pageIndex },
+    level: "info",
+  });
+
+  let png: Uint8Array;
+  const browser = await puppeteer.launch(c.env.BROWSER);
+  try {
+    const page = await browser.newPage();
+    const widthPx = Math.round(dims.wIn * 96);
+    const heightPx = Math.round(dims.hIn * 96);
+    await page.setViewport({ width: widthPx, height: heightPx, deviceScaleFactor: 2 });
+    await page.setContent(fullHtml, { waitUntil: "networkidle2", timeout: 30000 });
+    await page
+      .waitForFunction(() => (window as unknown as { __pdfReady?: boolean }).__pdfReady === true, { timeout: 10000 })
+      .catch(() => {});
+    const target = await page.evaluate((idx: number) => {
+      const pages = document.querySelectorAll<HTMLElement>(".page");
+      const el = pages[idx] ?? pages[0];
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return { x: r.left + window.scrollX, y: r.top + window.scrollY, width: r.width, height: r.height };
+    }, pageIndex);
+    png = target
+      ? await page.screenshot({
+          type: "png",
+          clip: { x: target.x, y: target.y, width: target.width, height: target.height },
+        })
+      : await page.screenshot({ type: "png", fullPage: false });
+  } catch (err) {
+    Sentry.captureException(err, { tags: { route: "export-png", step: "render" } });
+    await browser.close();
+    return c.json({ error: "PNG generation failed. Please try again." }, 502);
+  }
+  await browser.close();
+
+  const exportId = nanoid(12);
+  const safeTitle =
+    project.title.replace(/[^a-z0-9_-]+/gi, "-").toLowerCase().slice(0, 60) || "document";
+  const r2Key = `${userId}/${id}/${exportId}-${safeTitle}-p${pageIndex + 1}.png`;
+
+  try {
+    await c.env.PDFS.put(r2Key, png, {
+      httpMetadata: {
+        contentType: "image/png",
+        contentDisposition: `attachment; filename="${safeTitle}-p${pageIndex + 1}.png"`,
+      },
+      customMetadata: { userId, projectId: id, title: project.title, kind: "png", page: String(pageIndex) },
+    });
+  } catch (err) {
+    Sentry.captureException(err, { tags: { route: "export-png", step: "store" } });
+    return c.json({ error: "PNG generated but could not be saved. Please try again." }, 502);
+  }
+
+  await c.env.CACHE.put(rateKey, String(used + 1), { expirationTtl: 60 * 60 * 26 });
+
+  return c.json({
+    ok: true,
+    bytes: png.byteLength,
+    downloadUrl: `/api/projects/${id}/export-png/${exportId}/download?key=${encodeURIComponent(r2Key)}`,
+    filename: `${safeTitle}-p${pageIndex + 1}.png`,
+  });
+});
+
+app.get("/projects/:id/export-png/:exportId/download", requireAuth, async (c) => {
+  const db = getDb(c.env.DB);
+  const userId = c.get("userId");
+  const id = c.req.param("id");
+  const key = c.req.query("key");
+  if (!key || !key.startsWith(`${userId}/${id}/`) || !key.endsWith(".png")) {
+    return c.json({ error: "Not found" }, 404);
+  }
+  const project = await db.query.projects.findFirst({
+    where: and(eq(schema.projects.id, id), eq(schema.projects.userId, userId)),
+  });
+  if (!project) return c.json({ error: "Not found" }, 404);
+  const obj = await c.env.PDFS.get(key);
+  if (!obj) return c.json({ error: "Missing artifact" }, 404);
+  const safeTitle =
+    project.title.replace(/[^a-z0-9_-]+/gi, "-").toLowerCase().slice(0, 60) || "document";
+  return new Response(obj.body, {
+    headers: {
+      "content-type": "image/png",
+      "content-disposition": `attachment; filename="${safeTitle}.png"`,
+      "cache-control": "private, max-age=3600",
+    },
+  });
+});
+
 app.get("/projects/:id/export/:exportId/download", requireAuth, async (c) => {
   const db = getDb(c.env.DB);
   const userId = c.get("userId");

@@ -3,6 +3,7 @@ import { Globe, Lock, Sparkles, Loader2, Check, X, Tag, ExternalLink, Copy } fro
 import { useApi, ApiError } from "../lib/api";
 import { captureEvent } from "../lib/analytics";
 import { useFocusTrap } from "../hooks/useFocusTrap";
+import { fireConfetti } from "../lib/confetti";
 import type { Project } from "../lib/types";
 
 const ALLOWED_TAGS = [
@@ -99,6 +100,7 @@ export function PublishModal({ project, onClose, onPublished }: Props) {
         has_description: Boolean(description.trim()),
         tag_count: tagList.length,
       });
+      if (nextPublic && !project.isPublic) fireConfetti(110);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed");
     } finally {

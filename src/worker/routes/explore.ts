@@ -57,16 +57,20 @@ app.get("/", async (c) => {
     const now = Date.now();
     const rows = await db.query.projects.findMany({
       where: tagFilter
-        ? and(eq(schema.projects.isPublic, true), tagFilter)
-        : eq(schema.projects.isPublic, true),
+        ? and(eq(schema.projects.isPublic, true), isNull(schema.projects.deletedAt), tagFilter)
+        : and(eq(schema.projects.isPublic, true), isNull(schema.projects.deletedAt)),
       orderBy: [desc(schema.projects.updatedAt)],
       limit: candidatePool,
     });
+    // HN-style score: fresh items surface even without views.
+    // halfLifeDays still tunable via env; baseline +1 prevents zero-score for new pubs.
     const scored = rows.map((p) => {
       const ageMs = now - new Date(p.updatedAt).getTime();
-      const ageDays = Math.max(0, ageMs / 86_400_000);
-      const decay = Math.exp(-ageDays / halfLifeDays);
-      const score = (p.viewCount + p.editCount * 3) * decay;
+      const ageHours = Math.max(0, ageMs / 3_600_000);
+      const gravity = 1.5;
+      const decay = Math.exp(-ageHours / (halfLifeDays * 24));
+      const baseScore = p.viewCount + p.editCount * 3 + 1;
+      const score = (baseScore * decay) / Math.pow(ageHours + 2, gravity / 24);
       return { p, score };
     });
     scored.sort((a, b) => b.score - a.score);
@@ -89,8 +93,8 @@ app.get("/", async (c) => {
   if (sort === "popular") {
     const rows = await db.query.projects.findMany({
       where: tagFilter
-        ? and(eq(schema.projects.isPublic, true), tagFilter)
-        : eq(schema.projects.isPublic, true),
+        ? and(eq(schema.projects.isPublic, true), isNull(schema.projects.deletedAt), tagFilter)
+        : and(eq(schema.projects.isPublic, true), isNull(schema.projects.deletedAt)),
       orderBy: [desc(schema.projects.viewCount), desc(schema.projects.updatedAt)],
       limit,
       offset,
@@ -112,7 +116,7 @@ app.get("/", async (c) => {
   }
 
   // recent — cursor-paginated by updatedAt (stable, indexable)
-  const whereParts = [eq(schema.projects.isPublic, true)];
+  const whereParts = [eq(schema.projects.isPublic, true), isNull(schema.projects.deletedAt)];
   if (cursor) whereParts.push(lt(schema.projects.updatedAt, cursor));
   if (tagFilter) whereParts.push(tagFilter);
 
@@ -173,6 +177,7 @@ app.get("/search", async (c) => {
   const rows = await db.query.projects.findMany({
     where: and(
       eq(schema.projects.isPublic, true),
+      isNull(schema.projects.deletedAt),
       or(
         like(sql`lower(${schema.projects.title})`, pattern),
         like(sql`lower(${schema.projects.description})`, pattern),
@@ -202,7 +207,11 @@ app.get("/:slug", async (c) => {
   const db = getDb(c.env.DB);
   const slug = c.req.param("slug");
   const project = await db.query.projects.findFirst({
-    where: and(eq(schema.projects.slug, slug), eq(schema.projects.isPublic, true)),
+    where: and(
+      eq(schema.projects.slug, slug),
+      eq(schema.projects.isPublic, true),
+      isNull(schema.projects.deletedAt)
+    ),
   });
   if (!project) return c.json({ error: "Not found" }, 404);
 
@@ -227,6 +236,61 @@ app.get("/:slug", async (c) => {
   });
 });
 
+// Reactions — anonymous emoji counters per public PDF. KV-backed, IP-deduped 24h.
+const REACTION_KINDS = ["fire", "heart", "target", "sparkle"] as const;
+type ReactionKind = (typeof REACTION_KINDS)[number];
+
+// GET /api/explore/:slug/reactions — current counts.
+app.get("/:slug/reactions", async (c) => {
+  const slug = c.req.param("slug");
+  const counts: Record<ReactionKind, number> = { fire: 0, heart: 0, target: 0, sparkle: 0 };
+  await Promise.all(
+    REACTION_KINDS.map(async (k) => {
+      const raw = await c.env.CACHE.get(`react:${slug}:${k}`);
+      counts[k] = Math.max(0, Number(raw ?? "0") || 0);
+    })
+  );
+  c.header("cache-control", "public, max-age=15, stale-while-revalidate=60");
+  return c.json({ counts });
+});
+
+// POST /api/explore/:slug/react — increment a single emoji counter. IP-deduped 24h per kind.
+app.post("/:slug/react", async (c) => {
+  const slug = c.req.param("slug");
+  const body = await c.req.json<{ kind?: string }>().catch(() => ({}) as { kind?: string });
+  const kind = String(body.kind ?? "");
+  if (!REACTION_KINDS.includes(kind as ReactionKind)) {
+    return c.json({ error: "Invalid kind" }, 400);
+  }
+
+  // Verify slug points to a real public PDF before recording.
+  const db = getDb(c.env.DB);
+  const project = await db.query.projects.findFirst({
+    where: and(
+      eq(schema.projects.slug, slug),
+      eq(schema.projects.isPublic, true),
+      isNull(schema.projects.deletedAt)
+    ),
+    columns: { id: true },
+  });
+  if (!project) return c.json({ error: "Not found" }, 404);
+
+  const ip = c.req.header("cf-connecting-ip") ?? c.req.header("x-forwarded-for") ?? "anon";
+  const dedupeKey = `react-ip:${slug}:${kind}:${ip}`;
+  if (await c.env.CACHE.get(dedupeKey)) {
+    return c.json({ ok: true, deduped: true });
+  }
+
+  const counterKey = `react:${slug}:${kind}`;
+  const current = Number((await c.env.CACHE.get(counterKey)) ?? "0") || 0;
+  await Promise.all([
+    c.env.CACHE.put(counterKey, String(current + 1)),
+    c.env.CACHE.put(dedupeKey, "1", { expirationTtl: 60 * 60 * 24 }),
+  ]);
+
+  return c.json({ ok: true, kind, count: current + 1 });
+});
+
 // POST /api/explore/:slug/remix — duplicate a public PDF into the signed-in user's workspace
 app.post("/:slug/remix", requireAuth, async (c) => {
   const db = getDb(c.env.DB);
@@ -234,7 +298,11 @@ app.post("/:slug/remix", requireAuth, async (c) => {
   const slug = c.req.param("slug");
 
   const source = await db.query.projects.findFirst({
-    where: and(eq(schema.projects.slug, slug), eq(schema.projects.isPublic, true)),
+    where: and(
+      eq(schema.projects.slug, slug),
+      eq(schema.projects.isPublic, true),
+      isNull(schema.projects.deletedAt)
+    ),
   });
   if (!source) return c.json({ error: "Not found" }, 404);
 

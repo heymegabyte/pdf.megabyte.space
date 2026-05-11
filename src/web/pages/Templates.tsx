@@ -5,6 +5,7 @@ import { useApi } from "../lib/api";
 import { captureEvent } from "../lib/analytics";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { TopBar } from "../components/TopBar";
+import { Footer } from "../components/Footer";
 import type { PublicProjectSummary } from "../lib/types";
 
 interface TemplateGuide {
@@ -428,6 +429,7 @@ export default function Templates() {
             ))}
           </div>
         </main>
+        <Footer />
       </div>
     );
   }
@@ -635,6 +637,7 @@ export default function Templates() {
           </div>
         </section>
       </main>
+      <Footer />
     </div>
   );
 }

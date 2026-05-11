@@ -5,6 +5,7 @@ import { useApi } from "../lib/api";
 import { captureEvent } from "../lib/analytics";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { TopBar } from "../components/TopBar";
+import { Footer } from "../components/Footer";
 import type { PublicProjectSummary } from "../lib/types";
 
 const fmtRelative = (v: number | string) => {
@@ -323,17 +324,41 @@ export default function Explore() {
             )}
 
             {!loading && projects.length === 0 && (
-              <div className="text-center py-20">
-                <p className="text-[var(--color-muted)] mb-4">
+              <div className="text-center py-20 max-w-md mx-auto">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[var(--color-cyan)]/15 to-[var(--color-cyan)]/0 border border-[var(--color-cyan)]/20 mb-5">
+                  <Sparkles size={26} className="text-[var(--color-cyan)]" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2">
                   {debounced
-                    ? `No PDFs match "${debounced}".`
+                    ? `Nothing matches "${debounced}"`
                     : activeTag
-                    ? `No public PDFs tagged "${activeTag}" yet.`
-                    : "Nothing here yet — be the first to publish."}
+                    ? `No public PDFs tagged "${activeTag}" yet`
+                    : "Be the spark"}
+                </h3>
+                <p className="text-sm text-[var(--color-muted)] mb-6">
+                  {debounced
+                    ? "Try a broader keyword, switch sort, or browse trending."
+                    : activeTag
+                    ? "Publish one with this tag — yours will land at the top."
+                    : "Make a PDF, hit Publish, and your work shows up here for the world."}
                 </p>
-                <Link to="/dashboard" className="btn btn-primary text-sm">
-                  Make a PDF <ArrowRight size={14} />
-                </Link>
+                <div className="flex items-center justify-center gap-3">
+                  <Link to="/dashboard" className="btn btn-primary text-sm">
+                    Make a PDF <ArrowRight size={14} />
+                  </Link>
+                  {(debounced || activeTag) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setQuery("");
+                        setActiveTag("");
+                      }}
+                      className="btn btn-ghost text-sm"
+                    >
+                      Clear filters
+                    </button>
+                  )}
+                </div>
               </div>
             )}
 
@@ -385,6 +410,7 @@ export default function Explore() {
           </div>
         </section>
       </main>
+      <Footer />
     </div>
   );
 }
@@ -407,13 +433,25 @@ function PdfCard({
       style={{ minHeight: 200 }}
     >
       <div
-        className="aspect-[4/3] bg-gradient-to-br from-[var(--color-card)] to-black/40 border-b border-[var(--color-line)] flex items-center justify-center relative"
+        className="aspect-[4/3] border-b border-[var(--color-line)] relative overflow-hidden"
         aria-hidden="true"
       >
-        <div className="text-4xl opacity-20 font-bold tracking-tighter">PDF</div>
-        <span className="absolute top-2 right-2 text-[10px] px-1.5 py-0.5 rounded bg-black/60 border border-white/10 text-[var(--color-muted)] uppercase tracking-wider">
-          {project.pageSize}
-        </span>
+        <img
+          src={
+            project.thumbnailKey
+              ? `/s/preview/${project.slug}.png`
+              : `/s/thumb/${project.slug}.svg`
+          }
+          alt=""
+          loading="lazy"
+          decoding="async"
+          onError={(e) => {
+            const img = e.currentTarget;
+            const fallback = `/s/thumb/${project.slug}.svg`;
+            if (!img.src.endsWith(fallback)) img.src = fallback;
+          }}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+        />
       </div>
       <div className="p-4">
         <h3 className="font-semibold text-sm mb-1 truncate group-hover:text-[var(--color-cyan)] transition-colors">

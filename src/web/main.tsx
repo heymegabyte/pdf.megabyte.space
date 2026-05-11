@@ -18,6 +18,10 @@ const Community = lazy(() => import("./pages/Community"));
 const Tag = lazy(() => import("./pages/Tag"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Templates = lazy(() => import("./pages/Templates"));
+const TemplateHub = lazy(() => import("./pages/TemplateHub"));
+const TemplateHubDetail = lazy(() => import("./pages/TemplateHubDetail"));
+const Blog = lazy(() => import("./pages/Blog"));
+const BlogPost = lazy(() => import("./pages/BlogPost"));
 
 function RouteFallback() {
   return (
@@ -53,6 +57,13 @@ function AppRoutes() {
         <Route path="/t/:tag" element={<Tag />} />
         <Route path="/templates" element={<Templates />} />
         <Route path="/templates/:type" element={<Templates />} />
+        <Route path="/pdf-template" element={<TemplateHub />} />
+        <Route path="/pdf-template/:slug" element={<TemplateHubDetail />} />
+        <Route path="/blog" element={<Blog />} />
+        <Route path="/blog/:slug" element={<BlogPost />} />
+        <Route path="/free-invoice-generator" element={<BlogPost fixedSlug="free-invoice-generator" />} />
+        <Route path="/free-resume-pdf" element={<BlogPost fixedSlug="free-resume-pdf" />} />
+        <Route path="/pdf-from-prompt" element={<BlogPost fixedSlug="pdf-from-prompt" />} />
         <Route
           path="/dashboard"
           element={
@@ -157,6 +168,62 @@ function SwUpdateToast() {
     wave.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX - rect.left - size / 2}px;top:${e.clientY - rect.top - size / 2}px`;
     target.appendChild(wave);
     wave.addEventListener("animationend", () => wave.remove(), { once: true });
+  });
+})();
+
+// Scroll progress bar — single bar element, CSS var driven
+(function initScrollProgress() {
+  if (typeof document === "undefined") return;
+  const bar = document.createElement("div");
+  bar.className = "scroll-progress";
+  bar.setAttribute("aria-hidden", "true");
+  document.documentElement.appendChild(bar);
+  let raf = 0;
+  function update() {
+    raf = 0;
+    const h = document.documentElement;
+    const scrolled = h.scrollTop || document.body.scrollTop;
+    const max = (h.scrollHeight - h.clientHeight) || 1;
+    const pct = Math.max(0, Math.min(100, (scrolled / max) * 100));
+    bar.style.setProperty("--scroll-progress", pct.toFixed(2) + "%");
+    bar.style.opacity = pct < 0.5 ? "0" : "1";
+  }
+  window.addEventListener("scroll", () => {
+    if (!raf) raf = requestAnimationFrame(update);
+  }, { passive: true });
+  update();
+})();
+
+// Magnetic primary buttons — slight cursor pull on hover (pointer:fine only)
+(function initMagneticButtons() {
+  if (typeof window === "undefined") return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (!window.matchMedia("(pointer: fine)").matches) return;
+  const STRENGTH = 0.18;
+  const MAX = 6;
+  document.addEventListener("pointermove", (e) => {
+    const t = (e.target as Element | null)?.closest<HTMLElement>(".btn-primary");
+    if (!t) return;
+    const r = t.getBoundingClientRect();
+    const cx = r.left + r.width / 2;
+    const cy = r.top + r.height / 2;
+    const dx = Math.max(-MAX, Math.min(MAX, (e.clientX - cx) * STRENGTH));
+    const dy = Math.max(-MAX, Math.min(MAX, (e.clientY - cy) * STRENGTH));
+    t.style.setProperty("--mag-x", `${dx}px`);
+    t.style.setProperty("--mag-y", `${dy}px`);
+  });
+  document.addEventListener("pointerleave", (e) => {
+    const t = (e.target as Element | null)?.closest?.<HTMLElement>(".btn-primary");
+    if (!t) return;
+    t.style.setProperty("--mag-x", "0px");
+    t.style.setProperty("--mag-y", "0px");
+  }, true);
+  document.addEventListener("pointerout", (e) => {
+    const t = (e.target as Element | null)?.closest<HTMLElement>(".btn-primary");
+    if (!t) return;
+    if (t.contains((e.relatedTarget as Node) || null)) return;
+    t.style.setProperty("--mag-x", "0px");
+    t.style.setProperty("--mag-y", "0px");
   });
 })();
 

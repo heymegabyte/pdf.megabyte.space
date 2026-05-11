@@ -18,6 +18,8 @@
     "db:generate": "drizzle-kit generate",
     "db:apply:local": "wrangler d1 migrations apply megabyte-pdf --local",
     "db:apply:prod": "wrangler d1 migrations apply megabyte-pdf --remote",
+    "db:seed:local": "wrangler d1 execute megabyte-pdf --local --file=scripts/seed-community-pdfs.sql",
+    "db:seed:prod": "wrangler d1 execute megabyte-pdf --remote --file=scripts/seed-community-pdfs.sql",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test"

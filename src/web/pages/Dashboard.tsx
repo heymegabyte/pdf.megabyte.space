@@ -6,6 +6,7 @@ import { useConfig } from "../lib/config";
 import { captureEvent, identifyUser } from "../lib/analytics";
 import type { Me, ProjectListItem, Project } from "../lib/types";
 import { TopBar } from "../components/TopBar";
+import { Footer } from "../components/Footer";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 export default function Dashboard() {
@@ -380,6 +381,7 @@ export default function Dashboard() {
           </div>
         )}
       </main>
+      <Footer />
     </div>
   );
 }
