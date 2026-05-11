@@ -1,0 +1,17 @@
+/* TEAM */
+  Founder: Brian Zalewski
+  Site: https://megabyte.space
+  Contact: hey [at] megabyte.space
+  From: Bethesda, MD, USA
+
+/* THANKS */
+  Cloudflare Workers, D1, R2, Browser Rendering, Workers AI
+  Anthropic Claude
+  Clerk, Stripe, Resend
+  React, Vite, Tailwind, Hono, Drizzle
+
+/* SITE */
+  Last update: 2026-05-02
+  Standards: HTML5, ES2024, WCAG 2.2 AA
+  Components: React 19, Vite 6, Tailwind 4
+  Software: Cloudflare Workers

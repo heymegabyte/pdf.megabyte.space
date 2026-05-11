@@ -1,0 +1,74 @@
+- generic [ref=e28]:
+  - banner [ref=e29]:
+    - link "Home" [ref=e30] [cursor=pointer]:
+      - /url: /
+      - img [ref=e31]
+    - generic [ref=e33]:
+      - img [ref=e34]
+      - generic [ref=e38]: MegabytePDF
+    - generic [ref=e39]: Guest
+    - textbox "Document title" [ref=e40]: Untitled Document
+    - combobox "Page size" [ref=e41]:
+      - option "Letter" [selected]
+      - option "A4"
+      - option "Legal"
+    - combobox "Page margin" [ref=e42]:
+      - option "Narrow"
+      - option "Normal" [selected]
+      - option "Wide"
+      - option "Extra wide"
+    - status "Used 0 of 10 guest prompts today" [ref=e43]: 10 prompts left
+    - button "Toggle code editor" [ref=e44] [cursor=pointer]:
+      - img [ref=e45]
+      - generic [ref=e49]: Code
+    - button "Save (sign in required)" [ref=e50] [cursor=pointer]:
+      - img [ref=e51]
+      - generic [ref=e55]: Save
+    - button "Download PDF (sign in required)" [ref=e56] [cursor=pointer]:
+      - img [ref=e57]
+      - generic [ref=e60]: PDF
+  - generic [ref=e61]:
+    - complementary [ref=e62]:
+      - log "Chat messages" [ref=e63]:
+        - generic [ref=e64]:
+          - img [ref=e65]
+          - paragraph [ref=e67]: Try the chat. No signup, no email.
+          - paragraph [ref=e68]: 10 free prompts a day. Sign in for more.
+          - generic [ref=e69]:
+            - button "Invoice for $4,200 to Acme Corp from Brian Z, due in 14 days" [ref=e70]
+            - button "One-page resume for a senior software engineer in New York" [ref=e71]
+            - button "Mutual NDA between two startups — clean, professional, 2 pages" [ref=e72]
+            - button "Cover letter for a product designer applying to a Series A startup" [ref=e73]
+            - button "Quarterly business report with KPIs, highlights, and next-quarter goals" [ref=e74]
+      - generic [ref=e75]:
+        - radiogroup "AI model" [ref=e76]:
+          - generic [ref=e77]: "Model:"
+          - radio "Sonnet model (active)" [checked] [disabled] [ref=e78]: Sonnet
+          - radio "Opus model — sign in required" [ref=e79]:
+            - img [ref=e80]
+            - text: Opus
+          - button "Start over" [ref=e83]: Reset
+        - generic [ref=e84]:
+          - textbox "Chat message" [ref=e85]:
+            - /placeholder: Describe a document… (⌘+Enter)
+          - button "Send" [disabled] [ref=e86]:
+            - img [ref=e87]
+    - main [ref=e90]:
+      - generic [ref=e91]:
+        - generic [ref=e92]: 1 page · LetterClick text to edit · ⌘\ code · ⌘P print
+        - generic [ref=e93]:
+          - button "Print" [ref=e94] [cursor=pointer]:
+            - img [ref=e95]
+          - button "Share (sign in required)" [ref=e99] [cursor=pointer]:
+            - img [ref=e100]
+            - generic [ref=e106]: Share
+      - iframe [ref=e108]:
+        - generic [ref=f3e2]:
+          - article [ref=f3e3]:
+            - generic [ref=f3e4]:
+              - heading "Untitled Document" [level=1] [ref=f3e5]
+              - paragraph [ref=f3e6]: A blank canvas. Ask the chat to make it yours.
+            - generic [ref=f3e7]:
+              - paragraph [ref=f3e8]: Type a prompt — "build me a one-page resume for a senior engineer named Alex Rivera" or "create a quarterly business report template" — and watch this preview update in real time.
+              - paragraph [ref=f3e9]: Each printed page wraps automatically at 8.5 × 11 inches.
+          - generic: 1 / 1

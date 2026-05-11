@@ -1,0 +1,4 @@
+Contact: mailto:hey@megabyte.space
+Expires: 2027-05-02T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://pdf.megabyte.space/.well-known/security.txt

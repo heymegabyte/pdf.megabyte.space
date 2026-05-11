@@ -1,0 +1,248 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #060610;
+  --color-bg-elev: #0d0d18;
+  --color-bg-card: #111122;
+  --color-fg: #f4f4f5;
+  --color-muted: #a1a1aa;
+  --color-line: rgba(255, 255, 255, 0.08);
+  --color-cyan: #00e5ff;
+  --color-blue: #50aae3;
+  --color-violet: #7c3aed;
+  --color-accent: #00e5ff;
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    --shadow-glow: 0 0 0 1px rgba(0, 229, 255, 0.3), 0 8px 32px -8px rgba(0, 229, 255, 0.4);
+  }
+  html {
+    background: var(--color-bg);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+  body {
+    margin: 0;
+    overflow-x: hidden;
+  }
+  ::selection {
+    background: rgba(0, 229, 255, 0.3);
+    color: white;
+  }
+  *:focus-visible {
+    outline: 2px solid var(--color-cyan);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-150 active:scale-[0.98];
+    min-height: 44px;
+    min-width: 44px;
+    cursor: pointer;
+  }
+  .btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--color-cyan) 0%, var(--color-blue) 100%);
+    color: #060610;
+    font-weight: 700;
+    box-shadow: 0 4px 16px -4px rgba(0, 229, 255, 0.5);
+  }
+  .btn-primary:hover:not(:disabled) {
+    box-shadow: 0 8px 32px -4px rgba(0, 229, 255, 0.7);
+    transform: translateY(-1px);
+  }
+  .btn-primary:active:not(:disabled) {
+    transform: translateY(0) scale(0.98);
+    box-shadow: 0 2px 8px -2px rgba(0, 229, 255, 0.4);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .btn-primary:hover:not(:disabled) { transform: none; }
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--color-fg);
+    border: 1px solid var(--color-line);
+  }
+  .btn-ghost:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.18);
+  }
+  .btn-danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: rgb(252, 165, 165);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    cursor: pointer;
+  }
+  .btn-danger:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.2);
+  }
+  .card {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-line);
+    border-radius: 12px;
+  }
+  button.card, a.card {
+    cursor: pointer;
+  }
+  .input {
+    @apply w-full px-3 py-2 rounded-lg text-sm;
+    background: var(--color-bg-elev);
+    border: 1px solid var(--color-line);
+    color: var(--color-fg);
+    transition: border-color 0.15s;
+  }
+  .input:focus {
+    border-color: var(--color-cyan);
+    outline: none;
+  }
+  .underline-hover {
+    position: relative;
+  }
+  .underline-hover::after {
+    content: "";
+    position: absolute;
+    left: 51%;
+    right: 51%;
+    bottom: -2px;
+    height: 1.5px;
+    background: var(--color-cyan);
+    transition: left 0.3s ease-out, right 0.3s ease-out;
+  }
+  .underline-hover:hover::after,
+  .underline-hover:focus-visible::after {
+    left: 0;
+    right: 0;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-pretty {
+    text-wrap: pretty;
+  }
+  .glow-cyan {
+    text-shadow: 0 0 24px rgba(0, 229, 255, 0.5);
+  }
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+}
+
+/* Click ripple — desktop only (pointer: fine) */
+@keyframes ripple-expand {
+  to { transform: scale(4); opacity: 0; }
+}
+.ripple-host {
+  position: relative;
+  overflow: hidden;
+}
+.ripple-host > .ripple-wave {
+  position: absolute;
+  border-radius: 50%;
+  transform: scale(0);
+  background: rgba(255, 255, 255, 0.18);
+  pointer-events: none;
+  animation: ripple-expand 0.5s ease-out forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ripple-host > .ripple-wave { animation: none; opacity: 0; }
+}
+
+@keyframes codepanel-in {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes backdropIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out backwards;
+}
+[role="dialog"] > * {
+  animation: modalIn 0.2s ease-out backwards;
+}
+[role="dialog"] {
+  animation: backdropIn 0.15s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-up,
+  [role="dialog"],
+  [role="dialog"] > * { animation: none; }
+}
+
+@supports (view-transition-name: root) {
+  @keyframes vt-fade-out { to { opacity: 0; } }
+  @keyframes vt-fade-in { from { opacity: 0; } }
+  ::view-transition-old(root) {
+    animation: 120ms ease-out vt-fade-out;
+  }
+  ::view-transition-new(root) {
+    animation: 120ms ease-in vt-fade-in;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    ::view-transition-old(root),
+    ::view-transition-new(root) { animation: none; }
+  }
+}
+
+@media print {
+  @page { margin: 0; }
+  html, body, #root { background: #fff !important; height: auto !important; overflow: visible !important; }
+  body * { visibility: hidden !important; }
+  [data-print-area], [data-print-area] * { visibility: visible !important; }
+  [data-print-area] {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    border: 0 !important;
+  }
+  [data-print-area] iframe {
+    width: 100% !important;
+    height: 100vh !important;
+    border: 0 !important;
+    background: #fff !important;
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+  }
+}

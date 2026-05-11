@@ -1,0 +1,42 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#060610"/>
+      <stop offset="1" stop-color="#0b0b1c"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="240" cy="120" r="500" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00E5FF" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#00E5FF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="980" cy="520" r="520" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7C3AED" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#7C3AED" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="lg" x1="0" y1="0" x2="200" y2="280" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#00E5FF"/>
+      <stop offset="1" stop-color="#7C3AED"/>
+    </linearGradient>
+    <linearGradient id="text" x1="0" y1="0" x2="800" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#00E5FF"/>
+      <stop offset="1" stop-color="#a78bfa"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow1)"/>
+  <rect width="1200" height="630" fill="url(#glow2)"/>
+  <g transform="translate(140 175)">
+    <rect x="0" y="0" width="200" height="280" rx="24" fill="url(#lg)"/>
+    <path d="M140 0 L200 60 L140 60 Z" fill="#060610" opacity="0.25"/>
+    <path d="M40 90 H160 M40 140 H180 M40 190 H120" stroke="#060610" stroke-width="14" stroke-linecap="round" opacity="0.55"/>
+  </g>
+  <g transform="translate(420 230)" font-family="'Space Grotesk','Inter',-apple-system,Helvetica,Arial,sans-serif" font-weight="800">
+    <text x="0" y="0" font-size="76" fill="#ffffff" letter-spacing="-2">Megabyte<tspan fill="url(#text)">PDF</tspan></text>
+    <text x="0" y="74" font-size="34" fill="#bcbcd6" font-weight="500" letter-spacing="-0.5">Chat your way to a printable PDF.</text>
+    <text x="0" y="124" font-size="22" fill="#7d7da0" font-weight="500">Real PDFs. Real pages. No templates.</text>
+  </g>
+  <g transform="translate(420 470)">
+    <rect x="0" y="0" width="200" height="56" rx="28" fill="#00E5FF"/>
+    <text x="100" y="36" font-family="'Space Grotesk','Inter',sans-serif" font-size="20" font-weight="700" fill="#060610" text-anchor="middle">Try it free →</text>
+  </g>
+  <text x="1060" y="600" font-family="'JetBrains Mono',monospace" font-size="16" fill="#4a4a6a" text-anchor="end">pdf.megabyte.space</text>
+</svg>

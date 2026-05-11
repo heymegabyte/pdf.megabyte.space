@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <title>Offline — Megabyte PDF</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #060610;
+      --card: #111122;
+      --fg: #f4f4f5;
+      --muted: #a1a1aa;
+      --cyan: #00e5ff;
+      --line: rgba(255,255,255,0.08);
+      --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+    }
+    html, body { height: 100%; background: var(--bg); color: var(--fg); font-family: var(--font); }
+    body { display: grid; place-items: center; min-height: 100dvh; padding: 1.5rem; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 1rem;
+      padding: 2.5rem 2rem;
+      text-align: center;
+      max-width: 380px;
+      width: 100%;
+    }
+    .icon {
+      width: 48px; height: 48px;
+      margin: 0 auto 1.25rem;
+      background: rgba(0,229,255,0.12);
+      border-radius: 0.75rem;
+      display: grid; place-items: center;
+    }
+    .icon svg { width: 24px; height: 24px; stroke: var(--cyan); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    h1 { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.01em; margin-bottom: 0.5rem; }
+    p { color: var(--muted); font-size: 0.875rem; line-height: 1.6; margin-bottom: 1.5rem; }
+    a {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      background: var(--cyan); color: #060610;
+      font-weight: 600; font-size: 0.875rem;
+      padding: 0.6rem 1.25rem; border-radius: 0.5rem;
+      text-decoration: none;
+      transition: opacity 0.15s;
+    }
+    a:hover { opacity: 0.85; }
+    .sub { margin-top: 1.25rem; font-size: 0.75rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">
+      <svg viewBox="0 0 24 24"><path d="M1 6s3-4 11-4 11 4 11 4"/><path d="M1 18s3 4 11 4 11-4 11-4"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+    </div>
+    <h1>You're offline</h1>
+    <p>No internet connection right now. Cached pages still work — try returning to the home page.</p>
+    <a href="/">Go to home page</a>
+    <p class="sub">Megabyte PDF · hey@megabyte.space</p>
+  </div>
+</body>
+</html>

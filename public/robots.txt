@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /p/
+Disallow: /sign-in
+Disallow: /sign-up
+
+Sitemap: https://pdf.megabyte.space/sitemap.xml
+Host: https://pdf.megabyte.space
+# RSS / JSON feeds: /feed.xml /feed.json

@@ -1,0 +1,50 @@
+#:schema node_modules/wrangler/config-schema.json
+name = "megabyte-pdf"
+main = "src/worker/index.ts"
+compatibility_date = "2026-04-15"
+compatibility_flags = ["nodejs_compat"]
+account_id = "84fa0d1b16ff8086dd958c468ce7fd59"
+workers_dev = false
+send_metrics = false
+
+[observability]
+enabled = true
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+run_worker_first = ["/api/*", "/s/*", "/sitemap.xml", "/feed.xml", "/feed.json"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "megabyte-pdf"
+database_id = "ac94cfbf-cb92-41d7-a2a1-a4b65bb4442e"
+migrations_dir = "drizzle"
+
+[[r2_buckets]]
+binding = "PDFS"
+bucket_name = "megabyte-pdf-exports"
+
+[[kv_namespaces]]
+binding = "CACHE"
+id = "1961700553e14d3bbbe4a90cb0c5b2ee"
+
+[browser]
+binding = "BROWSER"
+
+[ai]
+binding = "AI"
+
+[vars]
+APP_URL = "https://pdf.megabyte.space"
+APP_NAME = "Megabyte PDF"
+APP_VERSION = "0.1.0"
+FREE_PROJECT_LIMIT = "1"
+PAID_PROJECT_LIMIT = "10"
+TRENDING_HALFLIFE_DAYS = "7"
+TRENDING_CANDIDATE_POOL = "200"
+
+[[routes]]
+pattern = "pdf.megabyte.space"
+custom_domain = true
