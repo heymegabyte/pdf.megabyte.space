@@ -50,6 +50,9 @@ app.get("/", async (c) => {
     ? like(sql`lower(${schema.projects.tags})`, `%${tag}%`)
     : undefined;
 
+  c.header("cache-control", "public, s-maxage=60, stale-while-revalidate=300");
+  c.header("vary", "Cookie");
+
   if (sort === "trending") {
     const now = Date.now();
     const rows = await db.query.projects.findMany({

@@ -17,13 +17,45 @@ export function TopBar({ children }: { children?: React.ReactNode }) {
       </Link>
       <div className="flex-1 min-w-0 flex items-center gap-2">{children}</div>
       <Link
-        to="/explore"
-        className="hidden sm:inline-flex shrink-0 text-xs font-medium text-[var(--color-muted)] hover:text-[var(--color-cyan)] px-3 py-1.5 rounded-md hover:bg-white/[0.04] transition-colors"
+        to="/templates"
+        className="hidden md:inline-flex shrink-0 items-center text-xs font-medium text-[var(--color-muted)] hover:text-[var(--color-cyan)] px-3 py-1.5 rounded-md hover:bg-white/[0.04] transition-colors"
       >
-        Explore
+        Templates
       </Link>
+      <ExploreNavLink />
       <UserMenu />
     </header>
+  );
+}
+
+function ExploreNavLink() {
+  const [hasFresh, setHasFresh] = useState(false);
+  useEffect(() => {
+    const last = Number(localStorage.getItem("trending_seen_at") ?? "0");
+    const stale = !last || Date.now() - last > 24 * 60 * 60 * 1000;
+    setHasFresh(stale);
+  }, []);
+  return (
+    <Link
+      to="/explore?sort=trending"
+      onClick={() => {
+        localStorage.setItem("trending_seen_at", String(Date.now()));
+        setHasFresh(false);
+      }}
+      aria-label={hasFresh ? "Explore — new trending PDFs" : "Explore"}
+      className="hidden sm:inline-flex shrink-0 items-center gap-1.5 relative text-xs font-medium text-[var(--color-muted)] hover:text-[var(--color-cyan)] px-3 py-1.5 rounded-md hover:bg-white/[0.04] transition-colors"
+    >
+      <span>Explore</span>
+      {hasFresh && (
+        <span
+          aria-hidden="true"
+          className="relative inline-flex w-2 h-2"
+        >
+          <span className="absolute inset-0 rounded-full bg-[var(--color-cyan)] opacity-70 animate-ping" />
+          <span className="relative inline-flex w-2 h-2 rounded-full bg-[var(--color-cyan)]" />
+        </span>
+      )}
+    </Link>
   );
 }
 

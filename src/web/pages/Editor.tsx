@@ -28,6 +28,8 @@ import {
   Command,
   FileCode2,
   Search,
+  Wand2,
+  LayoutTemplate,
 } from "lucide-react";
 import { useApi, useAuthFetch, ApiError } from "../lib/api";
 import { captureEvent } from "../lib/analytics";
@@ -54,6 +56,38 @@ interface EditorData {
   shares: ShareLink[];
 }
 
+type BlockKind =
+  | "cover"
+  | "toc"
+  | "signature"
+  | "references"
+  | "cta"
+  | "executive-summary"
+  | "thank-you"
+  | "divider";
+
+const BLOCK_LABELS: Record<BlockKind, string> = {
+  cover: "Insert cover page",
+  toc: "Insert table of contents",
+  "executive-summary": "Insert executive summary",
+  signature: "Insert signature block",
+  references: "Insert references",
+  cta: "Insert call-to-action",
+  "thank-you": "Insert thank-you page",
+  divider: "Insert divider",
+};
+
+const BLOCK_MODE: Record<BlockKind, "prepend" | "append"> = {
+  cover: "prepend",
+  toc: "prepend",
+  "executive-summary": "prepend",
+  signature: "append",
+  references: "append",
+  cta: "append",
+  "thank-you": "append",
+  divider: "append",
+};
+
 export default function Editor() {
   const { id } = useParams<{ id: string }>();
   const api = useApi();
@@ -79,6 +113,8 @@ export default function Editor() {
   const [localCode, setLocalCode] = useState<{ html: string; css: string } | null>(null);
   const [inlineSaved, setInlineSaved] = useState(false);
   const [showPalette, setShowPalette] = useState(false);
+  const [prettifying, setPrettifying] = useState(false);
+  const [insertingBlock, setInsertingBlock] = useState<BlockKind | null>(null);
   const chatScrollRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
@@ -109,6 +145,17 @@ export default function Editor() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    if (!id) return;
+    const key = `megabyte-pdf:prefill:${id}`;
+    const prefill = sessionStorage.getItem(key);
+    if (!prefill) return;
+    sessionStorage.removeItem(key);
+    setMessage(prefill);
+    captureEvent("editor_prefill_loaded", { length: prefill.length });
+    setTimeout(() => textareaRef.current?.focus(), 100);
+  }, [id]);
 
   useEffect(() => {
     function onMessage(e: MessageEvent) {
@@ -328,6 +375,70 @@ export default function Editor() {
     } finally {
       setSending(false);
       textareaRef.current?.focus();
+    }
+  }
+
+  async function makePrettier() {
+    if (!id || prettifying) return;
+    await syncInlineEdits();
+    setPrettifying(true);
+    setError(null);
+    captureEvent("editor_prettier_start");
+    const startedAt = performance.now();
+    try {
+      await api<{ project: Project; snapshotId: string | null }>(
+        `/api/projects/${id}/prettier`,
+        { method: "POST" }
+      );
+      captureEvent("editor_prettier_success", {
+        duration_ms: Math.round(performance.now() - startedAt),
+      });
+      setLocalCode(null);
+      await load();
+    } catch (e) {
+      const status = e instanceof ApiError ? e.status : 0;
+      captureEvent("editor_prettier_error", { status });
+      if (e instanceof ApiError && e.status === 402) {
+        setShowUpgrade(true);
+      } else if (e instanceof ApiError && e.status === 429) {
+        setError("Slow down — try again in a moment.");
+      } else {
+        setError(e instanceof Error ? e.message : "Prettier failed");
+      }
+    } finally {
+      setPrettifying(false);
+    }
+  }
+
+  async function insertBlock(kind: BlockKind) {
+    if (!id || insertingBlock) return;
+    await syncInlineEdits();
+    setInsertingBlock(kind);
+    setError(null);
+    captureEvent("editor_insert_block_start", { kind });
+    try {
+      await api<{ project: Project; snapshotId: string | null }>(
+        `/api/projects/${id}/insert`,
+        {
+          method: "POST",
+          body: JSON.stringify({ kind, mode: BLOCK_MODE[kind] }),
+        }
+      );
+      captureEvent("editor_insert_block_success", { kind });
+      setLocalCode(null);
+      await load();
+    } catch (e) {
+      const status = e instanceof ApiError ? e.status : 0;
+      captureEvent("editor_insert_block_error", { kind, status });
+      if (e instanceof ApiError && e.status === 402) {
+        setShowUpgrade(true);
+      } else if (e instanceof ApiError && e.status === 429) {
+        setError("Slow down — try again in a moment.");
+      } else {
+        setError(e instanceof Error ? e.message : "Insert failed");
+      }
+    } finally {
+      setInsertingBlock(null);
     }
   }
 
@@ -862,6 +973,14 @@ export default function Editor() {
         <CommandPalette
           onClose={() => setShowPalette(false)}
           actions={[
+            { id: "prettier", label: prettifying ? "Making it prettier…" : "Make this prettier (AI)", icon: Wand2, run: makePrettier, disabled: prettifying },
+            ...(Object.keys(BLOCK_LABELS) as BlockKind[]).map((kind) => ({
+              id: `insert-${kind}`,
+              label: insertingBlock === kind ? `Inserting ${kind}…` : BLOCK_LABELS[kind],
+              icon: LayoutTemplate,
+              run: () => insertBlock(kind),
+              disabled: insertingBlock !== null,
+            })),
             { id: "publish", label: project.isPublic ? "Manage public listing" : "Publish to community", icon: Globe, run: () => setShowPublish(true) },
             { id: "export", label: "Download PDF", icon: Download, run: exportPdf, disabled: exporting },
             { id: "drive", label: "Save to Google Drive", icon: Cloud, run: saveToDrive, disabled: savingToDrive },

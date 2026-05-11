@@ -15,6 +15,9 @@ const PrivacyPage = lazy(() => import("./pages/Privacy"));
 const TermsPage = lazy(() => import("./pages/Terms"));
 const Explore = lazy(() => import("./pages/Explore"));
 const Community = lazy(() => import("./pages/Community"));
+const Tag = lazy(() => import("./pages/Tag"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const Templates = lazy(() => import("./pages/Templates"));
 
 function RouteFallback() {
   return (
@@ -47,6 +50,9 @@ function AppRoutes() {
         <Route path="/sign-up" element={<Navigate to="/sign-in" replace />} />
         <Route path="/explore" element={<Explore />} />
         <Route path="/c/:slug" element={<Community />} />
+        <Route path="/t/:tag" element={<Tag />} />
+        <Route path="/templates" element={<Templates />} />
+        <Route path="/templates/:type" element={<Templates />} />
         <Route
           path="/dashboard"
           element={
@@ -63,7 +69,7 @@ function AppRoutes() {
             </Gated>
           }
         />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
   );

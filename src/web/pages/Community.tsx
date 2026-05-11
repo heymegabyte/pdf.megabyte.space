@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
+  Code,
   Copy,
   Download,
   Eye,
@@ -11,6 +12,7 @@ import {
   Sparkles,
   Tag,
   User,
+  X,
 } from "lucide-react";
 import { useApi, ApiError } from "../lib/api";
 import { useAuth } from "../lib/auth";
@@ -45,6 +47,7 @@ export default function Community() {
   const [remixing, setRemixing] = useState(false);
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [showEmbed, setShowEmbed] = useState(false);
   useDocumentTitle(project?.title ? `${project.title} — Community PDF` : "Community PDF");
 
   const canonicalUrl = useMemo(
@@ -80,7 +83,7 @@ export default function Community() {
 
     const desc =
       (project.description ?? `Community PDF: ${project.title}. Remix it in the editor.`).slice(0, 156);
-    const ogImage = `${window.location.origin}/og.jpg`;
+    const ogImage = `${window.location.origin}/api/og/${slug}`;
     upsertMeta('meta[name="description"]', { name: "description", content: desc });
     upsertLink("canonical", canonicalUrl);
     upsertMeta('meta[property="og:type"]', { property: "og:type", content: "article" });
@@ -285,7 +288,7 @@ export default function Community() {
                         {project.tags.map((t) => (
                           <Link
                             key={t}
-                            to={`/explore?q=${encodeURIComponent(t)}`}
+                            to={`/t/${encodeURIComponent(t)}`}
                             className="text-xs px-2 py-1 rounded-full border border-[var(--color-line)] text-[var(--color-muted)] hover:border-[var(--color-cyan)]/60 hover:text-[var(--color-fg)] inline-flex items-center gap-1"
                           >
                             <Tag size={10} />

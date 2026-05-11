@@ -31,7 +31,32 @@ export default function Dashboard() {
       window.history.replaceState({}, "", "/dashboard");
       setTimeout(() => setSuccessToast(false), 6000);
     }
+    const initialPrompt = params.get("prompt");
+    if (initialPrompt) {
+      sessionStorage.setItem("megabyte-pdf:initial-prompt", initialPrompt.slice(0, 4000));
+      window.history.replaceState({}, "", "/dashboard");
+    }
   }, []);
+
+  useEffect(() => {
+    const pending = sessionStorage.getItem("megabyte-pdf:initial-prompt");
+    if (!pending || !me || creating) return;
+    sessionStorage.removeItem("megabyte-pdf:initial-prompt");
+    captureEvent("dashboard_initial_prompt", { length: pending.length });
+    (async () => {
+      setCreating(true);
+      try {
+        const { project } = await api<{ project: Project }>("/api/projects", { method: "POST" });
+        sessionStorage.setItem(`megabyte-pdf:prefill:${project.id}`, pending);
+        navigate(`/p/${project.id}`);
+      } catch (e) {
+        if (e instanceof ApiError && e.status === 402) setLimitHit(true);
+        else setError(e instanceof Error ? e.message : "Failed to create");
+      } finally {
+        setCreating(false);
+      }
+    })();
+  }, [api, navigate, me, creating]);
 
   useEffect(() => {
     let cancelled = false;

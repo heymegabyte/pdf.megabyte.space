@@ -9,6 +9,8 @@ import { requireAuth } from "../middleware/auth";
 import { STARTER_HTML, STARTER_CSS } from "../lib/templates";
 import { generateAiTitle } from "../lib/ai-title";
 import { generateAiMeta } from "../lib/ai-meta";
+import { generateAiPrettier } from "../lib/ai-prettier";
+import { generateAiBlock, ALLOWED_BLOCK_KINDS, type BlockKind } from "../lib/ai-block";
 import type { Env, Variables } from "../types";
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -386,6 +388,155 @@ app.post("/:id/ai-meta", async (c) => {
     })
     .where(eq(schema.projects.id, id));
   return c.json({ description: meta.description, tags: meta.tags });
+});
+
+// "Make this prettier" — AI rewrites HTML+CSS for better typography/spacing/hierarchy.
+// Counts as one edit. Rate-limited 1/min per user.
+app.post("/:id/prettier", async (c) => {
+  const db = getDb(c.env.DB);
+  const userId = c.get("userId");
+  const id = c.req.param("id");
+  const project = await db.query.projects.findFirst({
+    where: and(eq(schema.projects.id, id), eq(schema.projects.userId, userId)),
+  });
+  if (!project) return c.json({ error: "Not found" }, 404);
+
+  const user = await db.query.users.findFirst({ where: eq(schema.users.id, userId) });
+  if (user?.plan !== "pro" && project.editCount >= FREE_EDITS_PER_PDF) {
+    return c.json(
+      {
+        error: `You've used all ${FREE_EDITS_PER_PDF} free edits on this PDF. Upgrade for unlimited edits.`,
+        code: "EDIT_LIMIT_REACHED",
+        editCount: project.editCount,
+        limit: FREE_EDITS_PER_PDF,
+      },
+      402
+    );
+  }
+
+  const rateKey = `ratelimit:prettier:${userId}`;
+  const recent = await c.env.CACHE.get(rateKey);
+  if (recent) return c.json({ error: "Slow down — try again in a moment.", code: "RATE_LIMIT" }, 429);
+
+  let result: { html: string; css: string } | null;
+  try {
+    result = await generateAiPrettier(c.env, {
+      html: project.html,
+      css: project.css,
+      title: project.title,
+    });
+  } catch (err) {
+    Sentry.captureException(err, { tags: { route: "ai-prettier" } });
+    return c.json({ error: "AI prettier unavailable" }, 502);
+  }
+  if (!result) return c.json({ error: "AI prettier unavailable" }, 502);
+
+  await c.env.CACHE.put(rateKey, "1", { expirationTtl: 60 });
+
+  await db.batch([
+    db.insert(schema.snapshots).values({
+      id: nanoid(12),
+      projectId: id,
+      label: "Before prettier",
+      html: project.html,
+      css: project.css,
+      pageSize: project.pageSize,
+      margin: project.margin,
+    }),
+    db.update(schema.projects)
+      .set({
+        html: result.html,
+        css: result.css,
+        editCount: project.editCount + 1,
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.projects.id, id)),
+  ]);
+
+  const updated = await db.query.projects.findFirst({ where: eq(schema.projects.id, id) });
+  return c.json({ project: updated });
+});
+
+// Block library — insert AI-generated <section> for cover/toc/signature/references/cta/etc.
+// Returns the rendered HTML so the client can splice client-side, or appended via ?mode=append.
+const insertBody = z.object({
+  kind: z.enum(ALLOWED_BLOCK_KINDS as [BlockKind, ...BlockKind[]]),
+  context: z.string().max(500).optional(),
+  mode: z.enum(["preview", "append", "prepend"]).default("preview"),
+});
+
+app.post("/:id/insert", zValidator("json", insertBody), async (c) => {
+  const db = getDb(c.env.DB);
+  const userId = c.get("userId");
+  const id = c.req.param("id");
+  const project = await db.query.projects.findFirst({
+    where: and(eq(schema.projects.id, id), eq(schema.projects.userId, userId)),
+  });
+  if (!project) return c.json({ error: "Not found" }, 404);
+
+  const rateKey = `ratelimit:insert:${userId}`;
+  const recent = await c.env.CACHE.get(rateKey);
+  if (recent) return c.json({ error: "Slow down — try again in a moment.", code: "RATE_LIMIT" }, 429);
+
+  const { kind, context, mode } = c.req.valid("json");
+
+  let block: string | null;
+  try {
+    block = await generateAiBlock(c.env, {
+      kind,
+      title: project.title,
+      currentHtml: project.html,
+      context,
+    });
+  } catch (err) {
+    Sentry.captureException(err, { tags: { route: "ai-insert", kind } });
+    return c.json({ error: "AI insert unavailable" }, 502);
+  }
+  if (!block) return c.json({ error: "AI insert unavailable" }, 502);
+
+  await c.env.CACHE.put(rateKey, "1", { expirationTtl: 30 });
+
+  if (mode === "preview") {
+    return c.json({ block });
+  }
+
+  const user = await db.query.users.findFirst({ where: eq(schema.users.id, userId) });
+  if (user?.plan !== "pro" && project.editCount >= FREE_EDITS_PER_PDF) {
+    return c.json(
+      {
+        error: `You've used all ${FREE_EDITS_PER_PDF} free edits on this PDF. Upgrade for unlimited edits.`,
+        code: "EDIT_LIMIT_REACHED",
+        editCount: project.editCount,
+        limit: FREE_EDITS_PER_PDF,
+      },
+      402
+    );
+  }
+
+  const nextHtml =
+    mode === "append" ? `${project.html.trimEnd()}\n${block}` : `${block}\n${project.html.trimStart()}`;
+
+  await db.batch([
+    db.insert(schema.snapshots).values({
+      id: nanoid(12),
+      projectId: id,
+      label: `Before insert: ${kind}`,
+      html: project.html,
+      css: project.css,
+      pageSize: project.pageSize,
+      margin: project.margin,
+    }),
+    db.update(schema.projects)
+      .set({
+        html: nextHtml,
+        editCount: project.editCount + 1,
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.projects.id, id)),
+  ]);
+
+  const updated = await db.query.projects.findFirst({ where: eq(schema.projects.id, id) });
+  return c.json({ project: updated, block });
 });
 
 // Toggle public visibility for the community Explore feed.

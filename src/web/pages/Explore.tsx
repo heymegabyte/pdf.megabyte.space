@@ -130,6 +130,37 @@ export default function Explore() {
     captureEvent("explore_view", { query: debounced, sort, tag: activeTag || null });
   }, [debounced, sort, activeTag]);
 
+  // Konami code easter egg — ↑↑↓↓←→←→BA → confetti + I'm-feeling-lucky pick
+  const [luckyMode, setLuckyMode] = useState(false);
+  useEffect(() => {
+    const sequence = [
+      "ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown",
+      "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight",
+      "KeyB", "KeyA",
+    ];
+    let idx = 0;
+    const onKey = (e: KeyboardEvent) => {
+      const code = e.code;
+      if (code === sequence[idx]) {
+        idx += 1;
+        if (idx === sequence.length) {
+          idx = 0;
+          setLuckyMode(true);
+          captureEvent("konami_unlocked", { source: "explore" });
+          window.setTimeout(() => setLuckyMode(false), 4200);
+          if (projects.length) {
+            const pick = projects[Math.floor(Math.random() * projects.length)];
+            if (pick) window.setTimeout(() => navigate(`/c/${pick.slug}`), 1200);
+          }
+        }
+      } else {
+        idx = code === sequence[0] ? 1 : 0;
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [projects, navigate]);
+
   const featured = useMemo(() => projects.slice(0, 3), [projects]);
   const rest = useMemo(() => projects.slice(3), [projects]);
   const hasMore = !debounced && (Boolean(nextCursor) || nextOffset !== null);
@@ -149,6 +180,20 @@ export default function Explore() {
   return (
     <div className="min-h-screen flex flex-col">
       <TopBar />
+      {luckyMode && (
+        <div
+          aria-hidden="true"
+          className="fixed inset-0 z-[60] pointer-events-none grid place-items-center"
+          style={{ animation: "fadeIn 200ms ease" }}
+        >
+          <div
+            className="px-6 py-3 rounded-full bg-[var(--color-cyan)] text-black font-bold text-lg shadow-2xl"
+            style={{ animation: "popIn 600ms cubic-bezier(.34,1.56,.64,1)" }}
+          >
+            🎲 Feeling lucky… opening a random PDF
+          </div>
+        </div>
+      )}
       <main className="flex-1">
         <section className="border-b border-[var(--color-line)] bg-gradient-to-b from-[var(--color-cyan)]/[0.04] to-transparent">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
