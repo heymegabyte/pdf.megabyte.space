@@ -152,7 +152,7 @@ export default function Terms() {
           </Section>
 
           <Section title="Billing">
-            <p>Pro plans are billed monthly via Stripe. You may cancel at any time from your account settings; access continues until the end of your billing period. We do not offer refunds for partial months except where required by law. Prices may change with 30 days' notice.</p>
+            <p>Pro ($9/month) and Unlimited ($50/month) plans are billed monthly via Stripe. You may cancel at any time from your account settings; access continues until the end of your billing period. We do not offer refunds for partial months except where required by law. Prices may change with 30 days' notice.</p>
           </Section>
 
           <Section title="Availability">

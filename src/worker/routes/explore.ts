@@ -4,6 +4,7 @@ import { nanoid } from "nanoid";
 import { getDb, schema } from "../db";
 import { requireAuth } from "../middleware/auth";
 import type { Env, Variables } from "../types";
+import { projectLimit } from "../../shared/plans";
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -308,10 +309,11 @@ app.post("/:slug/remix", requireAuth, async (c) => {
 
   const user = await db.query.users.findFirst({ where: eq(schema.users.id, userId) });
   if (!user) return c.json({ error: "User not found" }, 404);
-  const limit =
-    user.plan === "pro"
-      ? Number(c.env.PAID_PROJECT_LIMIT)
-      : Number(c.env.FREE_PROJECT_LIMIT);
+  const limit = projectLimit(
+    user.plan,
+    Number(c.env.FREE_PROJECT_LIMIT),
+    Number(c.env.PAID_PROJECT_LIMIT)
+  );
   const existing = await db
     .select({ n: count() })
     .from(schema.projects)

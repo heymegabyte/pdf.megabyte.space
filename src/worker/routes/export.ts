@@ -9,10 +9,12 @@ import { wrapDocument, pageDimensionsIn } from "../lib/templates";
 import { ensureFreshAccessToken, uploadPdfToDrive } from "../lib/drive";
 import { sendEmail } from "../lib/emails";
 import type { Env, Variables } from "../types";
+import { isPaid, isUnlimited } from "../../shared/plans";
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-const EXPORT_DAILY_LIMIT = 20;
+const EXPORT_DAILY_LIMIT_PRO = 20;
+const EXPORT_DAILY_LIMIT_UNLIMITED = 500;
 
 app.post("/projects/:id/export", requireAuth, async (c) => {
   const db = getDb(c.env.DB);
@@ -24,15 +26,32 @@ app.post("/projects/:id/export", requireAuth, async (c) => {
   if (!project) return c.json({ error: "Not found" }, 404);
 
   const user = await db.query.users.findFirst({ where: eq(schema.users.id, userId) });
-  if (!user || user.plan !== "pro") {
-    return c.json({ error: "PDF export requires a Pro subscription.", code: "PLAN_REQUIRED" }, 402);
+  if (!user || !isPaid(user.plan)) {
+    return c.json({ error: "PDF export requires a Pro or Unlimited subscription.", code: "PLAN_REQUIRED" }, 402);
   }
 
+  const EXPORT_DAILY_LIMIT = isUnlimited(user.plan) ? EXPORT_DAILY_LIMIT_UNLIMITED : EXPORT_DAILY_LIMIT_PRO;
   const day = new Date().toISOString().slice(0, 10);
   const rateKey = `ratelimit:export:${userId}:${day}`;
   const used = Number((await c.env.CACHE.get(rateKey)) ?? "0");
   const exportRemaining = Math.max(0, EXPORT_DAILY_LIMIT - used);
   if (used >= EXPORT_DAILY_LIMIT) {
+    // Pro hitting the ceiling = upsell signal. Fire one email per day.
+    if (user.plan === "pro") {
+      c.executionCtx.waitUntil(
+        sendEmail(c.env, {
+          userId,
+          template: "export-limit-pro",
+          dedupKey: `export-limit-pro:${userId}:${day}`,
+          data: {
+            limit: EXPORT_DAILY_LIMIT_PRO,
+            unlimited_limit: EXPORT_DAILY_LIMIT_UNLIMITED,
+            upgrade_url: `${c.env.APP_URL}/dashboard?upgrade=unlimited`,
+            day,
+          },
+        }).catch(() => {})
+      );
+    }
     return c.json(
       { error: "Daily export limit reached. Try again tomorrow.", code: "RATE_LIMIT", limit: EXPORT_DAILY_LIMIT, used },
       429,

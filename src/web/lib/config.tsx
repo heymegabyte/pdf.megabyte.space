@@ -6,6 +6,9 @@ export interface AppConfig {
   appUrl: string;
   googleSignInEnabled: boolean;
   billingEnabled: boolean;
+  unlimitedEnabled: boolean;
+  proPriceUsd: number;
+  unlimitedPriceUsd: number;
   freeLimit: number;
   paidLimit: number;
   sentryDsn: string;
@@ -37,7 +40,10 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
     fetchConfig()
       .then((cfg) => {
         setConfig(cfg);
-        initAnalytics(cfg);
+        const schedule =
+          (window as unknown as { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => void })
+            .requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 1));
+        schedule(() => initAnalytics(cfg), { timeout: 3000 });
       })
       .catch(() => setConfig(null));
   }, []);

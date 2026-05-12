@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { Volume2, VolumeX } from "lucide-react";
+import { Volume2, VolumeX, Sparkles, Crown, Loader2 } from "lucide-react";
 import { Logo } from "./Logo";
 import { useAuth } from "../lib/auth";
+import { useApi } from "../lib/api";
 import { isSoundOn, setSoundOn } from "../lib/sound";
 import { captureEvent } from "../lib/analytics";
 
@@ -91,9 +92,26 @@ function SoundToggle() {
 
 function UserMenu() {
   const { me, signOut, refresh, status } = useAuth();
+  const api = useApi();
   const [open, setOpen] = useState(false);
   const [flipping, setFlipping] = useState(false);
+  const [upgrading, setUpgrading] = useState<"pro" | "unlimited" | null>(null);
   const ref = useRef<HTMLDivElement>(null);
+
+  const startCheckout = async (tier: "pro" | "unlimited") => {
+    if (upgrading) return;
+    setUpgrading(tier);
+    captureEvent("topbar_upgrade_click", { tier });
+    try {
+      const { url } = await api<{ url: string }>("/api/billing/checkout", {
+        method: "POST",
+        body: JSON.stringify({ tier }),
+      });
+      window.location.href = url;
+    } catch {
+      setUpgrading(null);
+    }
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -147,10 +165,116 @@ function UserMenu() {
             {user.name && (
               <div className="text-xs text-[var(--color-muted)] truncate">{user.email}</div>
             )}
-            <div className="text-xs text-[var(--color-muted)] mt-1">
-              Plan: <span className="text-[var(--color-fg)] capitalize">{user.plan}</span>
+            <div className="text-xs text-[var(--color-muted)] mt-1 flex items-center gap-1.5">
+              <span>Plan:</span>
+              <span
+                className="text-[var(--color-fg)] capitalize inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold tracking-wide"
+                style={{
+                  background:
+                    user.plan === "unlimited"
+                      ? "linear-gradient(135deg, rgba(124,58,237,0.18), rgba(0,229,255,0.14))"
+                      : user.plan === "pro"
+                        ? "rgba(0,229,255,0.14)"
+                        : "rgba(255,255,255,0.05)",
+                  color:
+                    user.plan === "unlimited"
+                      ? "#C4B5FD"
+                      : user.plan === "pro"
+                        ? "var(--color-cyan)"
+                        : "var(--color-muted)",
+                  border:
+                    user.plan === "unlimited"
+                      ? "1px solid rgba(124,58,237,0.4)"
+                      : user.plan === "pro"
+                        ? "1px solid rgba(0,229,255,0.35)"
+                        : "1px solid var(--color-line)",
+                }}
+              >
+                {user.plan === "unlimited" && <Crown size={9} aria-hidden="true" />}
+                {user.plan === "pro" && <Sparkles size={9} aria-hidden="true" />}
+                {user.plan}
+              </span>
             </div>
           </div>
+          {user.plan === "free" && (
+            <div className="px-3 pt-3 pb-2 border-b border-[var(--color-line)] bg-gradient-to-b from-[var(--color-cyan)]/[0.08] to-transparent">
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  void startCheckout("pro");
+                }}
+                disabled={!!upgrading}
+                className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-xs font-semibold transition-all"
+                style={{
+                  background:
+                    "linear-gradient(135deg, var(--color-cyan), #50AAE3)",
+                  color: "#060610",
+                  boxShadow: "0 4px 16px -4px rgba(0,229,255,0.5)",
+                }}
+              >
+                {upgrading === "pro" ? (
+                  <Loader2 size={12} className="animate-spin" aria-hidden="true" />
+                ) : (
+                  <Sparkles size={12} aria-hidden="true" />
+                )}
+                <span>Go Pro — $9/mo</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  void startCheckout("unlimited");
+                }}
+                disabled={!!upgrading}
+                className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 mt-1.5 rounded-md text-[11px] font-medium transition-all"
+                style={{
+                  background: "transparent",
+                  color: "#C4B5FD",
+                  border: "1px solid rgba(124,58,237,0.4)",
+                }}
+              >
+                {upgrading === "unlimited" ? (
+                  <Loader2 size={10} className="animate-spin" aria-hidden="true" />
+                ) : (
+                  <Crown size={10} aria-hidden="true" />
+                )}
+                <span>Go Unlimited — $50/mo</span>
+              </button>
+              <p className="text-[10px] text-[var(--color-muted)] text-center mt-2 leading-tight">
+                10 PDFs/mo · Priority AI · Brand fonts
+              </p>
+            </div>
+          )}
+          {user.plan === "pro" && (
+            <div className="px-3 pt-3 pb-2 border-b border-[var(--color-line)] bg-gradient-to-b from-purple-500/[0.08] to-transparent">
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  void startCheckout("unlimited");
+                }}
+                disabled={!!upgrading}
+                className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-xs font-semibold transition-all"
+                style={{
+                  background:
+                    "linear-gradient(135deg, #7C3AED, #A855F7)",
+                  color: "#fff",
+                  boxShadow: "0 4px 16px -4px rgba(124,58,237,0.55)",
+                }}
+              >
+                {upgrading === "unlimited" ? (
+                  <Loader2 size={12} className="animate-spin" aria-hidden="true" />
+                ) : (
+                  <Crown size={12} aria-hidden="true" />
+                )}
+                <span>Go Unlimited — $50/mo</span>
+              </button>
+              <p className="text-[10px] text-[var(--color-muted)] text-center mt-2 leading-tight">
+                Unlimited PDFs · Priority everything
+              </p>
+            </div>
+          )}
           {user.isAdmin && (
             <div
               role="group"
@@ -161,57 +285,47 @@ function UserMenu() {
                 Admin · Simulate plan
               </div>
               <div
-                role="switch"
-                aria-checked={user.plan === "pro"}
-                aria-label={user.plan === "pro" ? "Switch to free" : "Switch to pro"}
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === " " || e.key === "Enter") {
-                    e.preventDefault();
-                    (e.currentTarget as HTMLDivElement).click();
-                  }
-                }}
-                onClick={async () => {
-                  if (flipping) return;
-                  setFlipping(true);
-                  const next = user.plan === "pro" ? "free" : "pro";
-                  try {
-                    await fetch("/api/admin/plan", {
-                      method: "POST",
-                      credentials: "include",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ plan: next }),
-                    });
-                    await refresh();
-                    captureEvent("admin_plan_toggled", { plan: next });
-                  } finally {
-                    setFlipping(false);
-                  }
-                }}
-                className={`relative inline-flex items-center w-full h-9 rounded-full border border-[var(--color-line)] bg-[var(--color-bg)] cursor-pointer select-none transition-colors ${
+                role="radiogroup"
+                aria-label="Plan tier"
+                className={`relative inline-flex items-center w-full h-9 rounded-full border border-[var(--color-line)] bg-[var(--color-bg)] select-none transition-colors ${
                   flipping ? "opacity-60 pointer-events-none" : ""
                 }`}
               >
-                <span
-                  className={`absolute top-1 left-1 h-7 rounded-full bg-[var(--color-cyan)] transition-[transform,width] duration-200 ease-out ${
-                    user.plan === "pro" ? "translate-x-full w-[calc(50%-4px)]" : "translate-x-0 w-[calc(50%-4px)]"
-                  }`}
-                  aria-hidden="true"
-                />
-                <span
-                  className={`relative z-10 w-1/2 text-center text-xs font-semibold ${
-                    user.plan === "free" ? "text-black" : "text-[var(--color-muted)]"
-                  }`}
-                >
-                  Free
-                </span>
-                <span
-                  className={`relative z-10 w-1/2 text-center text-xs font-semibold ${
-                    user.plan === "pro" ? "text-black" : "text-[var(--color-muted)]"
-                  }`}
-                >
-                  Pro
-                </span>
+                {(["free", "pro", "unlimited"] as const).map((tier) => {
+                  const active = user.plan === tier;
+                  const tierColor = tier === "unlimited" ? "#7C3AED" : "var(--color-cyan)";
+                  return (
+                    <button
+                      key={tier}
+                      type="button"
+                      role="radio"
+                      aria-checked={active}
+                      onClick={async () => {
+                        if (flipping || active) return;
+                        setFlipping(true);
+                        try {
+                          await fetch("/api/admin/plan", {
+                            method: "POST",
+                            credentials: "include",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ plan: tier }),
+                          });
+                          await refresh();
+                          captureEvent("admin_plan_toggled", { plan: tier });
+                        } finally {
+                          setFlipping(false);
+                        }
+                      }}
+                      className="relative flex-1 h-full text-xs font-semibold capitalize rounded-full transition-colors"
+                      style={{
+                        background: active ? tierColor : "transparent",
+                        color: active ? "#060610" : "var(--color-muted)",
+                      }}
+                    >
+                      {tier}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}

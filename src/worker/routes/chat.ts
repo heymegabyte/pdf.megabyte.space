@@ -9,6 +9,7 @@ import { getDb, schema } from "../db";
 import { requireAuth } from "../middleware/auth";
 import { SYSTEM_PROMPT } from "../lib/system-prompt";
 import type { Env, Variables } from "../types";
+import { CHAT_RATE_LIMITS, isPaid } from "../../shared/plans";
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -37,7 +38,7 @@ const extractBlocks = (text: string): { html?: string; css?: string; reply: stri
   };
 };
 
-const CHAT_LIMITS = { pro: 300, free: 60 } as const;
+const CHAT_LIMITS = CHAT_RATE_LIMITS;
 
 app.post("/projects/:id/chat", requireAuth, zValidator("json", chatBody), async (c) => {
   const db = getDb(c.env.DB);
@@ -53,7 +54,8 @@ app.post("/projects/:id/chat", requireAuth, zValidator("json", chatBody), async 
   if (!project) return c.json({ error: "Not found" }, 404);
   if (!user) return c.json({ error: "User not found" }, 404);
 
-  const dailyLimit = user.plan === "pro" ? CHAT_LIMITS.pro : CHAT_LIMITS.free;
+  const dailyLimit =
+    user.plan === "unlimited" ? CHAT_LIMITS.unlimited : user.plan === "pro" ? CHAT_LIMITS.pro : CHAT_LIMITS.free;
   const day = new Date().toISOString().slice(0, 10);
   const rateKey = `ratelimit:chat:${userId}:${day}`;
   const used = Number((await c.env.CACHE.get(rateKey)) ?? "0");
@@ -70,8 +72,8 @@ app.post("/projects/:id/chat", requireAuth, zValidator("json", chatBody), async 
     );
   }
   const { message, model = "sonnet" } = c.req.valid("json");
-  if (model === "opus" && user.plan !== "pro") {
-    return c.json({ error: "Opus model requires a Pro subscription.", code: "PLAN_REQUIRED" }, 402);
+  if (model === "opus" && !isPaid(user.plan)) {
+    return c.json({ error: "Opus model requires a Pro or Unlimited subscription.", code: "PLAN_REQUIRED" }, 402);
   }
   const modelId = MODEL_MAP[model];
 

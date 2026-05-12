@@ -1,10 +1,168 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Logo } from "../components/Logo";
-import { ArrowRight, FileText, MessageSquare, Download, Layers, Sparkles, Check, Crown, ChevronDown, Code2, Eye, X, Music, Mail, Globe, Ghost } from "lucide-react";
+import {
+  ArrowRight,
+  FileText,
+  MessageSquare,
+  Download,
+  Layers,
+  Sparkles,
+  Check,
+  Crown,
+  ChevronDown,
+  Code2,
+  Eye,
+  X,
+  Music,
+  Mail,
+  Globe,
+  Ghost,
+  EyeOff,
+  ShieldCheck,
+  Brain,
+  Scale,
+  BookOpen,
+  Quote,
+} from "lucide-react";
 import { captureEvent } from "../lib/analytics";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { Footer } from "../components/Footer";
+import { PodcastTeaser } from "../components/PodcastTeaser";
+
+interface Reference {
+  id: string;
+  apa: string;
+  url?: string;
+}
+
+const REFERENCES: Reference[] = [
+  {
+    id: "delgado-2018",
+    apa: "Delgado, P., Vargas, C., Ackerman, R., & Salmerón, L. (2018). Don't throw away your printed books: A meta-analysis on the effects of reading media on reading comprehension. Educational Research Review, 25, 23–38.",
+    url: "https://doi.org/10.1016/j.edurev.2018.09.003",
+  },
+  {
+    id: "mangen-2013",
+    apa: "Mangen, A., Walgermo, B. R., & Brønnick, K. (2013). Reading linear texts on paper versus computer screen: Effects on reading comprehension. International Journal of Educational Research, 58, 61–68.",
+    url: "https://doi.org/10.1016/j.ijer.2012.12.002",
+  },
+  {
+    id: "singer-alexander-2017",
+    apa: "Singer, L. M., & Alexander, P. A. (2017). Reading on paper and digitally: What the past decades of empirical research reveal. Review of Educational Research, 87(6), 1007–1041.",
+    url: "https://doi.org/10.3102/0034654317722961",
+  },
+  {
+    id: "sellen-harper-2003",
+    apa: "Sellen, A. J., & Harper, R. H. R. (2003). The myth of the paperless office. MIT Press.",
+    url: "https://mitpress.mit.edu/9780262692830/the-myth-of-the-paperless-office/",
+  },
+  {
+    id: "mangen-kuiken-2014",
+    apa: "Mangen, A., & Kuiken, D. (2014). Lost in an iPad: Narrative engagement on paper and tablet. Scientific Study of Literature, 4(2), 150–177.",
+    url: "https://doi.org/10.1075/ssol.4.2.02man",
+  },
+  {
+    id: "kong-2018",
+    apa: "Kong, Y., Seo, Y. S., & Zhai, L. (2018). Comparison of reading performance on screen and on paper: A meta-analysis. Computers & Education, 123, 138–149.",
+    url: "https://doi.org/10.1016/j.compedu.2018.05.005",
+  },
+  {
+    id: "wastlund-2005",
+    apa: "Wästlund, E., Reinikka, H., Norlander, T., & Archer, T. (2005). Effects of VDT and paper presentation on consumption and production of information: Psychological and physiological factors. Computers in Human Behavior, 21(2), 377–394.",
+    url: "https://doi.org/10.1016/j.chb.2004.02.007",
+  },
+  {
+    id: "wolf-2018",
+    apa: "Wolf, M. (2018). Reader, come home: The reading brain in a digital world. Harper.",
+    url: "https://www.harpercollins.com/products/reader-come-home-maryanne-wolf",
+  },
+  {
+    id: "carr-2010",
+    apa: "Carr, N. (2010). The shallows: What the Internet is doing to our brains. W. W. Norton.",
+    url: "https://www.nicholascarr.com/?page_id=16",
+  },
+  {
+    id: "naumann-2015",
+    apa: "Naumann, J. (2015). A model of online reading engagement: The role of motivational factors, attention to reading goals, and cognitive abilities. Computers in Human Behavior, 53, 263–277.",
+    url: "https://doi.org/10.1016/j.chb.2015.06.051",
+  },
+  {
+    id: "annisette-2017",
+    apa: "Annisette, L. E., & Lafreniere, K. D. (2017). Social media, texting, and personality: A test of the shallowing hypothesis. Personality and Individual Differences, 115, 154–158.",
+    url: "https://doi.org/10.1016/j.paid.2016.02.043",
+  },
+  {
+    id: "sundar-marathe-2010",
+    apa: "Sundar, S. S., & Marathe, S. S. (2010). Personalization versus customization: The importance of agency, privacy, and power usage. Human Communication Research, 36(3), 298–322.",
+    url: "https://doi.org/10.1111/j.1468-2958.2010.01377.x",
+  },
+  {
+    id: "pierce-2003",
+    apa: "Pierce, J. L., Kostova, T., & Dirks, K. T. (2003). The state of psychological ownership: Integrating and extending a century of research. Review of General Psychology, 7(1), 84–107.",
+    url: "https://doi.org/10.1037/1089-2680.7.1.84",
+  },
+  {
+    id: "jicmail-2024",
+    apa: "JICMail. (2024). Item Engagement Quarterly Report: Q4 2024. Joint Industry Committee for Mail Data.",
+    url: "https://jicmail.org.uk/data/quarterly-reports/",
+  },
+  {
+    id: "dma-2024",
+    apa: "Data & Marketing Association. (2024). Response rate report 2024. ANA / DMA.",
+    url: "https://thedma.org/marketing-insights/response-rate-report/",
+  },
+  {
+    id: "ackerman-goldsmith-2011",
+    apa: "Ackerman, R., & Goldsmith, M. (2011). Metacognitive regulation of text learning: On screen versus on paper. Journal of Experimental Psychology: Applied, 17(1), 18–32.",
+    url: "https://doi.org/10.1037/a0022086",
+  },
+  {
+    id: "noyes-garland-2008",
+    apa: "Noyes, J. M., & Garland, K. J. (2008). Computer- vs. paper-based tasks: Are they equivalent? Ergonomics, 51(9), 1352–1375.",
+    url: "https://doi.org/10.1080/00140130802170387",
+  },
+  {
+    id: "iso-32000",
+    apa: "International Organization for Standardization. (2020). Document management — Portable document format — Part 2: PDF 2.0 (ISO 32000-2:2020).",
+    url: "https://www.iso.org/standard/75839.html",
+  },
+  {
+    id: "adobe-pdf-history",
+    apa: "Warnock, J. (1991). The Camelot Project. Adobe Systems Incorporated. (Internal technical memo introducing what became PDF.)",
+    url: "https://www.planetpdf.com/planetpdf/pdfs/warnock_camelot.pdf",
+  },
+  {
+    id: "wcag-2-2",
+    apa: "World Wide Web Consortium. (2023). Web Content Accessibility Guidelines (WCAG) 2.2. W3C Recommendation.",
+    url: "https://www.w3.org/TR/WCAG22/",
+  },
+  {
+    id: "cf-browser-rendering",
+    apa: "Cloudflare. (2024). Browser Rendering API — Generating PDFs with headless Chromium. Cloudflare Workers documentation.",
+    url: "https://developers.cloudflare.com/browser-rendering/",
+  },
+];
+
+const REF_INDEX: Record<string, number> = REFERENCES.reduce((acc, r, i) => {
+  acc[r.id] = i + 1;
+  return acc;
+}, {} as Record<string, number>);
+
+function Cite({ refId }: { refId: string }) {
+  const n = REF_INDEX[refId];
+  if (!n) return null;
+  return (
+    <a
+      href={`#ref-${refId}`}
+      onClick={() => captureEvent("landing_cite_click", { refId })}
+      className="align-super text-[0.6em] font-semibold text-[var(--color-cyan)] hover:underline no-underline ml-0.5"
+      aria-label={`Reference ${n}`}
+    >
+      [{n}]
+    </a>
+  );
+}
 
 interface FeaturedPdf {
   slug: string;
@@ -24,6 +182,7 @@ const COMPETITORS = [
   { feature: "Public share link", us: true, panda: true, doc: true, acro: false, jas: false },
   { feature: "Anonymous trial — no signup", us: true, panda: false, doc: false, acro: false, jas: false },
   { feature: "Starts at $9/mo (or free)", us: true, panda: false, doc: false, acro: false, jas: false },
+  { feature: "Unlimited projects tier ($50/mo)", us: true, panda: false, doc: false, acro: false, jas: false },
 ];
 
 const SISTER_SITES = [
@@ -44,7 +203,11 @@ const FAQ_ITEMS = [
   },
   {
     q: "Can I download a real PDF?",
-    a: "Yes — Pro users ($9/mo) get true PDF exports generated by Cloudflare Browser Rendering. The file has selectable text, embedded fonts, and correct page dimensions. Guest and Free tiers see the live preview only.",
+    a: "Yes — Pro ($9/mo) and Unlimited ($50/mo) get true PDF exports generated by Cloudflare Browser Rendering. The file has selectable text, embedded fonts, and correct page dimensions. Guest and Free tiers see the live preview only.",
+  },
+  {
+    q: "What does Unlimited get me at $50/mo?",
+    a: "Everything in Pro plus unlimited projects, 500 PDF exports per day, 2,000 AI prompts per day across both the document editor and the assistant. Built for agencies, prolific writers, and anyone who hits the Pro caps.",
   },
   {
     q: "What kinds of documents can it make?",
@@ -59,6 +222,44 @@ const FAQ_ITEMS = [
     a: "Every AI response creates a snapshot. You can restore any previous version of your document with one click — handy when a prompt takes the design in the wrong direction.",
   },
 ];
+
+const ROTATOR_WORDS = [
+  "printable PDF",
+  "polished invoice",
+  "winning resume",
+  "tight contract",
+  "killer proposal",
+  "crisp report",
+];
+
+function WordRotator() {
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const t = window.setInterval(() => setI((n) => (n + 1) % ROTATOR_WORDS.length), 2400);
+    return () => window.clearInterval(t);
+  }, []);
+  return (
+    <span className="word-rotator" aria-live="polite">
+      <span className="word-rotator-sr" aria-hidden="true">
+        {ROTATOR_WORDS[0]}
+      </span>
+      {ROTATOR_WORDS.map((w, idx) => (
+        <span
+          key={w}
+          className="word-rotator-item"
+          data-active={idx === i ? "true" : "false"}
+          aria-hidden={idx !== i}
+        >
+          <span className="bg-gradient-to-r from-[var(--color-cyan)] to-[#7C3AED] bg-clip-text text-transparent">
+            {w}
+          </span>
+        </span>
+      ))}
+    </span>
+  );
+}
 
 export default function Landing() {
   useDocumentTitle("Chat your way to print-perfect PDFs");
@@ -104,6 +305,19 @@ export default function Landing() {
       <main id="main-content" className="flex-1">
         <section ref={heroRef} className="relative overflow-hidden">
           <div className="aurora" aria-hidden="true" />
+          <picture aria-hidden="true">
+            <source media="(max-width: 640px)" srcSet="/hero-papers-mobile.webp" type="image/webp" />
+            <img
+              src="/hero-papers.webp"
+              alt=""
+              className="hero-papers"
+              width={1024}
+              height={1024}
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
+            />
+          </picture>
           <div className="spotlight" aria-hidden="true" />
           <div className="max-w-6xl mx-auto px-6 lg:px-10 pt-20 lg:pt-32 pb-16 text-center animate-fade-in-up relative">
             <p className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-[var(--color-cyan)] mb-6">
@@ -114,18 +328,17 @@ export default function Landing() {
               className="text-5xl lg:text-7xl font-bold tracking-tight text-balance leading-[1.05] mb-6"
               style={{ fontFamily: "var(--font-display)" }}
             >
-              Chat your way to a{" "}
-              <span
-                className="bg-gradient-to-r from-[var(--color-cyan)] to-[var(--color-violet)] bg-clip-text text-transparent type-on"
-                style={{ ["--type-dur" as string]: "1.1s", ["--type-steps" as string]: 13 }}
-              >
-                printable PDF
-              </span>
-              .
+              Chat your way to a <WordRotator />.
             </h1>
-            <p className="text-lg lg:text-xl text-[var(--color-muted)] max-w-2xl mx-auto text-pretty mb-10">
+            <p className="text-lg lg:text-xl text-[var(--color-muted)] max-w-2xl mx-auto text-pretty mb-6">
               Prompt the AI. Watch every page render in real time at 8.5 × 11. Download a real
               PDF — text-selectable, print-ready, your name on it.
+            </p>
+            <p className="text-sm lg:text-base text-[var(--color-fg)]/85 max-w-2xl mx-auto text-pretty mb-10 leading-relaxed">
+              Email gets skimmed. Slack gets muted. A great-looking PDF gets <em>read</em> —
+              alone, on the reader's own clock, where the ego falls away
+              <Cite refId="annisette-2017" /> and the medium itself becomes
+              the trust signal.<Cite refId="sellen-harper-2003" />
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link to="/guest" className="btn btn-primary text-base px-6 py-3" onClick={() => captureEvent("landing_hero_try_guest")}>
@@ -140,6 +353,9 @@ export default function Landing() {
             </p>
           </div>
         </section>
+
+        {/* Paper philosophy — why paper still wins */}
+        <PaperPhilosophy />
 
         <section className="max-w-6xl mx-auto px-6 lg:px-10 pb-24">
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -185,7 +401,10 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* Featured PDFs from the community */}
+        {/* Research-backed stats */}
+        <ResearchStats />
+
+        {/* Featured PDFs — "I want gorgeous PDFs like this." */}
         <FeaturedSection />
 
         {/* Competitor comparison */}
@@ -261,6 +480,8 @@ export default function Landing() {
           </div>
         </section>
 
+        <PodcastTeaser />
+
         {/* Pricing */}
         <section className="max-w-6xl mx-auto px-6 lg:px-10 pb-24" id="pricing">
           <div className="text-center mb-12">
@@ -274,7 +495,7 @@ export default function Landing() {
               Start free. Pay when you need real PDFs.
             </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-4 items-start">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
             <PricingTier
               name="Guest"
               price="Free"
@@ -327,6 +548,24 @@ export default function Landing() {
               ]}
               locked={[]}
             />
+            <PricingTier
+              name="Unlimited"
+              price="$50"
+              sub="per month"
+              cta="Go Unlimited"
+              ctaLink="/sign-in"
+              premium
+              features={[
+                "Unlimited projects",
+                "500 PDF exports / day",
+                "2,000 AI prompts / day",
+                "Opus + Sonnet, no caps",
+                "Priority assistant",
+                "Public share links",
+                "Cancel anytime",
+              ]}
+              locked={[]}
+            />
           </div>
         </section>
 
@@ -346,6 +585,9 @@ export default function Landing() {
             ))}
           </dl>
         </section>
+
+        {/* APA References */}
+        <ReferencesSection />
 
         <section className="max-w-6xl mx-auto px-6 lg:px-10 pb-24">
           <div className="card p-8 lg:p-12 text-center">
@@ -369,6 +611,352 @@ export default function Landing() {
 
       <Footer />
     </div>
+  );
+}
+
+function PaperPhilosophy() {
+  return (
+    <section className="relative max-w-6xl mx-auto px-6 lg:px-10 pb-24" aria-labelledby="paper-philosophy-heading">
+      <div className="text-center mb-12">
+        <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-cyan)] mb-3">
+          The case for the printed page
+        </p>
+        <h2
+          id="paper-philosophy-heading"
+          className="text-4xl lg:text-6xl font-bold mb-5 text-balance leading-[1.05]"
+          style={{ fontFamily: "var(--font-display)" }}
+        >
+          Paper{" "}
+          <span className="bg-gradient-to-r from-[var(--color-cyan)] via-[#7C3AED] to-[#50AAE3] bg-clip-text text-transparent">
+            never dies.
+          </span>
+        </h2>
+        <p className="text-base lg:text-lg text-[var(--color-muted)] max-w-2xl mx-auto text-pretty">
+          The best way to land a complex point on another human is still over a single document
+          they can hold, scroll, and re-read on their own time. Four reasons the format wins —
+          backed by forty years of cognitive research.
+        </p>
+      </div>
+      <div className="grid md:grid-cols-2 gap-4 lg:gap-6">
+        <PhilosophyCard
+          n="01"
+          icon={<EyeOff size={20} />}
+          title="The ego falls away."
+          body={
+            <>
+              On a screen, people perform for their feed. On paper, they read for themselves —
+              no notification, no Slack ping, no audience to posture for. That privacy is
+              where minds actually change.<Cite refId="annisette-2017" />{" "}
+              Solo reading on paper engages deeper metacognition than the same text on a
+              screen.<Cite refId="ackerman-goldsmith-2011" />
+            </>
+          }
+          quote="“Solo, on paper, on their own clock — that's where the argument actually lands.”"
+          accent="var(--color-cyan)"
+        />
+        <PhilosophyCard
+          n="02"
+          icon={<ShieldCheck size={20} />}
+          title="The medium IS the trust."
+          body={
+            <>
+              A PDF is a commitment. You sat with it. You laid it out. You signed it. The
+              format itself is proof you showed up — receipts feel real, contracts feel real,
+              proposals feel real.<Cite refId="sellen-harper-2003" /> Printed material is
+              touched on average 4.6 times over its lifetime versus a single glance for most
+              email.<Cite refId="jicmail-2024" />
+            </>
+          }
+          quote="“A printed deck on the table is proof you took them seriously.”"
+          accent="#7C3AED"
+        />
+        <PhilosophyCard
+          n="03"
+          icon={<Brain size={20} />}
+          title="Comprehension is higher."
+          body={
+            <>
+              Across 54 controlled studies and 171,055 participants, meta-analyses confirm
+              paper readers understand more, remember more, and locate information faster than
+              screen readers — especially for time-pressured, complex
+              text.<Cite refId="delgado-2018" /><Cite refId="singer-alexander-2017" /> If your
+              idea is complicated, paper is the medium it survives in.
+            </>
+          }
+          quote="“Complex ideas survive on paper. They drown in a scroll.”"
+          accent="#50AAE3"
+        />
+        <PhilosophyCard
+          n="04"
+          icon={<Scale size={20} />}
+          title="It breaks the unfair game."
+          body={
+            <>
+              A great-looking PDF beats a beautifully crafted email because the email got
+              skimmed in a preview pane. A printed proposal beats a Notion link because the
+              proposal can't get tab-killed. Paper survives the attention economy by refusing
+              to play it.<Cite refId="carr-2010" /><Cite refId="wolf-2018" />
+            </>
+          }
+          quote="“The reader closes every tab — except the one in their hand.”"
+          accent="var(--color-cyan)"
+        />
+      </div>
+    </section>
+  );
+}
+
+function PhilosophyCard({
+  n,
+  icon,
+  title,
+  body,
+  quote,
+  accent,
+}: {
+  n: string;
+  icon: React.ReactNode;
+  title: string;
+  body: React.ReactNode;
+  quote: string;
+  accent: string;
+}) {
+  return (
+    <article
+      className="card relative p-7 lg:p-9 group hover:border-[var(--color-cyan)]/40 transition-colors overflow-hidden"
+      style={{
+        background:
+          "linear-gradient(160deg, var(--color-bg-card) 0%, color-mix(in oklch, var(--color-bg-card), transparent 30%) 100%)",
+      }}
+    >
+      <div
+        aria-hidden="true"
+        className="absolute -right-12 -top-12 size-40 rounded-full blur-3xl opacity-30 group-hover:opacity-50 transition-opacity"
+        style={{ background: accent }}
+      />
+      <div className="relative flex items-start gap-4 mb-4">
+        <span
+          className="font-mono text-3xl lg:text-4xl font-bold opacity-30 tabular-nums"
+          style={{ color: accent, fontFamily: "var(--font-mono, ui-monospace)" }}
+        >
+          {n}
+        </span>
+        <span
+          className="size-10 rounded-lg grid place-items-center"
+          style={{ background: `color-mix(in oklch, ${accent}, transparent 85%)`, color: accent }}
+        >
+          {icon}
+        </span>
+      </div>
+      <h3 className="relative text-2xl lg:text-3xl font-bold mb-3 leading-tight" style={{ fontFamily: "var(--font-display)" }}>
+        {title}
+      </h3>
+      <p className="relative text-sm lg:text-base text-[var(--color-fg)]/85 leading-relaxed text-pretty mb-5">
+        {body}
+      </p>
+      <figure className="relative pl-4 border-l-2" style={{ borderColor: accent }}>
+        <Quote size={14} className="opacity-40 mb-1" style={{ color: accent }} aria-hidden="true" />
+        <blockquote className="text-sm italic text-[var(--color-muted)] leading-snug">
+          {quote}
+        </blockquote>
+      </figure>
+    </article>
+  );
+}
+
+function ResearchStats() {
+  return (
+    <section className="max-w-6xl mx-auto px-6 lg:px-10 pb-24" aria-labelledby="research-heading">
+      <div className="text-center mb-12">
+        <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-cyan)] mb-3">The numbers</p>
+        <h2
+          id="research-heading"
+          className="text-3xl lg:text-5xl font-bold mb-3 text-balance leading-[1.05]"
+          style={{ fontFamily: "var(--font-display)" }}
+        >
+          Forty years of research,{" "}
+          <span className="bg-gradient-to-r from-[var(--color-cyan)] to-[#7C3AED] bg-clip-text text-transparent">
+            same verdict.
+          </span>
+        </h2>
+        <p className="text-base text-[var(--color-muted)] max-w-2xl mx-auto text-pretty">
+          The advantage of paper is not nostalgia. It's measured, replicated, and pooled across
+          tens of thousands of subjects.
+        </p>
+      </div>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+        <StatCard
+          number="171K+"
+          label="participants meta-analyzed"
+          sub={
+            <>
+              Across 54 studies, paper readers consistently outscored screen readers on
+              comprehension.<Cite refId="delgado-2018" />
+            </>
+          }
+        />
+        <StatCard
+          number="6–8%"
+          label="comprehension lift on paper"
+          sub={
+            <>
+              Pooled effect size <span className="font-mono">g = 0.21</span> — robust to study
+              type, sample, and decade.<Cite refId="delgado-2018" /><Cite refId="kong-2018" />
+            </>
+          }
+        />
+        <StatCard
+          number="4.6×"
+          label="touches per printed document"
+          sub={
+            <>
+              Average lifetime engagement per piece of physical mail — versus one preview
+              glance for most email.<Cite refId="jicmail-2024" />
+            </>
+          }
+        />
+        <StatCard
+          number="34 yrs"
+          label="of PDFs and still climbing"
+          sub={
+            <>
+              From Warnock's 1991 Camelot memo<Cite refId="adobe-pdf-history" /> to ISO
+              32000-2:2020<Cite refId="iso-32000" /> — the only doc format the whole world
+              actually opens.
+            </>
+          }
+        />
+      </div>
+      <div className="card mt-8 p-6 lg:p-8 grid lg:grid-cols-[auto_1fr] gap-5 items-start">
+        <div className="size-12 rounded-xl bg-[var(--color-cyan)]/10 grid place-items-center text-[var(--color-cyan)] shrink-0">
+          <BookOpen size={22} aria-hidden="true" />
+        </div>
+        <div>
+          <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)] font-semibold mb-2">
+            The fine print
+          </p>
+          <p className="text-sm lg:text-base text-[var(--color-fg)]/85 leading-relaxed text-pretty">
+            The screen-vs-paper gap is widest where it matters most: when text is informational,
+            time-pressured, or genuinely complex.<Cite refId="delgado-2018" /> Casual reading
+            tracks roughly equally on both. But contracts, reports, proposals, resumes —
+            anything where the reader is supposed to remember what you said — measurably
+            performs better when the medium is paper.<Cite refId="mangen-2013" /><Cite refId="singer-alexander-2017" />{" "}
+            That is exactly what a print-ready PDF preserves: the cognitive shape of a printed
+            page, even when it's read on a glowing rectangle.<Cite refId="cf-browser-rendering" />
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function StatCard({
+  number,
+  label,
+  sub,
+}: {
+  number: string;
+  label: string;
+  sub: React.ReactNode;
+}) {
+  return (
+    <div
+      className="card p-5 lg:p-6 hover:border-[var(--color-cyan)]/40 transition-colors relative overflow-hidden"
+      style={{
+        background:
+          "linear-gradient(170deg, var(--color-bg-card) 0%, color-mix(in oklch, var(--color-bg-card), transparent 40%) 100%)",
+      }}
+    >
+      <div
+        className="text-4xl lg:text-5xl font-bold mb-1 tabular-nums leading-none bg-gradient-to-br from-[var(--color-cyan)] to-[#7C3AED] bg-clip-text text-transparent"
+        style={{ fontFamily: "var(--font-display)" }}
+      >
+        {number}
+      </div>
+      <p className="text-sm font-semibold text-[var(--color-fg)] mb-2">{label}</p>
+      <p className="text-xs text-[var(--color-muted)] leading-relaxed text-pretty">{sub}</p>
+    </div>
+  );
+}
+
+function ReferencesSection() {
+  const [open, setOpen] = useState(false);
+  return (
+    <section
+      className="max-w-3xl mx-auto px-6 lg:px-10 pb-24"
+      aria-labelledby="references-heading"
+    >
+      <div className="text-center mb-8">
+        <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-cyan)] mb-3">
+          We cite our sources
+        </p>
+        <h2
+          id="references-heading"
+          className="text-3xl lg:text-4xl font-bold mb-3 text-balance"
+          style={{ fontFamily: "var(--font-display)" }}
+        >
+          References.
+        </h2>
+        <p className="text-sm text-[var(--color-muted)] max-w-md mx-auto text-pretty">
+          Every claim above traces back to a primary source. APA 7th edition.
+        </p>
+      </div>
+      <div className="card p-5 lg:p-7">
+        <button
+          type="button"
+          onClick={() => {
+            setOpen((v) => !v);
+            if (!open) captureEvent("landing_references_open", {});
+          }}
+          aria-expanded={open}
+          aria-controls="references-list"
+          className="w-full flex items-center justify-between gap-3 text-left"
+        >
+          <span className="text-sm font-semibold">
+            {open ? "Hide" : "Show"} the {REFERENCES.length} references
+          </span>
+          <ChevronDown
+            size={16}
+            className="text-[var(--color-muted)] transition-transform duration-200 motion-reduce:transition-none"
+            style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
+            aria-hidden="true"
+          />
+        </button>
+        <ol
+          id="references-list"
+          aria-hidden={!open}
+          className="grid transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none mt-0"
+          style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
+        >
+          <li className="overflow-hidden list-none">
+            <ol className="pt-5 space-y-3 text-xs lg:text-sm leading-relaxed">
+              {REFERENCES.map((r, i) => (
+                <li
+                  key={r.id}
+                  id={`ref-${r.id}`}
+                  className="text-[var(--color-fg)]/85 pl-9 -indent-9 text-pretty target:bg-[var(--color-cyan)]/[0.08] target:rounded-md target:-mx-2 target:px-2 target:py-1 transition-colors"
+                >
+                  <span className="font-mono font-semibold text-[var(--color-cyan)] inline-block w-7">
+                    [{i + 1}]
+                  </span>{" "}
+                  {r.apa}{" "}
+                  {r.url && (
+                    <a
+                      href={r.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[var(--color-cyan)] underline-hover break-words"
+                    >
+                      {r.url.replace(/^https?:\/\//, "")}
+                    </a>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </li>
+        </ol>
+      </div>
+    </section>
   );
 }
 
@@ -410,10 +998,13 @@ function FeaturedSection() {
     <section className="max-w-6xl mx-auto px-6 lg:px-10 pb-24">
       <div className="flex items-end justify-between gap-4 mb-8 flex-wrap">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-cyan)] mb-2">Trending this week</p>
-          <h2 className="text-3xl lg:text-4xl font-bold text-balance" style={{ fontFamily: "var(--font-display)" }}>
-            Featured PDFs.
+          <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-cyan)] mb-2">Built by humans like you</p>
+          <h2 className="text-3xl lg:text-5xl font-bold text-balance leading-[1.05]" style={{ fontFamily: "var(--font-display)" }}>
+            “I want gorgeous PDFs like this.”
           </h2>
+          <p className="text-sm text-[var(--color-muted)] mt-2 max-w-lg text-pretty">
+            Real documents from real people. One thought after the third tile: <em>I could ship this tomorrow.</em>
+          </p>
         </div>
         <Link
           to="/explore?sort=trending"
@@ -546,6 +1137,7 @@ function PricingTier({
   features,
   locked,
   highlight = false,
+  premium = false,
 }: {
   name: string;
   price: string;
@@ -555,16 +1147,26 @@ function PricingTier({
   features: string[];
   locked: string[];
   highlight?: boolean;
+  premium?: boolean;
 }) {
+  const accent = premium ? "#7C3AED" : "var(--color-cyan)";
+  const accentClass = premium ? "text-[#7C3AED]" : "text-[var(--color-cyan)]";
   return (
     <div
       className={`card p-6 flex flex-col gap-5 ${
-        highlight
+        premium
+          ? "border-[#7C3AED]/40 bg-gradient-to-b from-[#7C3AED]/10 to-transparent"
+          : highlight
           ? "border-[var(--color-cyan)]/40 bg-gradient-to-b from-[var(--color-cyan)]/5 to-transparent"
           : ""
       }`}
     >
-      {highlight && (
+      {premium && (
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-[#7C3AED] uppercase tracking-widest">
+          <Crown size={13} /> Power user
+        </div>
+      )}
+      {highlight && !premium && (
         <div className="flex items-center gap-1.5 text-xs font-semibold text-[var(--color-cyan)] uppercase tracking-widest">
           <Crown size={13} /> Most popular
         </div>
@@ -581,7 +1183,7 @@ function PricingTier({
       <ul className="space-y-2 flex-1">
         {features.map((f) => (
           <li key={f} className="flex items-start gap-2 text-sm">
-            <Check size={14} className="text-[var(--color-cyan)] mt-0.5 shrink-0" />
+            <Check size={14} className={`${accentClass} mt-0.5 shrink-0`} />
             {f}
           </li>
         ))}
@@ -594,11 +1196,13 @@ function PricingTier({
       </ul>
       <Link
         to={ctaLink}
-        className={`btn text-sm w-full justify-center ${highlight ? "btn-primary" : "btn-ghost"}`}
-        style={{ minHeight: 40 }}
+        className={`btn text-sm w-full justify-center ${
+          premium ? "btn-primary" : highlight ? "btn-primary" : "btn-ghost"
+        }`}
+        style={premium ? { minHeight: 40, background: accent, borderColor: accent } : { minHeight: 40 }}
         onClick={() => captureEvent("landing_pricing_cta", { tier: name })}
       >
-        {cta} {highlight && <ArrowRight size={14} />}
+        {cta} {(highlight || premium) && <ArrowRight size={14} />}
       </Link>
     </div>
   );

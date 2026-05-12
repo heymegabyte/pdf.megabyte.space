@@ -7,9 +7,11 @@ import {
   type BlogBlock,
   type BlogPost as BlogPostType,
 } from "../data/blog";
+import { getBlogContent } from "../data/blog-content";
 import { getTemplate, CATEGORY_LABELS as TEMPLATE_CAT_LABELS } from "../data/templates-hub";
 import { TopBar } from "../components/TopBar";
 import { Footer } from "../components/Footer";
+import { RichContentSections } from "../components/RichContentSections";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { useApi } from "../lib/api";
 import { captureEvent } from "../lib/analytics";
@@ -62,16 +64,24 @@ function Inner({ post }: { post: BlogPostType }) {
       el.href = href;
     };
 
+    const ogImage = post.heroImage || `${origin}/og/blog/${post.slug}.png`;
+    const ogImageType = post.heroImage ? "image/jpeg" : "image/png";
     setMeta('meta[name="description"]', "content", post.metaDescription);
     setMeta('meta[property="og:title"]', "content", post.title);
     setMeta('meta[property="og:description"]', "content", post.metaDescription);
     setMeta('meta[property="og:url"]', "content", url);
     setMeta('meta[property="og:type"]', "content", post.kind === "landing" ? "website" : "article");
-    if (post.heroImage) setMeta('meta[property="og:image"]', "content", post.heroImage);
+    setMeta('meta[property="og:image"]', "content", ogImage);
+    setMeta('meta[property="og:image:secure_url"]', "content", ogImage);
+    setMeta('meta[property="og:image:width"]', "content", "1200");
+    setMeta('meta[property="og:image:height"]', "content", "630");
+    setMeta('meta[property="og:image:alt"]', "content", post.h1);
+    setMeta('meta[property="og:image:type"]', "content", ogImageType);
     setMeta('meta[name="twitter:title"]', "content", post.title);
     setMeta('meta[name="twitter:description"]', "content", post.metaDescription);
     setMeta('meta[name="twitter:card"]', "content", "summary_large_image");
-    if (post.heroImage) setMeta('meta[name="twitter:image"]', "content", post.heroImage);
+    setMeta('meta[name="twitter:image"]', "content", ogImage);
+    setMeta('meta[name="twitter:image:alt"]', "content", post.h1);
     setLink("canonical", url);
 
     const breadcrumb = post.kind === "landing"
@@ -85,6 +95,35 @@ function Inner({ post }: { post: BlogPostType }) {
           { "@type": "ListItem", position: 3, name: post.title, item: url },
         ];
 
+    const blogContent = getBlogContent(post.slug);
+    const galleryImages =
+      blogContent?.mediaGallery.filter((m) => m.kind !== "search-deeplink" && m.src) ?? [];
+    const imageObjects = galleryImages.map((m, idx) => ({
+      "@type": "ImageObject",
+      "@id": `${url}#image-${idx + 1}`,
+      contentUrl: m.src,
+      url: m.src,
+      name: m.caption ?? m.alt,
+      description: m.alt,
+      caption: m.caption ?? m.alt,
+      ...(m.width ? { width: m.width } : {}),
+      ...(m.height ? { height: m.height } : {}),
+      creditText: m.attribution,
+      creator: { "@type": "Organization", name: m.attribution },
+      acquireLicensePage:
+        m.source === "pexels"
+          ? "https://www.pexels.com/license/"
+          : m.source === "unsplash"
+            ? "https://unsplash.com/license"
+            : m.source === "wikimedia"
+              ? "https://commons.wikimedia.org/wiki/Commons:Reusing_content_outside_Wikimedia"
+              : undefined,
+      copyrightNotice: m.attribution,
+      inLanguage: "en-US",
+      isAccessibleForFree: true,
+      representativeOfPage: idx === 0,
+      isPartOf: { "@id": url },
+    }));
     const graph: object[] = [
       {
         "@type": post.kind === "landing" ? "WebPage" : "BlogPosting",
@@ -103,7 +142,17 @@ function Inner({ post }: { post: BlogPostType }) {
         },
         mainEntityOfPage: url,
         keywords: post.tags.join(", "),
+        ...(blogContent && blogContent.citations.length > 0
+          ? {
+              citation: blogContent.citations.map((c) => ({
+                "@type": "CreativeWork",
+                name: c.apa,
+                ...(c.url ? { url: c.url } : {}),
+              })),
+            }
+          : {}),
       },
+      ...imageObjects,
       {
         "@type": "BreadcrumbList",
         itemListElement: breadcrumb,
@@ -160,6 +209,7 @@ function Inner({ post }: { post: BlogPostType }) {
   }, [api, post.tags]);
 
   const related = relatedPosts(post.slug, 3);
+  const rich = getBlogContent(post.slug);
   const relatedTpls = post.relatedTemplates
     .map((s) => getTemplate(s))
     .filter((t): t is NonNullable<ReturnType<typeof getTemplate>> => Boolean(t))
@@ -309,6 +359,11 @@ function Inner({ post }: { post: BlogPostType }) {
             </div>
           </div>
         </article>
+
+        {/* Rich content extensions — citations + media gallery + references */}
+        {rich && (
+          <RichContentSections content={rich} eyebrow="Sources and references" />
+        )}
 
         {/* Related templates */}
         {relatedTpls.length > 0 && (

@@ -15,7 +15,9 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          codemirror: ["codemirror", "@codemirror/lang-html", "@codemirror/lang-css", "@codemirror/theme-one-dark", "@codemirror/state", "@codemirror/view"],
+          "codemirror-core": ["codemirror", "@codemirror/state", "@codemirror/view"],
+          "codemirror-lang": ["@codemirror/lang-html", "@codemirror/lang-css"],
+          "codemirror-theme": ["@codemirror/theme-one-dark"],
           react: ["react", "react-dom", "react-router-dom"],
           icons: ["lucide-react"],
         },

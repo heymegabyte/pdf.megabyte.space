@@ -438,6 +438,7 @@ export function AiAssistantDrawer() {
 
   const planLabel = useMemo(() => {
     if (status !== "authenticated") return "Anon";
+    if (me?.user.plan === "unlimited") return "Unlimited";
     if (me?.user.plan === "pro") return "Pro";
     return "Free";
   }, [status, me]);

@@ -170,9 +170,12 @@ export default function Dashboard() {
     }
   }
 
-  async function upgrade() {
+  async function upgrade(tier: "pro" | "unlimited" = "pro") {
     try {
-      const { url } = await api<{ url: string }>("/api/billing/checkout", { method: "POST" });
+      const { url } = await api<{ url: string }>("/api/billing/checkout", {
+        method: "POST",
+        body: JSON.stringify({ tier }),
+      });
       window.location.href = url;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Billing unavailable");
@@ -214,7 +217,12 @@ export default function Dashboard() {
 
   const empty = !loading && projects.length === 0;
   const overLimit = me && me.usage.projectCount >= me.usage.projectLimit;
-  const isPro = me?.user.plan === "pro";
+  const plan = me?.user.plan ?? "free";
+  const isUnlimited = plan === "unlimited";
+  const isPro = plan === "pro";
+  const isPaid = isPro || isUnlimited;
+  const planLabel = isUnlimited ? "Unlimited" : isPro ? "Pro" : "Free";
+  const planColor = isUnlimited ? "#7C3AED" : "var(--color-cyan)";
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -230,26 +238,45 @@ export default function Dashboard() {
             </h1>
             {me && (
               <p className="text-sm text-[var(--color-muted)] mt-2">
-                {me.usage.projectCount} of {me.usage.projectLimit} used ·{" "}
-                <span className="inline-flex items-center gap-1">
-                  {isPro ? (
-                    <>
-                      <Crown size={14} className="text-[var(--color-cyan)]" /> Pro
-                    </>
-                  ) : (
-                    <>Free</>
-                  )}
-                </span>
+                {isUnlimited ? (
+                  <>
+                    {me.usage.projectCount} projects · <span className="inline-flex items-center gap-1">
+                      <Crown size={14} style={{ color: planColor }} /> {planLabel}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    {me.usage.projectCount} of {me.usage.projectLimit} used ·{" "}
+                    <span className="inline-flex items-center gap-1">
+                      {isPro ? (
+                        <>
+                          <Crown size={14} className="text-[var(--color-cyan)]" /> Pro
+                        </>
+                      ) : (
+                        <>Free</>
+                      )}
+                    </span>
+                  </>
+                )}
               </p>
             )}
           </div>
           <div className="flex items-center gap-2">
-            {config?.billingEnabled && !isPro && (
-              <button onClick={() => { captureEvent("dashboard_upgrade_click"); upgrade(); }} className="btn btn-ghost text-sm">
+            {config?.billingEnabled && !isPaid && (
+              <button onClick={() => { captureEvent("dashboard_upgrade_click"); upgrade("pro"); }} className="btn btn-ghost text-sm">
                 <Crown size={16} /> Upgrade
               </button>
             )}
-            {config?.billingEnabled && isPro && (
+            {config?.billingEnabled && config?.unlimitedEnabled && isPro && (
+              <button
+                onClick={() => { captureEvent("dashboard_upgrade_unlimited_click"); upgrade("unlimited"); }}
+                className="btn btn-ghost text-sm"
+                style={{ borderColor: "#7C3AED", color: "#7C3AED" }}
+              >
+                <Crown size={16} /> Go Unlimited
+              </button>
+            )}
+            {config?.billingEnabled && isPaid && (
               <button onClick={manageBilling} className="btn btn-ghost text-sm">
                 Billing
               </button>
@@ -265,10 +292,15 @@ export default function Dashboard() {
         </div>
 
         {successToast && (
-          <div role="status" aria-live="polite" className="mb-6 flex items-center gap-3 p-4 rounded-lg border border-[var(--color-cyan)]/30 bg-[var(--color-cyan)]/10 text-sm">
-            <Check size={18} className="text-[var(--color-cyan)] shrink-0" />
+          <div role="status" aria-live="polite" className="mb-6 flex items-center gap-3 p-4 rounded-lg border text-sm" style={{ borderColor: `${planColor}4D`, background: `${planColor}1A` }}>
+            <Check size={18} className="shrink-0" style={{ color: planColor }} />
             <div>
-              <strong className="text-[var(--color-cyan)]">Welcome to Pro!</strong> PDF export, share links, and Opus are now unlocked.
+              <strong style={{ color: planColor }}>
+                {isUnlimited ? "Welcome to Unlimited!" : "Welcome to Pro!"}
+              </strong>{" "}
+              {isUnlimited
+                ? "Unlimited projects, 500 daily PDF exports, and 2,000 AI prompts a day are now yours."
+                : "PDF export, share links, and Opus are now unlocked."}
             </div>
           </div>
         )}
@@ -313,11 +345,32 @@ export default function Dashboard() {
         {limitHit && (
           <div role="alert" aria-live="assertive" className="mb-6 card p-4 flex flex-wrap items-center justify-between gap-3">
             <div className="text-sm">
-              <strong>You've hit your free plan limit.</strong> Pro gives you 10 projects, PDF export, and share links.
+              {isPro ? (
+                <>
+                  <strong>You've hit your Pro project limit.</strong> Unlimited removes the cap and bumps daily exports to 500.
+                </>
+              ) : (
+                <>
+                  <strong>You've hit your free plan limit.</strong> Pro gives you 10 projects, PDF export, and share links — Unlimited removes the cap.
+                </>
+              )}
             </div>
-            <button onClick={() => { captureEvent("dashboard_limit_hit_upgrade"); upgrade(); }} className="btn btn-primary text-sm">
-              <Crown size={16} /> Upgrade — $9/mo
-            </button>
+            <div className="flex items-center gap-2">
+              {!isPro && (
+                <button onClick={() => { captureEvent("dashboard_limit_hit_upgrade"); upgrade("pro"); }} className="btn btn-primary text-sm">
+                  <Crown size={16} /> Pro — ${config?.proPriceUsd ?? 9}/mo
+                </button>
+              )}
+              {config?.unlimitedEnabled && (
+                <button
+                  onClick={() => { captureEvent("dashboard_limit_hit_unlimited"); upgrade("unlimited"); }}
+                  className="btn btn-primary text-sm"
+                  style={{ background: "#7C3AED", borderColor: "#7C3AED" }}
+                >
+                  <Crown size={16} /> Unlimited — ${config?.unlimitedPriceUsd ?? 50}/mo
+                </button>
+              )}
+            </div>
           </div>
         )}
 

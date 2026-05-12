@@ -17,6 +17,7 @@ export interface Env {
   STRIPE_SECRET_KEY?: string;
   STRIPE_WEBHOOK_SECRET?: string;
   STRIPE_PRICE_ID_PRO?: string;
+  STRIPE_PRICE_ID_UNLIMITED?: string;
   SENTRY_DSN?: string;
   SENTRY_DSN_CLIENT?: string;
   POSTHOG_API_KEY?: string;
@@ -31,6 +32,7 @@ export interface Env {
   LISTMONK_FROM_EMAIL?: string;
   LISTMONK_FROM_NAME?: string;
   LISTMONK_LIST_ID?: string;
+  LISTMONK_PODCAST_LIST_ID?: string;
   EMAIL_UNSUB_SECRET?: string;
   ADMIN_EMAIL?: string;
   CRON_SECRET?: string;

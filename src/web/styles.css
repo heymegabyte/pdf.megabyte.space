@@ -383,24 +383,63 @@ body[data-ai-busy="on"] [data-wordmark] {
   .spotlight { display: none; }
 }
 
-/* Type-on intro — hero headline */
-@keyframes type-on {
-  from { width: 0; }
-  to { width: 100%; }
+/* Hero ambient backdrop — drifting paper bloom */
+.hero-papers {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: min(780px, 78vw);
+  height: auto;
+  max-height: 78vh;
+  opacity: 0.42;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  z-index: 0;
+  filter: saturate(1.05) contrast(1.02);
+  animation: hero-drift 22s ease-in-out infinite alternate;
+  will-change: transform;
 }
-@keyframes caret-blink {
-  50% { border-right-color: transparent; }
+@keyframes hero-drift {
+  from { transform: translate3d(-1.6%, -1%, 0) rotate(-1deg) scale(1); }
+  to   { transform: translate3d(1.6%,  1%, 0) rotate(1deg)  scale(1.04); }
 }
-.type-on {
-  display: inline-block;
-  overflow: hidden;
-  white-space: nowrap;
-  border-right: 2px solid var(--color-cyan);
-  vertical-align: bottom;
-  animation:
-    type-on var(--type-dur, 1.4s) steps(var(--type-steps, 24), end) 200ms both,
-    caret-blink 720ms steps(1, end) infinite;
+@media (max-width: 640px) {
+  .hero-papers { width: 92vw; opacity: 0.32; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .type-on { animation: none; border-right: 0; width: auto; }
+  .hero-papers { animation: none; }
+}
+
+/* Word rotator — transform/opacity only (no width-stepping → no gradient glitch) */
+.word-rotator {
+  display: inline-grid;
+  vertical-align: bottom;
+  position: relative;
+  text-align: left;
+}
+.word-rotator-sr {
+  visibility: hidden;
+  white-space: nowrap;
+  grid-area: 1 / 1;
+}
+.word-rotator-item {
+  grid-area: 1 / 1;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(0.35em);
+  transition: opacity 520ms cubic-bezier(0.22, 1, 0.36, 1), transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+.word-rotator-item[data-active="true"] {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  .word-rotator-item {
+    transition: none;
+    transform: none;
+    opacity: 0;
+  }
+  .word-rotator-item[data-active="true"] { opacity: 1; }
 }

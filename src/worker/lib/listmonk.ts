@@ -88,12 +88,14 @@ export async function listmonkSendTx(
   if (!templateId) {
     return { ok: false, status: 0, error: `template_not_found:${args.templateAlias}` };
   }
+  const headersArr = Object.entries(args.headers ?? {}).map(([k, v]) => ({ [k]: v }));
   const body: Record<string, unknown> = {
     subscriber_email: args.subscriberEmail,
     template_id: templateId,
     data: args.data,
-    headers: args.headers ?? {},
+    headers: headersArr,
     content_type: args.contentType ?? "html",
+    messenger: "email",
   };
   if (args.fromEmail || env.LISTMONK_FROM_EMAIL) {
     body.from_email = args.fromEmail ?? env.LISTMONK_FROM_EMAIL;
@@ -149,7 +151,7 @@ export async function listmonkSendTx(
     const errMsg =
       typeof json === "object" && json && "message" in json
         ? String((json as { message: unknown }).message)
-        : `HTTP ${res.status}`;
+        : `HTTP ${res.status} ${JSON.stringify(json).slice(0, 500)}`;
     return { ok: false, status: res.status, body: json, error: errMsg };
   }
   return { ok: true, status: res.status, body: json };

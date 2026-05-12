@@ -16,8 +16,10 @@ import {
   relatedTemplates,
   type TemplateHubEntry,
 } from "../data/templates-hub";
+import { getTemplateContent } from "../data/template-content";
 import { TopBar } from "../components/TopBar";
 import { Footer } from "../components/Footer";
+import { RichContentSections } from "../components/RichContentSections";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { useApi } from "../lib/api";
 import { captureEvent } from "../lib/analytics";
@@ -42,6 +44,7 @@ function DetailInner({ tpl }: { tpl: TemplateHubEntry }) {
   useEffect(() => {
     const origin = window.location.origin;
     const url = `${origin}/pdf-template/${tpl.slug}`;
+    const richMeta = getTemplateContent(tpl.slug);
     const setMeta = (selector: string, attr: string, content: string) => {
       let el = document.querySelector<HTMLMetaElement>(selector);
       if (!el) {
@@ -62,15 +65,53 @@ function DetailInner({ tpl }: { tpl: TemplateHubEntry }) {
       el.href = href;
     };
 
+    const ogImage = `${origin}/og/template/${tpl.slug}.png`;
     setMeta('meta[name="description"]', "content", tpl.metaDescription);
     setMeta('meta[property="og:title"]', "content", tpl.title);
     setMeta('meta[property="og:description"]', "content", tpl.metaDescription);
     setMeta('meta[property="og:url"]', "content", url);
     setMeta('meta[property="og:type"]', "content", "article");
+    setMeta('meta[property="og:image"]', "content", ogImage);
+    setMeta('meta[property="og:image:secure_url"]', "content", ogImage);
+    setMeta('meta[property="og:image:width"]', "content", "1200");
+    setMeta('meta[property="og:image:height"]', "content", "630");
+    setMeta('meta[property="og:image:alt"]', "content", tpl.h1);
+    setMeta('meta[property="og:image:type"]', "content", "image/png");
     setMeta('meta[name="twitter:title"]', "content", tpl.title);
     setMeta('meta[name="twitter:description"]', "content", tpl.metaDescription);
     setMeta('meta[name="twitter:card"]', "content", "summary_large_image");
+    setMeta('meta[name="twitter:image"]', "content", ogImage);
+    setMeta('meta[name="twitter:image:alt"]', "content", tpl.h1);
     setLink("canonical", url);
+
+    const galleryImages =
+      richMeta?.mediaGallery.filter((m) => m.kind !== "search-deeplink" && m.src) ?? [];
+    const imageObjects = galleryImages.map((m, idx) => ({
+      "@type": "ImageObject",
+      "@id": `${url}#image-${idx + 1}`,
+      contentUrl: m.src,
+      url: m.src,
+      name: m.caption ?? m.alt,
+      description: m.alt,
+      caption: m.caption ?? m.alt,
+      ...(m.width ? { width: m.width } : {}),
+      ...(m.height ? { height: m.height } : {}),
+      creditText: m.attribution,
+      creator: { "@type": "Organization", name: m.attribution },
+      acquireLicensePage:
+        m.source === "pexels"
+          ? "https://www.pexels.com/license/"
+          : m.source === "unsplash"
+            ? "https://unsplash.com/license"
+            : m.source === "wikimedia"
+              ? "https://commons.wikimedia.org/wiki/Commons:Reusing_content_outside_Wikimedia"
+              : undefined,
+      copyrightNotice: m.attribution,
+      inLanguage: "en-US",
+      isAccessibleForFree: true,
+      representativeOfPage: idx === 0,
+      isPartOf: { "@id": url },
+    }));
 
     const jsonLd = {
       "@context": "https://schema.org",
@@ -80,11 +121,22 @@ function DetailInner({ tpl }: { tpl: TemplateHubEntry }) {
           "@id": url,
           headline: tpl.h1,
           description: tpl.metaDescription,
+          image: galleryImages[0]?.src ? [galleryImages[0].src] : undefined,
           author: { "@type": "Organization", name: "Megabyte PDF" },
           publisher: { "@type": "Organization", name: "Megabyte PDF" },
           datePublished: "2026-05-11",
           mainEntityOfPage: url,
+          ...(richMeta && richMeta.citations.length > 0
+            ? {
+                citation: richMeta.citations.map((c) => ({
+                  "@type": "CreativeWork",
+                  name: c.apa,
+                  ...(c.url ? { url: c.url } : {}),
+                })),
+              }
+            : {}),
         },
+        ...imageObjects,
         {
           "@type": "HowTo",
           name: `How to generate a ${tpl.h1.toLowerCase()} PDF in seconds`,
@@ -158,6 +210,7 @@ function DetailInner({ tpl }: { tpl: TemplateHubEntry }) {
   }, [api, tpl.communityTags]);
 
   const related = relatedTemplates(tpl.slug, 4);
+  const rich = getTemplateContent(tpl.slug);
   const guestHref = `/guest?prompt=${encodeURIComponent(tpl.starterPrompt)}`;
 
   return (
@@ -337,6 +390,15 @@ function DetailInner({ tpl }: { tpl: TemplateHubEntry }) {
             </p>
           </div>
         </section>
+
+        {/* Rich body + media gallery + references (only when content available) */}
+        {rich && (
+          <RichContentSections
+            content={rich}
+            eyebrow="Deep dive"
+            heading={`What good ${tpl.h1.toLowerCase()} actually look like`}
+          />
+        )}
 
         {/* Features + design notes */}
         <section className="border-b border-[var(--color-line)]">

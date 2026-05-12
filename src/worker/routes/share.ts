@@ -70,8 +70,39 @@ shareApi.post("/projects/:id/share", requireAuth, async (c) => {
   }
   await c.env.CACHE.put(rateKey, String(used + 1), { expirationTtl: 60 * 60 * 24 });
 
+  // Detect first-ever share before insert so the dedup is honest.
+  const priorShareCount = await db
+    .select({ n: sql<number>`count(*)` })
+    .from(schema.shareLinks)
+    .innerJoin(schema.projects, eq(schema.shareLinks.projectId, schema.projects.id))
+    .where(eq(schema.projects.userId, userId));
+  const isFirstShare = Number(priorShareCount[0]?.n ?? 0) === 0;
+
   const slug = nanoid(10);
   await db.insert(schema.shareLinks).values({ slug, projectId: id });
+
+  if (isFirstShare) {
+    const shareUrl = `${c.env.APP_URL}/s/${slug}`;
+    c.executionCtx?.waitUntil(
+      sendEmail(c.env, {
+        userId,
+        template: "first-share",
+        dedupKey: `first-share:${userId}`,
+        data: {
+          project_title: project.title,
+          share_url: shareUrl,
+          tweet_url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+            `Just made ${project.title} with @megabytepdf — one prompt, one PDF.`
+          )}&url=${encodeURIComponent(shareUrl)}`,
+          linkedin_url: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`,
+          explore_url: `${c.env.APP_URL}/explore?sort=trending`,
+        },
+      }).catch((err) => {
+        Sentry.captureException(err, { tags: { trigger: "first_share", userId } });
+      })
+    );
+  }
+
   return c.json({ slug, url: `${c.env.APP_URL}/s/${slug}` }, 201);
 });
 
@@ -419,7 +450,8 @@ sharePublic.get("/:slug/render", async (c) => {
   return c.html(buildSharePreviewDoc(project.html, project.css, project.pageSize, project.margin), 200, {
     "cache-control": "public, max-age=60",
     "x-content-type-options": "nosniff",
-    "content-security-policy": "default-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'none';",
+    "content-security-policy":
+      "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'none'; frame-ancestors 'self'; base-uri 'none';",
   });
 });
 

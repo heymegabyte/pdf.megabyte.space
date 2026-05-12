@@ -14,12 +14,15 @@ import auth from "./routes/auth";
 import follows from "./routes/follows";
 import email from "./routes/email";
 import assistant from "./routes/assistant";
+import podcast from "./routes/podcast";
+import { ogRoutes } from "./routes/og-template";
 import puppeteer from "@cloudflare/puppeteer";
 import { buildSharePreviewDoc, wrapDocument, pageDimensionsIn } from "./lib/templates";
 import { optionalAuth, requireAuth } from "./middleware/auth";
 import { getDb, schema } from "./db";
 import { eq, and, isNull, count, desc, like, sql } from "drizzle-orm";
 import type { Env, Variables } from "./types";
+import { projectLimit, PRO_PRICE_USD, UNLIMITED_PRICE_USD } from "../shared/plans";
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -37,66 +40,81 @@ app.use(
     allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
   })
 );
-app.use(
-  "*",
-  secureHeaders({
-    xFrameOptions: false,
-    xXssProtection: false,
-    strictTransportSecurity: "max-age=63072000; includeSubDomains; preload",
-    crossOriginEmbedderPolicy: false,
-    crossOriginOpenerPolicy: false,
-    crossOriginResourcePolicy: false,
-    contentSecurityPolicy: {
-      defaultSrc: ["'self'"],
-      scriptSrc: [
-        "'self'",
-        "'unsafe-inline'",
-        "https://www.googletagmanager.com",
-        "https://js.stripe.com",
-        "https://challenges.cloudflare.com",
-        "https://us-assets.i.posthog.com",
-        "https://static.cloudflareinsights.com",
-      ],
-      connectSrc: [
-        "'self'",
-        "https://*.sentry.io",
-        "https://ingest.sentry.io",
-        "https://sentry.megabyte.space",
-        "https://us.i.posthog.com",
-        "https://us-assets.i.posthog.com",
-        "https://app.posthog.com",
-        "https://www.google-analytics.com",
-        "https://analytics.google.com",
-        "https://region1.google-analytics.com",
-        "https://www.google.com",
-        "https://www.googletagmanager.com",
-        "https://api.stripe.com",
-        "https://accounts.google.com",
-        "https://oauth2.googleapis.com",
-        "https://www.googleapis.com",
-        "https://static.cloudflareinsights.com",
-      ],
-      imgSrc: [
-        "'self'",
-        "data:",
-        "https://www.googletagmanager.com",
-        "https://www.google-analytics.com",
-        "https://lh3.googleusercontent.com",
-      ],
-      frameSrc: [
-        "https://www.googletagmanager.com",
-        "https://js.stripe.com",
-        "https://challenges.cloudflare.com",
-        "https://accounts.google.com",
-      ],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      baseUri: ["'self'"],
-      objectSrc: ["'none'"],
-      reportUri: ["https://sentry.megabyte.space/api/security/?sentry_key=megabyte-pdf"],
-    },
-  })
-);
+// PDF render endpoints (/api/public/:slug/render, /s/:slug/render) host
+// arbitrary user-authored HTML+CSS+images. They set their own permissive CSP
+// in-handler. Apply the strict global CSP to everything ELSE.
+const isUserRenderPath = (pathname: string): boolean =>
+  /^\/api\/public\/[^/]+\/render$/.test(pathname) ||
+  /^\/s\/[^/]+\/render$/.test(pathname);
+
+const strictSecureHeaders = secureHeaders({
+  xFrameOptions: false,
+  xXssProtection: false,
+  strictTransportSecurity: "max-age=63072000; includeSubDomains; preload",
+  crossOriginEmbedderPolicy: false,
+  crossOriginOpenerPolicy: false,
+  crossOriginResourcePolicy: false,
+  contentSecurityPolicy: {
+    defaultSrc: ["'self'"],
+    scriptSrc: [
+      "'self'",
+      "'unsafe-inline'",
+      "https://www.googletagmanager.com",
+      "https://js.stripe.com",
+      "https://challenges.cloudflare.com",
+      "https://us-assets.i.posthog.com",
+      "https://static.cloudflareinsights.com",
+    ],
+    connectSrc: [
+      "'self'",
+      "https://*.sentry.io",
+      "https://ingest.sentry.io",
+      "https://sentry.megabyte.space",
+      "https://us.i.posthog.com",
+      "https://us-assets.i.posthog.com",
+      "https://app.posthog.com",
+      "https://www.google-analytics.com",
+      "https://analytics.google.com",
+      "https://region1.google-analytics.com",
+      "https://www.google.com",
+      "https://www.googletagmanager.com",
+      "https://api.stripe.com",
+      "https://accounts.google.com",
+      "https://oauth2.googleapis.com",
+      "https://www.googleapis.com",
+      "https://static.cloudflareinsights.com",
+    ],
+    imgSrc: [
+      "'self'",
+      "data:",
+      "https://www.googletagmanager.com",
+      "https://www.google-analytics.com",
+      "https://lh3.googleusercontent.com",
+    ],
+    frameSrc: [
+      "'self'",
+      "https://www.googletagmanager.com",
+      "https://js.stripe.com",
+      "https://challenges.cloudflare.com",
+      "https://accounts.google.com",
+    ],
+    fontSrc: ["'self'", "https://fonts.gstatic.com"],
+    styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+    baseUri: ["'self'"],
+    objectSrc: ["'none'"],
+    reportUri: ["https://sentry.megabyte.space/api/security/?sentry_key=megabyte-pdf"],
+  },
+});
+
+app.use("*", async (c, next) => {
+  const pathname = new URL(c.req.url).pathname;
+  if (isUserRenderPath(pathname)) {
+    // Render endpoints set their own scoped CSP; skip the global one entirely
+    // so user PDFs with arbitrary https://… imagery aren't blocked.
+    return next();
+  }
+  return strictSecureHeaders(c, next);
+});
 
 app.get("/api/health", async (c) => {
   const start = Date.now();
@@ -134,6 +152,9 @@ app.get("/api/config", (c) =>
     appUrl: c.env.APP_URL,
     googleSignInEnabled: Boolean(c.env.GOOGLE_CLIENT_ID),
     billingEnabled: Boolean(c.env.STRIPE_SECRET_KEY && c.env.STRIPE_PRICE_ID_PRO),
+    unlimitedEnabled: Boolean(c.env.STRIPE_SECRET_KEY && c.env.STRIPE_PRICE_ID_UNLIMITED),
+    proPriceUsd: PRO_PRICE_USD,
+    unlimitedPriceUsd: UNLIMITED_PRICE_USD,
     freeLimit: Number(c.env.FREE_PROJECT_LIMIT),
     paidLimit: Number(c.env.PAID_PROJECT_LIMIT),
     sentryDsn: c.env.SENTRY_DSN_CLIENT ?? "",
@@ -154,10 +175,11 @@ app.get("/api/me", optionalAuth, async (c) => {
     .select({ n: count() })
     .from(schema.projects)
     .where(and(eq(schema.projects.userId, userId), isNull(schema.projects.deletedAt)));
-  const limit =
-    user.plan === "pro"
-      ? Number(c.env.PAID_PROJECT_LIMIT)
-      : Number(c.env.FREE_PROJECT_LIMIT);
+  const limit = projectLimit(
+    user.plan,
+    Number(c.env.FREE_PROJECT_LIMIT),
+    Number(c.env.PAID_PROJECT_LIMIT)
+  );
   return c.json({
     user: {
       id: user.id,
@@ -185,8 +207,15 @@ app.post("/api/admin/plan", optionalAuth, async (c) => {
     return c.json({ error: "Forbidden" }, 403);
   }
   const body = (await c.req.json().catch(() => null)) as { plan?: unknown } | null;
-  const plan = body?.plan === "pro" ? "pro" : body?.plan === "free" ? "free" : null;
-  if (!plan) return c.json({ error: "plan must be 'free' or 'pro'" }, 400);
+  const plan =
+    body?.plan === "pro"
+      ? "pro"
+      : body?.plan === "unlimited"
+        ? "unlimited"
+        : body?.plan === "free"
+          ? "free"
+          : null;
+  if (!plan) return c.json({ error: "plan must be 'free', 'pro', or 'unlimited'" }, 400);
   await db.update(schema.users).set({ plan }).where(eq(schema.users.id, userId));
   return c.json({ ok: true, plan });
 });
@@ -202,6 +231,7 @@ app.route("/api/guest", guest);
 app.route("/api/follows", follows);
 app.route("/api/email", email);
 app.route("/api/assistant", assistant);
+app.route("/api/podcast", podcast);
 
 // Public-PDF iframe preview (served by /p/:slug client page)
 app.get("/api/public/:slug/render", async (c) => {
@@ -218,7 +248,7 @@ app.get("/api/public/:slug/render", async (c) => {
       "cache-control": "public, max-age=120",
       "x-content-type-options": "nosniff",
       "content-security-policy":
-        "default-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'none';",
+        "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'none'; frame-ancestors 'self'; base-uri 'none';",
     }
   );
 });
@@ -309,6 +339,8 @@ app.get("/feed.xml", async (c) => {
     .filter((r) => r.slug)
     .map((r) => {
       const url = `${origin}/c/${r.slug}`;
+      const ogUrl = `${origin}/s/og/${r.slug}.png`;
+      const thumbUrl = `${origin}/s/thumb/${r.slug}.svg`;
       const pubDate = new Date(r.createdAt).toUTCString();
       return (
         `<item>` +
@@ -317,6 +349,9 @@ app.get("/feed.xml", async (c) => {
         `<guid isPermaLink="true">${xmlEscape(url)}</guid>` +
         `<pubDate>${pubDate}</pubDate>` +
         `<description>${xmlEscape(r.description ?? r.title)}</description>` +
+        `<enclosure url="${xmlEscape(ogUrl)}" type="image/png" length="0" />` +
+        `<media:thumbnail url="${xmlEscape(thumbUrl)}" width="800" height="600" />` +
+        `<media:content url="${xmlEscape(ogUrl)}" medium="image" type="image/png" width="1200" height="630" />` +
         `</item>`
       );
     })
@@ -331,7 +366,7 @@ app.get("/feed.xml", async (c) => {
   const feedSelf = tag ? `${origin}/feed.xml?tag=${tag}` : `${origin}/feed.xml`;
   const xml =
     `<?xml version="1.0" encoding="UTF-8"?>` +
-    `<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">` +
+    `<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" xmlns:content="http://purl.org/rss/1.0/modules/content/">` +
     `<channel>` +
     `<title>${xmlEscape(feedTitle)}</title>` +
     `<link>${xmlEscape(feedHome)}</link>` +
@@ -394,7 +429,15 @@ app.get("/feed.json", async (c) => {
           summary: r.description ?? r.title,
           date_published: new Date(r.createdAt).toISOString(),
           date_modified: new Date(r.updatedAt).toISOString(),
-          image: `${origin}/api/og/${r.slug}`,
+          image: `${origin}/s/og/${r.slug}.png`,
+          banner_image: `${origin}/s/og/${r.slug}.png`,
+          attachments: [
+            {
+              url: `${origin}/s/og/${r.slug}.png`,
+              mime_type: "image/png",
+              title: r.title,
+            },
+          ],
         })),
     },
     200,
@@ -575,6 +618,7 @@ app.get("/api/og/:slug", async (c) => {
 });
 
 app.route("/s", sharePublic);
+app.route("/og", ogRoutes);
 
 app.onError((err, c) => {
   console.error("[worker error]", err);
@@ -592,7 +636,11 @@ app.onError((err, c) => {
 });
 
 app.notFound((c) => {
-  if (c.req.path.startsWith("/api/") || c.req.path.startsWith("/s/")) {
+  if (
+    c.req.path.startsWith("/api/") ||
+    c.req.path.startsWith("/s/") ||
+    c.req.path.startsWith("/og/")
+  ) {
     return c.json({ error: "Not found" }, 404);
   }
   return c.env.ASSETS.fetch(c.req.raw);

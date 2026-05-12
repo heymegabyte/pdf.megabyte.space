@@ -32,6 +32,24 @@ import {
   LayoutTemplate,
   ImageDown,
   PanelLeft,
+  Briefcase,
+  Scale,
+  User,
+  Megaphone,
+  Palette,
+  Mic,
+  MicOff,
+  ThumbsUp,
+  ThumbsDown,
+  RotateCcw,
+  Star,
+  Clock,
+  Keyboard,
+  Target,
+  ChevronRight,
+  FileText,
+  Eraser,
+  StopCircle,
 } from "lucide-react";
 import { useApi, useAuthFetch, ApiError } from "../lib/api";
 import { captureEvent } from "../lib/analytics";
@@ -126,11 +144,36 @@ export default function Editor() {
   const [showPalette, setShowPalette] = useState(false);
   const [prettifying, setPrettifying] = useState(false);
   const [insertingBlock, setInsertingBlock] = useState<BlockKind | null>(null);
+  const [tone, setTone] = useState<TonePreset>(() => {
+    if (typeof window === "undefined") return "default";
+    return (window.localStorage.getItem("megabyte-pdf:tone") as TonePreset) || "default";
+  });
+  const [pageTarget, setPageTarget] = useState<number | "all">("all");
+  const [showGallery, setShowGallery] = useState(false);
+  const [galleryCategory, setGalleryCategory] = useState<keyof typeof PROMPT_GALLERY>("business");
+  const [reactions, setReactions] = useState<Record<string, "up" | "down" | null>>({});
+  const [listening, setListening] = useState(false);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+  const [pinnedPrompts, setPinnedPrompts] = useState<string[]>(() => {
+    if (typeof window === "undefined") return [];
+    try { return JSON.parse(window.localStorage.getItem("megabyte-pdf:pins") || "[]"); } catch { return []; }
+  });
+  const [promptHistory, setPromptHistory] = useState<string[]>(() => {
+    if (typeof window === "undefined") return [];
+    try { return JSON.parse(window.localStorage.getItem("megabyte-pdf:history") || "[]"); } catch { return []; }
+  });
+  const [showHistory, setShowHistory] = useState(false);
+  const [showPins, setShowPins] = useState(false);
+  const [chatSearch, setChatSearch] = useState("");
+  const [showChatSearch, setShowChatSearch] = useState(false);
+  const [stage, setStage] = useState<"idle" | "reading" | "planning" | "drafting" | "done">("idle");
   const chatScrollRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const liveHtmlRef = useRef<string | null>(null);
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const speechRecRef = useRef<SpeechRecognitionLike | null>(null);
+  const stageTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const apiRef = useRef(api);
   const idRef = useRef(id);
   useEffect(() => { apiRef.current = api; }, [api]);
@@ -335,6 +378,102 @@ export default function Editor() {
     });
   }, [data?.turns.length, sending]);
 
+  const composedMessage = useMemo(
+    () => composeMessage(message, tone, pageTarget),
+    [message, tone, pageTarget],
+  );
+
+  const costEstimate = useMemo(() => estimateCost(message, model), [message, model]);
+
+  useEffect(() => {
+    try { window.localStorage.setItem("megabyte-pdf:tone", tone); } catch { /* noop */ }
+  }, [tone]);
+
+  useEffect(() => {
+    try { window.localStorage.setItem("megabyte-pdf:pins", JSON.stringify(pinnedPrompts.slice(0, 12))); } catch { /* noop */ }
+  }, [pinnedPrompts]);
+
+  useEffect(() => {
+    try { window.localStorage.setItem("megabyte-pdf:history", JSON.stringify(promptHistory.slice(0, 10))); } catch { /* noop */ }
+  }, [promptHistory]);
+
+  useEffect(() => {
+    if (!sending) {
+      if (stageTimerRef.current) clearTimeout(stageTimerRef.current);
+      setStage("idle");
+      return;
+    }
+    setStage("reading");
+    const t1 = setTimeout(() => setStage("planning"), 1200);
+    const t2 = setTimeout(() => setStage("drafting"), 3500);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [sending]);
+
+  // ⌘/ to focus textarea, ⌘? to show shortcut overlay (palette)
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const meta = e.metaKey || e.ctrlKey;
+      if (meta && e.key === "/") {
+        e.preventDefault();
+        textareaRef.current?.focus();
+      }
+      if (meta && e.shiftKey && e.key === "?") {
+        e.preventDefault();
+        setShowPalette(true);
+      }
+      if (meta && e.key === "f" && document.activeElement?.tagName !== "TEXTAREA") {
+        e.preventDefault();
+        setShowChatSearch((s) => !s);
+      }
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+
+  const startVoiceInput = useCallback(() => {
+    setVoiceError(null);
+    const win = window as unknown as { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor };
+    const Recognition = win.SpeechRecognition || win.webkitSpeechRecognition;
+    if (!Recognition) {
+      setVoiceError("Voice input unsupported in this browser.");
+      return;
+    }
+    const rec = new Recognition();
+    rec.lang = "en-US";
+    rec.interimResults = true;
+    rec.continuous = false;
+    rec.onresult = (event: SpeechRecognitionEvent) => {
+      let txt = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        const transcript = result?.[0]?.transcript;
+        if (transcript) txt += transcript;
+      }
+      setMessage((prev) => (prev ? `${prev.trim()} ${txt}` : txt));
+    };
+    rec.onend = () => { setListening(false); };
+    rec.onerror = (e: SpeechRecognitionErrorEvent) => {
+      setVoiceError(e.error === "not-allowed" ? "Microphone permission denied." : "Voice input failed.");
+      setListening(false);
+    };
+    speechRecRef.current = rec;
+    setListening(true);
+    rec.start();
+    captureEvent("editor_voice_start");
+  }, []);
+
+  const stopVoiceInput = useCallback(() => {
+    speechRecRef.current?.stop();
+    setListening(false);
+  }, []);
+
+  const togglePin = useCallback((prompt: string) => {
+    setPinnedPrompts((prev) => {
+      if (prev.includes(prompt)) return prev.filter((p) => p !== prompt);
+      return [prompt, ...prev].slice(0, 12);
+    });
+  }, []);
+
   const previewSrc = useMemo(() => {
     if (!data) return "";
     const h = localCode?.html ?? data.project.html;
@@ -363,14 +502,16 @@ export default function Editor() {
     iframeRef.current?.contentWindow?.print();
   }
 
-  async function send() {
-    const text = message.trim();
-    if (!text || !id || sending) return;
+  async function send(overrideText?: string) {
+    const baseText = (overrideText ?? message).trim();
+    if (!baseText || !id || sending) return;
+    const text = composeMessage(baseText, tone, pageTarget);
     // Flush any pending inline edits to server so AI sees latest content
     await syncInlineEdits();
     setSending(true);
     setError(null);
-    setMessage("");
+    if (!overrideText) setMessage("");
+    setPromptHistory((prev) => [baseText, ...prev.filter((p) => p !== baseText)].slice(0, 10));
     const optimisticTurn: Turn = {
       id: `tmp-${Date.now()}`,
       role: "user",
@@ -379,7 +520,7 @@ export default function Editor() {
     };
     setData((d) => (d ? { ...d, turns: [...d.turns, optimisticTurn] } : d));
     playSound("send");
-    captureEvent("editor_chat_send", { model, messageLength: text.length });
+    captureEvent("editor_chat_send", { model, messageLength: text.length, tone, page_target: pageTarget });
     const startedAt = performance.now();
     try {
       const res = await api<ChatResponse>(`/api/projects/${id}/chat`, {
@@ -441,6 +582,25 @@ export default function Editor() {
       setSending(false);
       textareaRef.current?.focus();
     }
+  }
+
+  function regenerateLast() {
+    if (!data || sending) return;
+    const userTurns = data.turns.filter((t) => t.role === "user");
+    const last = userTurns[userTurns.length - 1];
+    if (!last) return;
+    captureEvent("editor_regenerate_last");
+    void send(stripComposedPrefixSuffix(last.content));
+  }
+
+  function reactTo(turnId: string, value: "up" | "down") {
+    setReactions((prev) => ({ ...prev, [turnId]: prev[turnId] === value ? null : value }));
+    captureEvent("editor_chat_reaction", { value });
+  }
+
+  function continueDraft() {
+    if (sending) return;
+    void send("Continue the draft from where it leaves off. Match the existing tone, structure, and visual style.");
   }
 
   async function makePrettier() {
@@ -836,78 +996,239 @@ export default function Editor() {
       )}
 
       <div className={`flex-1 grid grid-cols-1 overflow-hidden ${fullscreen || cinema ? "" : "lg:grid-cols-[380px_1fr]"}`}>
-        {!fullscreen && !cinema && <aside data-cinema-hide className="border-r border-[var(--color-line)] flex flex-col bg-[var(--color-bg-elev)] min-h-0">
+        {!fullscreen && !cinema && <aside data-cinema-hide className="border-r border-[var(--color-line)] flex flex-col bg-[var(--color-bg-elev)] min-h-0 relative">
+          <div className="px-4 pt-3 pb-2 flex items-center justify-between gap-2 border-b border-[var(--color-line)]/60">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="size-7 rounded-lg grid place-items-center bg-gradient-to-br from-[var(--color-cyan)]/25 to-[var(--color-violet)]/25 ring-1 ring-[var(--color-cyan)]/30">
+                <Sparkles size={14} className="text-[var(--color-cyan)]" />
+              </span>
+              <div className="min-w-0">
+                <div className="text-xs font-semibold tracking-wide">AI Designer</div>
+                <div className="text-[10px] text-[var(--color-muted)] truncate">
+                  {sending ? <StagePill stage={stage} /> : `${data.turns.length} message${data.turns.length === 1 ? "" : "s"} · ${previewPages}p`}
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-1 shrink-0">
+              <button
+                onClick={() => setShowChatSearch((s) => !s)}
+                aria-label="Search chat"
+                title="Search chat (⌘F)"
+                className={`size-7 rounded-md grid place-items-center ${showChatSearch ? "bg-[var(--color-cyan)]/15 text-[var(--color-cyan)]" : "text-[var(--color-muted)] hover:bg-white/5 hover:text-[var(--color-fg)]"}`}
+              >
+                <Search size={13} />
+              </button>
+              <button
+                onClick={() => setShowPins((s) => !s)}
+                aria-label="Pinned prompts"
+                title="Pinned prompts"
+                className={`size-7 rounded-md grid place-items-center ${showPins ? "bg-amber-400/15 text-amber-300" : "text-[var(--color-muted)] hover:bg-white/5 hover:text-[var(--color-fg)]"}`}
+              >
+                <Star size={13} className={pinnedPrompts.length > 0 ? "fill-current" : ""} />
+              </button>
+              <button
+                onClick={() => setShowHistory((s) => !s)}
+                aria-label="Prompt history"
+                title="Recent prompts"
+                className={`size-7 rounded-md grid place-items-center ${showHistory ? "bg-[var(--color-cyan)]/15 text-[var(--color-cyan)]" : "text-[var(--color-muted)] hover:bg-white/5 hover:text-[var(--color-fg)]"}`}
+              >
+                <Clock size={13} />
+              </button>
+              <button
+                onClick={() => setShowPalette(true)}
+                aria-label="Keyboard shortcuts"
+                title="Shortcuts (⌘?)"
+                className="size-7 rounded-md grid place-items-center text-[var(--color-muted)] hover:bg-white/5 hover:text-[var(--color-fg)]"
+              >
+                <Keyboard size={13} />
+              </button>
+            </div>
+          </div>
+
+          {showChatSearch && (
+            <div className="px-4 py-2 border-b border-[var(--color-line)]/60 bg-[var(--color-bg)]/60">
+              <div className="relative">
+                <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--color-muted)]" />
+                <input
+                  type="search"
+                  value={chatSearch}
+                  onChange={(e) => setChatSearch(e.target.value)}
+                  placeholder="Find in chat…"
+                  aria-label="Search chat messages"
+                  className="input text-xs pl-7 py-1.5 w-full"
+                  autoFocus
+                />
+              </div>
+            </div>
+          )}
+
+          {showPins && pinnedPrompts.length > 0 && (
+            <div className="px-3 py-2 border-b border-[var(--color-line)]/60 bg-amber-400/[0.03]">
+              <div className="text-[10px] uppercase tracking-wider text-amber-300/70 mb-1.5 flex items-center gap-1">
+                <Star size={9} className="fill-current" /> Pinned
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {pinnedPrompts.map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => { setMessage(p); textareaRef.current?.focus(); }}
+                    className="text-[11px] px-2 py-1 rounded-md bg-amber-400/10 border border-amber-400/20 text-amber-200/90 hover:bg-amber-400/15 max-w-[200px] truncate"
+                    title={p}
+                  >
+                    {p}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setPinnedPrompts([])}
+                  className="text-[11px] px-2 py-1 rounded-md text-[var(--color-muted)] hover:text-red-300"
+                  title="Clear pins"
+                >
+                  <Trash2 size={10} />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {showHistory && promptHistory.length > 0 && (
+            <div className="px-3 py-2 border-b border-[var(--color-line)]/60 bg-[var(--color-bg)]/40">
+              <div className="text-[10px] uppercase tracking-wider text-[var(--color-muted)] mb-1.5">Recent</div>
+              <div className="flex flex-col gap-0.5 max-h-44 overflow-y-auto scrollbar-thin">
+                {promptHistory.map((p, i) => (
+                  <div key={`${p}-${i}`} className="group flex items-center gap-1">
+                    <button
+                      onClick={() => { setMessage(p); textareaRef.current?.focus(); setShowHistory(false); }}
+                      className="flex-1 text-left text-[11px] px-2 py-1 rounded-md hover:bg-white/[0.04] text-[var(--color-fg)]/80 truncate"
+                      title={p}
+                    >
+                      {p}
+                    </button>
+                    <button
+                      onClick={() => togglePin(p)}
+                      className="size-5 rounded grid place-items-center text-[var(--color-muted)] opacity-0 group-hover:opacity-100 hover:text-amber-300"
+                      aria-label={pinnedPrompts.includes(p) ? "Unpin" : "Pin"}
+                    >
+                      <Star size={10} className={pinnedPrompts.includes(p) ? "fill-current text-amber-300" : ""} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div ref={chatScrollRef} role="log" aria-live="polite" aria-label="Chat messages" className="flex-1 overflow-y-auto scrollbar-thin px-4 py-4 space-y-3">
             {data.turns.length === 0 && !sending && (
-              <div className="text-center py-8 px-2">
-                <Sparkles size={24} className="mx-auto mb-3 text-[var(--color-cyan)]" />
-                <p className="text-sm text-[var(--color-muted)] mb-3">
-                  Tell the AI what to make. Try:
-                </p>
-                <div className="flex flex-col gap-2">
-                  {[
-                    "Invoice for $4,200 to Acme Corp from Brian Z, due in 14 days",
-                    "One-page resume for a senior software engineer in New York",
-                    "Mutual NDA between two startups — clean, professional, 2 pages",
-                    "Cover letter for a product designer applying to a Series A startup",
-                    "Quarterly business report with KPIs, highlights, and next-quarter goals",
-                  ].map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => {
-                        setMessage(s);
-                        captureEvent("editor_starter_prompt", { prompt: s });
-                        setTimeout(() => textareaRef.current?.focus(), 0);
-                      }}
-                      className="text-xs text-left p-2 rounded-lg border border-[var(--color-line)] hover:border-[var(--color-cyan)]/40 hover:bg-white/[0.02] transition-colors"
-                    >
-                      {s}
-                    </button>
-                  ))}
+              <PromptGallery
+                category={galleryCategory}
+                onCategory={setGalleryCategory}
+                onPick={(prompt) => {
+                  setMessage(prompt);
+                  captureEvent("editor_starter_prompt", { prompt, category: galleryCategory });
+                  setTimeout(() => textareaRef.current?.focus(), 0);
+                }}
+              />
+            )}
+            {data.turns
+              .filter((t) => !chatSearch.trim() || t.content.toLowerCase().includes(chatSearch.toLowerCase()))
+              .map((turn, idx, arr) => (
+                <ChatMessage
+                  key={turn.id}
+                  turn={turn}
+                  isLast={idx === arr.length - 1}
+                  reaction={reactions[turn.id] ?? null}
+                  onReact={(v) => reactTo(turn.id, v)}
+                  onRegenerate={turn.role === "assistant" && idx === arr.length - 1 ? regenerateLast : undefined}
+                  onPin={togglePin}
+                  isPinned={(p) => pinnedPrompts.includes(p)}
+                />
+              ))}
+            {sending && (
+              <div className="flex items-start gap-2">
+                <div className="size-7 rounded-full bg-gradient-to-br from-[var(--color-cyan)]/30 to-[var(--color-violet)]/30 grid place-items-center shrink-0 mt-0.5">
+                  <Loader2 size={14} className="animate-spin text-[var(--color-cyan)]" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <StageTimeline stage={stage} />
                 </div>
               </div>
             )}
-            {data.turns.map((turn) => (
-              <ChatMessage key={turn.id} turn={turn} />
-            ))}
-            {sending && (
-              <div className="flex items-start gap-2 text-sm text-[var(--color-muted)]">
-                <Loader2 size={16} className="animate-spin mt-1 text-[var(--color-cyan)]" />
-                <span>Drawing your document…</span>
+            {!sending && data.turns.length > 0 && data.turns[data.turns.length - 1]?.role === "assistant" && (
+              <div className="flex flex-wrap gap-2 pt-1">
+                <button
+                  onClick={continueDraft}
+                  className="text-[11px] px-2.5 py-1 rounded-full border border-[var(--color-line)] hover:border-[var(--color-cyan)]/40 hover:bg-white/[0.03] inline-flex items-center gap-1 text-[var(--color-fg)]/80"
+                >
+                  <ChevronRight size={10} className="text-[var(--color-cyan)]" /> Continue
+                </button>
+                <button
+                  onClick={regenerateLast}
+                  className="text-[11px] px-2.5 py-1 rounded-full border border-[var(--color-line)] hover:border-[var(--color-cyan)]/40 hover:bg-white/[0.03] inline-flex items-center gap-1 text-[var(--color-fg)]/80"
+                >
+                  <RotateCcw size={10} className="text-[var(--color-cyan)]" /> Regenerate
+                </button>
               </div>
             )}
           </div>
 
-          <div className="border-t border-[var(--color-line)] p-3 bg-[var(--color-bg)]">
-            <div className="flex items-center gap-2 mb-2" role="radiogroup" aria-label="AI model">
-              <span className="text-xs text-[var(--color-muted)]">Model:</span>
+          <div className="border-t border-[var(--color-line)] p-3 bg-[var(--color-bg)] space-y-2">
+            {voiceError && (
+              <div role="alert" className="text-[11px] px-2 py-1 rounded-md bg-red-500/10 border border-red-500/20 text-red-300 flex items-center justify-between gap-2">
+                <span className="truncate">{voiceError}</span>
+                <button onClick={() => setVoiceError(null)} aria-label="Dismiss"><X size={10} /></button>
+              </div>
+            )}
+            <div className="flex items-center gap-1.5 flex-wrap" role="toolbar" aria-label="Compose options">
+              <details className="relative">
+                <summary className="text-[11px] px-2 py-1 rounded-md border border-[var(--color-line)] text-[var(--color-muted)] hover:text-[var(--color-fg)] cursor-pointer inline-flex items-center gap-1 list-none">
+                  <Palette size={10} /> {TONE_LABEL[tone]}
+                </summary>
+                <div className="absolute z-30 bottom-full mb-1 left-0 card p-1 min-w-[160px] shadow-2xl">
+                  {(Object.keys(TONE_LABEL) as TonePreset[]).map((t) => (
+                    <button
+                      key={t}
+                      onClick={() => setTone(t)}
+                      className={`w-full text-left text-xs px-2 py-1 rounded-md ${tone === t ? "bg-[var(--color-cyan)]/15 text-[var(--color-cyan)]" : "text-[var(--color-fg)]/80 hover:bg-white/5"}`}
+                    >
+                      {TONE_LABEL[t]}
+                    </button>
+                  ))}
+                </div>
+              </details>
+              {previewPages > 1 && (
+                <details className="relative">
+                  <summary className="text-[11px] px-2 py-1 rounded-md border border-[var(--color-line)] text-[var(--color-muted)] hover:text-[var(--color-fg)] cursor-pointer inline-flex items-center gap-1 list-none">
+                    <Target size={10} /> {pageTarget === "all" ? "All pages" : `Page ${pageTarget}`}
+                  </summary>
+                  <div className="absolute z-30 bottom-full mb-1 left-0 card p-1 max-h-48 overflow-y-auto scrollbar-thin min-w-[140px] shadow-2xl">
+                    <button onClick={() => setPageTarget("all")} className={`w-full text-left text-xs px-2 py-1 rounded-md ${pageTarget === "all" ? "bg-[var(--color-cyan)]/15 text-[var(--color-cyan)]" : "text-[var(--color-fg)]/80 hover:bg-white/5"}`}>All pages</button>
+                    {Array.from({ length: previewPages }, (_, i) => i + 1).map((n) => (
+                      <button key={n} onClick={() => setPageTarget(n)} className={`w-full text-left text-xs px-2 py-1 rounded-md ${pageTarget === n ? "bg-[var(--color-cyan)]/15 text-[var(--color-cyan)]" : "text-[var(--color-fg)]/80 hover:bg-white/5"}`}>Page {n}</button>
+                    ))}
+                  </div>
+                </details>
+              )}
               <button
-                role="radio"
-                aria-checked={model === "sonnet"}
-                onClick={() => setModel("sonnet")}
-                className={`text-xs px-2.5 py-1 rounded-md ${
-                  model === "sonnet"
-                    ? "bg-[var(--color-cyan)]/15 text-[var(--color-cyan)] border border-[var(--color-cyan)]/40"
-                    : "border border-[var(--color-line)] text-[var(--color-muted)] hover:text-[var(--color-fg)]"
-                }`}
+                onClick={() => setModel(model === "sonnet" ? "opus" : "sonnet")}
+                aria-label={`Model: ${model}`}
+                title="Toggle model"
+                className={`text-[11px] px-2 py-1 rounded-md border inline-flex items-center gap-1 ${model === "opus" ? "border-[var(--color-violet)]/40 text-[var(--color-violet)] bg-[var(--color-violet)]/10" : "border-[var(--color-cyan)]/40 text-[var(--color-cyan)] bg-[var(--color-cyan)]/10"}`}
               >
-                Sonnet
+                {model === "opus" ? <Crown size={10} /> : <Zap size={10} />}
+                {model === "opus" ? "Opus" : "Sonnet"}
               </button>
-              <button
-                role="radio"
-                aria-checked={model === "opus"}
-                onClick={() => setModel("opus")}
-                className={`text-xs px-2.5 py-1 rounded-md ${
-                  model === "opus"
-                    ? "bg-[var(--color-violet)]/20 text-[var(--color-violet)] border border-[var(--color-violet)]/40"
-                    : "border border-[var(--color-line)] text-[var(--color-muted)] hover:text-[var(--color-fg)]"
-                }`}
-              >
-                Opus
-              </button>
+              <span className="text-[10px] text-[var(--color-muted)] ml-auto tabular-nums" title="Estimated input cost">
+                ~${costEstimate.toFixed(3)}
+              </span>
             </div>
+            {data.turns.length === 0 && (
+              <button
+                onClick={() => setShowGallery((s) => !s)}
+                className="w-full text-[11px] px-2 py-1.5 rounded-md border border-dashed border-[var(--color-line)] text-[var(--color-muted)] hover:text-[var(--color-fg)] hover:border-[var(--color-cyan)]/40 inline-flex items-center justify-center gap-1"
+              >
+                <LayoutTemplate size={11} /> {showGallery ? "Hide" : "Browse"} 25 templates
+              </button>
+            )}
             {suggestions.length > 0 && message.length === 0 && !sending && data.turns.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mb-2" aria-label="Suggested next prompts">
+              <div className="flex flex-wrap gap-1.5" aria-label="Suggested next prompts">
                 {suggestions.map((s) => (
                   <button
                     key={s.id}
@@ -941,25 +1262,77 @@ export default function Editor() {
                     e.preventDefault();
                     void send();
                   }
+                  if (e.key === "ArrowUp" && !message && promptHistory.length > 0) {
+                    e.preventDefault();
+                    const first = promptHistory[0];
+                    if (first) setMessage(first);
+                  }
                 }}
-                placeholder="Describe a change… (try / for commands, ⌘+Enter to send)"
+                placeholder={listening ? "Listening…" : "Describe a change… (try / for commands, ⌘+Enter to send)"}
                 aria-label="Chat message"
-                className="input resize-none pr-12 pb-6 text-sm"
-                style={{ minHeight: 56, maxHeight: 180, overflowY: "auto" }}
+                className="input resize-none pr-24 pb-7 text-sm"
+                style={{ minHeight: 64, maxHeight: 200, overflowY: "auto" }}
                 disabled={sending}
               />
-              <span className="absolute bottom-2 left-3 text-[10px] text-[var(--color-muted)] pointer-events-none select-none">
-                {message.length > 0 && `${message.length}/8000`}
-              </span>
-              <button
-                onClick={send}
-                disabled={!message.trim() || sending}
-                className="absolute bottom-2 right-2 size-9 rounded-lg bg-[var(--color-cyan)] text-[#060610] grid place-items-center disabled:opacity-30 disabled:cursor-not-allowed hover:opacity-90"
-                aria-label="Send"
-              >
-                {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-              </button>
+              <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between pointer-events-none">
+                <div className="flex items-center gap-2">
+                  <span className={`text-[10px] tabular-nums ${message.length > 7000 ? "text-amber-400" : message.length > 7600 ? "text-red-400" : "text-[var(--color-muted)]"}`}>
+                    {message.length > 0 ? `${message.length}/8000` : ""}
+                  </span>
+                  {message.trim() && (
+                    <button
+                      onClick={() => togglePin(message.trim())}
+                      className="pointer-events-auto text-[10px] text-[var(--color-muted)] hover:text-amber-300 inline-flex items-center gap-0.5"
+                      title="Pin this prompt"
+                      type="button"
+                    >
+                      <Star size={9} className={pinnedPrompts.includes(message.trim()) ? "fill-current text-amber-300" : ""} />
+                    </button>
+                  )}
+                </div>
+                <span className="text-[10px] text-[var(--color-muted)] hidden sm:inline opacity-60">
+                  {composedMessage !== message.trim() && message.trim() && "Tone+target applied"}
+                </span>
+              </div>
+              <div className="absolute bottom-2 right-2 flex items-center gap-1 pointer-events-auto">
+                {message.trim() && !sending && (
+                  <button
+                    onClick={() => setMessage("")}
+                    aria-label="Clear"
+                    title="Clear"
+                    className="size-7 rounded-md grid place-items-center text-[var(--color-muted)] hover:bg-white/5 hover:text-[var(--color-fg)]"
+                  >
+                    <Eraser size={13} />
+                  </button>
+                )}
+                <button
+                  onClick={listening ? stopVoiceInput : startVoiceInput}
+                  aria-label={listening ? "Stop listening" : "Voice input"}
+                  title={listening ? "Stop listening" : "Voice input"}
+                  className={`size-7 rounded-md grid place-items-center ${listening ? "bg-red-500/20 text-red-300 ring-2 ring-red-500/40 animate-pulse" : "text-[var(--color-muted)] hover:bg-white/5 hover:text-[var(--color-fg)]"}`}
+                >
+                  {listening ? <MicOff size={13} /> : <Mic size={13} />}
+                </button>
+                <button
+                  onClick={() => void send()}
+                  disabled={!message.trim() || sending}
+                  className="size-9 rounded-lg bg-gradient-to-br from-[var(--color-cyan)] to-[#0ea5b7] text-[#060610] grid place-items-center disabled:opacity-30 disabled:cursor-not-allowed hover:brightness-110 shadow-[0_4px_12px_-2px_rgba(0,229,255,0.4)]"
+                  aria-label="Send (⌘+Enter)"
+                  title="Send (⌘+Enter)"
+                >
+                  {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                </button>
+              </div>
             </div>
+            {sending && (
+              <button
+                onClick={() => { setSending(false); setStage("idle"); }}
+                className="w-full text-[11px] px-2 py-1.5 rounded-md border border-red-500/20 text-red-300/80 hover:bg-red-500/10 inline-flex items-center justify-center gap-1"
+                aria-label="Stop generating"
+              >
+                <StopCircle size={11} /> Stop
+              </button>
+            )}
           </div>
         </aside>}
 
@@ -1203,31 +1576,119 @@ export default function Editor() {
   );
 }
 
-function ChatMessage({ turn }: { turn: Turn }) {
+function ChatMessage({
+  turn,
+  isLast,
+  reaction,
+  onReact,
+  onRegenerate,
+  onPin,
+  isPinned,
+}: {
+  turn: Turn;
+  isLast?: boolean;
+  reaction?: "up" | "down" | null;
+  onReact?: (v: "up" | "down") => void;
+  onRegenerate?: () => void;
+  onPin?: (text: string) => void;
+  isPinned?: (text: string) => boolean;
+}) {
+  const [copied, setCopied] = useState(false);
   const cleanContent = useMemo(() => {
-    if (turn.role !== "assistant") return turn.content;
+    if (turn.role !== "assistant") return stripComposedPrefixSuffix(turn.content);
     return turn.content
       .replace(/```html\s*\n[\s\S]*?\n```/g, "")
       .replace(/```css\s*\n[\s\S]*?\n```/g, "")
       .trim() || "Updated.";
   }, [turn.content, turn.role]);
 
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(cleanContent);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch { /* noop */ }
+  }
+
   if (turn.role === "user") {
+    const pinned = isPinned?.(cleanContent) ?? false;
     return (
-      <div className="flex justify-end">
-        <div className="max-w-[85%] rounded-2xl rounded-tr-sm px-3.5 py-2.5 bg-gradient-to-br from-[var(--color-cyan)]/15 to-[var(--color-blue)]/10 border border-[var(--color-cyan)]/20 text-sm whitespace-pre-wrap break-words">
-          {turn.content}
+      <div className="flex justify-end group">
+        <div className="max-w-[85%]">
+          <div className="rounded-2xl rounded-tr-sm px-3.5 py-2.5 bg-gradient-to-br from-[var(--color-cyan)]/15 to-[var(--color-blue)]/10 border border-[var(--color-cyan)]/20 text-sm whitespace-pre-wrap break-words shadow-[0_1px_8px_-2px_rgba(0,229,255,0.15)]">
+            {cleanContent}
+          </div>
+          <div className="flex justify-end gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            {onPin && (
+              <button
+                onClick={() => onPin(cleanContent)}
+                className="size-5 rounded grid place-items-center text-[var(--color-muted)] hover:text-amber-300"
+                aria-label={pinned ? "Unpin prompt" : "Pin prompt"}
+                title={pinned ? "Unpin" : "Pin"}
+              >
+                <Star size={10} className={pinned ? "fill-current text-amber-300" : ""} />
+              </button>
+            )}
+            <button onClick={copy} className="size-5 rounded grid place-items-center text-[var(--color-muted)] hover:text-[var(--color-fg)]" aria-label="Copy" title="Copy">
+              {copied ? <Check size={10} className="text-green-400" /> : <Copy size={10} />}
+            </button>
+          </div>
         </div>
       </div>
     );
   }
   return (
-    <div className="flex items-start gap-2">
-      <div className="size-7 rounded-full bg-[var(--color-cyan)]/15 grid place-items-center text-[var(--color-cyan)] shrink-0 mt-0.5">
+    <div className="flex items-start gap-2 group">
+      <div className="size-7 rounded-full bg-gradient-to-br from-[var(--color-cyan)]/25 to-[var(--color-violet)]/20 grid place-items-center text-[var(--color-cyan)] shrink-0 mt-0.5 ring-1 ring-[var(--color-cyan)]/30">
         <Sparkles size={14} />
       </div>
-      <div className="flex-1 min-w-0 text-sm whitespace-pre-wrap break-words text-[var(--color-fg)]/90">
-        {cleanContent}
+      <div className="flex-1 min-w-0">
+        <div className="text-sm whitespace-pre-wrap break-words text-[var(--color-fg)]/90">
+          {cleanContent}
+        </div>
+        <div className={`flex items-center gap-0.5 mt-1.5 transition-opacity ${isLast ? "opacity-70" : "opacity-0 group-hover:opacity-70"} hover:opacity-100`}>
+          <button
+            onClick={copy}
+            className="size-6 rounded grid place-items-center text-[var(--color-muted)] hover:text-[var(--color-fg)] hover:bg-white/5"
+            aria-label="Copy message"
+            title="Copy"
+          >
+            {copied ? <Check size={11} className="text-green-400" /> : <Copy size={11} />}
+          </button>
+          {onReact && (
+            <>
+              <button
+                onClick={() => onReact("up")}
+                className={`size-6 rounded grid place-items-center hover:bg-white/5 ${reaction === "up" ? "text-green-400" : "text-[var(--color-muted)] hover:text-[var(--color-fg)]"}`}
+                aria-label="Helpful"
+                title="Helpful"
+              >
+                <ThumbsUp size={11} className={reaction === "up" ? "fill-current" : ""} />
+              </button>
+              <button
+                onClick={() => onReact("down")}
+                className={`size-6 rounded grid place-items-center hover:bg-white/5 ${reaction === "down" ? "text-red-400" : "text-[var(--color-muted)] hover:text-[var(--color-fg)]"}`}
+                aria-label="Not helpful"
+                title="Not helpful"
+              >
+                <ThumbsDown size={11} className={reaction === "down" ? "fill-current" : ""} />
+              </button>
+            </>
+          )}
+          {onRegenerate && (
+            <button
+              onClick={onRegenerate}
+              className="size-6 rounded grid place-items-center text-[var(--color-muted)] hover:text-[var(--color-cyan)] hover:bg-white/5"
+              aria-label="Regenerate"
+              title="Regenerate"
+            >
+              <RotateCcw size={11} />
+            </button>
+          )}
+          <span className="text-[10px] text-[var(--color-muted)]/60 ml-auto tabular-nums">
+            {formatTimeAgo(turn.createdAt)}
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -1694,19 +2155,49 @@ function CommandPalette({
   );
 }
 
-const SLASH_COMMANDS: Array<{ slug: string; label: string; template: string; hint: string }> = [
-  { slug: "shorten", label: "/shorten", template: "Shorten this document by 30% without losing key facts.", hint: "Tighter copy" },
-  { slug: "professional", label: "/professional", template: "Rewrite in a confident, formal tone suitable for executives.", hint: "Formal tone" },
-  { slug: "casual", label: "/casual", template: "Rewrite in a friendly, conversational tone.", hint: "Friendly tone" },
-  { slug: "fix-grammar", label: "/fix-grammar", template: "Fix all grammar, spelling, and punctuation issues. Do not change meaning.", hint: "Proofread" },
-  { slug: "summarize", label: "/summarize", template: "Add a 3-sentence executive summary at the top.", hint: "Executive summary" },
-  { slug: "bullets", label: "/bullets", template: "Convert dense paragraphs into clear bulleted lists where appropriate.", hint: "Bulleted lists" },
-  { slug: "translate-es", label: "/translate-es", template: "Translate the entire document to Spanish, preserving layout.", hint: "Translate → Spanish" },
-  { slug: "translate-fr", label: "/translate-fr", template: "Translate the entire document to French, preserving layout.", hint: "Translate → French" },
-  { slug: "add-cover", label: "/add-cover", template: "Add a striking cover page with a bold title, subtitle, and date.", hint: "Add cover page" },
-  { slug: "add-toc", label: "/add-toc", template: "Add a table of contents listing all main sections with page numbers.", hint: "Add table of contents" },
-  { slug: "callouts", label: "/callouts", template: "Highlight key insights with styled callout boxes.", hint: "Callout boxes" },
-  { slug: "stats", label: "/stats", template: "Add a stats row near the top with 3-4 key numbers from this document.", hint: "Stats row" },
+const SLASH_COMMANDS: Array<{ slug: string; label: string; template: string; hint: string; group: string }> = [
+  // Rewrites
+  { slug: "shorten", label: "/shorten", template: "Shorten this document by 30% without losing key facts.", hint: "Tighter copy", group: "Rewrite" },
+  { slug: "expand", label: "/expand", template: "Expand each section with one extra sentence of supporting detail.", hint: "Add depth", group: "Rewrite" },
+  { slug: "professional", label: "/professional", template: "Rewrite in a confident, formal tone suitable for executives.", hint: "Formal tone", group: "Rewrite" },
+  { slug: "casual", label: "/casual", template: "Rewrite in a friendly, conversational tone.", hint: "Friendly tone", group: "Rewrite" },
+  { slug: "concise", label: "/concise", template: "Tighten every sentence. Remove filler. Active voice only.", hint: "Active voice", group: "Rewrite" },
+  { slug: "playful", label: "/playful", template: "Add personality and warmth without losing professionalism.", hint: "More personality", group: "Rewrite" },
+  { slug: "academic", label: "/academic", template: "Rewrite in a scholarly, citation-friendly tone with hedged claims.", hint: "Academic register", group: "Rewrite" },
+  { slug: "legal", label: "/legal", template: "Rewrite in clear legal English: numbered clauses, defined terms, precise scope.", hint: "Legal voice", group: "Rewrite" },
+  // Fixes
+  { slug: "fix-grammar", label: "/fix-grammar", template: "Fix all grammar, spelling, and punctuation issues. Do not change meaning.", hint: "Proofread", group: "Polish" },
+  { slug: "fix-numbers", label: "/fix-numbers", template: "Audit every number, total, percentage, and date for arithmetic and consistency. Fix mistakes inline.", hint: "Number audit", group: "Polish" },
+  { slug: "balance", label: "/balance", template: "Balance content evenly across pages. Avoid orphans and widows.", hint: "Page balance", group: "Polish" },
+  { slug: "consistency", label: "/consistency", template: "Make heading levels, terminology, and capitalization perfectly consistent.", hint: "Style consistency", group: "Polish" },
+  // Structure
+  { slug: "summarize", label: "/summarize", template: "Add a 3-sentence executive summary at the top.", hint: "Executive summary", group: "Structure" },
+  { slug: "bullets", label: "/bullets", template: "Convert dense paragraphs into clear bulleted lists where appropriate.", hint: "Bulleted lists", group: "Structure" },
+  { slug: "tldr", label: "/tldr", template: "Add a 'TL;DR' callout at the top in 2 sentences.", hint: "TL;DR callout", group: "Structure" },
+  { slug: "outline", label: "/outline", template: "Restructure with H1/H2/H3 hierarchy and short intro under each heading.", hint: "Reorganize headings", group: "Structure" },
+  { slug: "headings", label: "/headings", template: "Rewrite every heading for clarity and parallel structure.", hint: "Stronger headings", group: "Structure" },
+  // Blocks
+  { slug: "add-cover", label: "/add-cover", template: "Add a striking cover page with a bold title, subtitle, and date.", hint: "Add cover page", group: "Blocks" },
+  { slug: "add-toc", label: "/add-toc", template: "Add a table of contents listing all main sections with page numbers.", hint: "Add table of contents", group: "Blocks" },
+  { slug: "add-signature", label: "/add-signature", template: "Add a signature block with lines for both parties, date, and printed name.", hint: "Signature block", group: "Blocks" },
+  { slug: "add-references", label: "/add-references", template: "Add a references / citations section in APA 7th edition format.", hint: "References", group: "Blocks" },
+  { slug: "add-cta", label: "/add-cta", template: "Add a clear call-to-action block with contact details and a next step.", hint: "Call-to-action", group: "Blocks" },
+  { slug: "callouts", label: "/callouts", template: "Highlight key insights with styled callout boxes.", hint: "Callout boxes", group: "Blocks" },
+  { slug: "stats", label: "/stats", template: "Add a stats row near the top with 3-4 key numbers from this document.", hint: "Stats row", group: "Blocks" },
+  { slug: "footer", label: "/footer", template: "Add a clean footer with page numbers, document title, and confidentiality notice.", hint: "Footer", group: "Blocks" },
+  { slug: "qr", label: "/qr", template: "Add a QR code linking to the source document URL in the footer.", hint: "QR code", group: "Blocks" },
+  // Design
+  { slug: "redesign", label: "/redesign", template: "Redesign with a more modern, editorial layout. Strong typography, generous whitespace.", hint: "Editorial redesign", group: "Design" },
+  { slug: "monochrome", label: "/monochrome", template: "Convert to an elegant monochrome palette (black + one accent).", hint: "Mono palette", group: "Design" },
+  { slug: "brand", label: "/brand", template: "Apply a brand color palette: primary, accent, and a neutral. Suggest hexes.", hint: "Brand colors", group: "Design" },
+  { slug: "two-column", label: "/two-column", template: "Restructure dense pages into a two-column layout for readability.", hint: "Two columns", group: "Design" },
+  { slug: "serif", label: "/serif", template: "Switch body type to a serif and headings to a complementary sans.", hint: "Serif body", group: "Design" },
+  // Translate
+  { slug: "translate-es", label: "/translate-es", template: "Translate the entire document to Spanish, preserving layout.", hint: "→ Spanish", group: "Translate" },
+  { slug: "translate-fr", label: "/translate-fr", template: "Translate the entire document to French, preserving layout.", hint: "→ French", group: "Translate" },
+  { slug: "translate-de", label: "/translate-de", template: "Translate the entire document to German, preserving layout.", hint: "→ German", group: "Translate" },
+  { slug: "translate-jp", label: "/translate-jp", template: "Translate the entire document to Japanese, preserving layout.", hint: "→ Japanese", group: "Translate" },
+  { slug: "translate-pt", label: "/translate-pt", template: "Translate the entire document to Brazilian Portuguese, preserving layout.", hint: "→ Portuguese", group: "Translate" },
 ];
 
 function SlashMenu({
@@ -1716,35 +2207,347 @@ function SlashMenu({
   message: string;
   onSelect: (text: string) => void;
 }) {
+  const [activeIdx, setActiveIdx] = useState(0);
   const trimmed = message.trimStart();
   const showing = trimmed.startsWith("/");
   const query = showing ? (trimmed.slice(1).split(/\s/)[0] ?? "").toLowerCase() : "";
-  const matches = showing
-    ? SLASH_COMMANDS.filter((c) => c.slug.startsWith(query)).slice(0, 6)
-    : [];
+  const matches = useMemo(
+    () => (showing ? SLASH_COMMANDS.filter((c) => c.slug.includes(query) || c.hint.toLowerCase().includes(query)).slice(0, 8) : []),
+    [showing, query],
+  );
+
+  useEffect(() => { setActiveIdx(0); }, [query]);
+
+  useEffect(() => {
+    if (!showing || matches.length === 0) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setActiveIdx((i) => Math.min(matches.length - 1, i + 1));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setActiveIdx((i) => Math.max(0, i - 1));
+      } else if (e.key === "Tab" || (e.key === "Enter" && !e.metaKey && !e.ctrlKey)) {
+        const m = matches[activeIdx];
+        if (m) {
+          e.preventDefault();
+          onSelect(m.template);
+          captureEvent("editor_slash_command", { slug: m.slug });
+        }
+      }
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [showing, matches, activeIdx, onSelect]);
+
   if (!showing || matches.length === 0) return null;
+
+  // Group matches by group label
+  const groups = matches.reduce<Record<string, typeof matches>>((acc, m) => {
+    (acc[m.group] ??= []).push(m);
+    return acc;
+  }, {});
+
   return (
     <div
       role="listbox"
       aria-label="Slash commands"
-      className="absolute bottom-full left-0 right-0 mb-2 rounded-lg border border-[var(--color-line)] bg-[var(--color-bg-elev)] shadow-lg overflow-hidden z-20"
+      className="absolute bottom-full left-0 right-0 mb-2 rounded-xl border border-[var(--color-line)] bg-gradient-to-b from-[#0d0d1a]/98 to-[var(--color-bg-elev)] shadow-2xl overflow-hidden z-20 max-h-72 overflow-y-auto scrollbar-thin"
     >
-      {matches.map((c) => (
-        <button
-          key={c.slug}
-          type="button"
-          role="option"
-          aria-selected="false"
-          onClick={() => {
-            onSelect(c.template);
-            captureEvent("editor_slash_command", { slug: c.slug });
-          }}
-          className="w-full flex items-center justify-between gap-3 px-3 py-2 text-left hover:bg-white/[0.04] border-b border-[var(--color-line)] last:border-b-0"
-        >
-          <span className="text-xs font-mono text-[var(--color-cyan)]">{c.label}</span>
-          <span className="text-xs text-[var(--color-muted)] truncate">{c.hint}</span>
-        </button>
+      <div className="px-3 py-1.5 border-b border-[var(--color-line)]/60 text-[10px] uppercase tracking-wider text-[var(--color-muted)] flex items-center justify-between">
+        <span>Slash commands — {matches.length} match{matches.length === 1 ? "" : "es"}</span>
+        <span className="opacity-60">↑↓ navigate · ↵ pick</span>
+      </div>
+      {Object.entries(groups).map(([group, items]) => (
+        <div key={group}>
+          <div className="px-3 pt-1.5 pb-0.5 text-[9px] uppercase tracking-[0.18em] text-[var(--color-cyan)]/70 font-semibold">{group}</div>
+          {items.map((c) => {
+            const globalIdx = matches.indexOf(c);
+            const isActive = globalIdx === activeIdx;
+            return (
+              <button
+                key={c.slug}
+                type="button"
+                role="option"
+                aria-selected={isActive}
+                onMouseEnter={() => setActiveIdx(globalIdx)}
+                onClick={() => {
+                  onSelect(c.template);
+                  captureEvent("editor_slash_command", { slug: c.slug });
+                }}
+                className={`w-full flex items-center justify-between gap-3 px-3 py-1.5 text-left ${isActive ? "bg-[var(--color-cyan)]/10" : "hover:bg-white/[0.03]"}`}
+              >
+                <span className={`text-xs font-mono ${isActive ? "text-[var(--color-cyan)]" : "text-[var(--color-cyan)]/80"}`}>{c.label}</span>
+                <span className="text-[11px] text-[var(--color-muted)] truncate">{c.hint}</span>
+              </button>
+            );
+          })}
+        </div>
       ))}
+    </div>
+  );
+}
+
+type TonePreset = "default" | "professional" | "casual" | "concise" | "detailed" | "playful" | "academic";
+
+const TONE_LABEL: Record<TonePreset, string> = {
+  default: "Tone: default",
+  professional: "Professional",
+  casual: "Casual",
+  concise: "Concise",
+  detailed: "Detailed",
+  playful: "Playful",
+  academic: "Academic",
+};
+
+const TONE_PREFIX: Record<TonePreset, string> = {
+  default: "",
+  professional: "[Tone: confident, formal, suitable for executives.]\n\n",
+  casual: "[Tone: friendly, conversational, plain English.]\n\n",
+  concise: "[Tone: extremely concise. Cut filler. Active voice.]\n\n",
+  detailed: "[Tone: thorough. Add depth, context, supporting detail.]\n\n",
+  playful: "[Tone: warm, witty, human. Keep it professional.]\n\n",
+  academic: "[Tone: scholarly, citation-friendly, hedged claims.]\n\n",
+};
+
+const TONE_MARKER_RE = /^\[Tone: [^\]]+\]\s*\n+/;
+const PAGE_MARKER_RE = /\n*\[Apply only to page \d+\.\]$/;
+const PAGES_ALL_RE = /\n*\[Apply across all pages\.\]$/;
+
+function composeMessage(text: string, tone: TonePreset, pageTarget: number | "all"): string {
+  const trimmed = text.trim();
+  if (!trimmed) return "";
+  const prefix = TONE_PREFIX[tone];
+  const suffix = pageTarget === "all" ? "" : `\n\n[Apply only to page ${pageTarget}.]`;
+  return `${prefix}${trimmed}${suffix}`;
+}
+
+function stripComposedPrefixSuffix(text: string): string {
+  return text.replace(TONE_MARKER_RE, "").replace(PAGE_MARKER_RE, "").replace(PAGES_ALL_RE, "").trim();
+}
+
+function estimateCost(text: string, model: "sonnet" | "opus"): number {
+  // Rough heuristic: text tokens ≈ chars/4. Doc context adds ~6k tokens average.
+  const messageTokens = Math.ceil(text.length / 4);
+  const inputTokens = messageTokens + 6000;
+  const outputTokens = 1500; // typical assistant turn
+  // Anthropic public pricing (per 1M tokens, May 2026): Sonnet 4.6 $3/$15, Opus 4.7 $15/$75
+  if (model === "opus") {
+    return (inputTokens / 1_000_000) * 15 + (outputTokens / 1_000_000) * 75;
+  }
+  return (inputTokens / 1_000_000) * 3 + (outputTokens / 1_000_000) * 15;
+}
+
+function formatTimeAgo(ts: number): string {
+  const diff = Date.now() - ts;
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h`;
+  const d = Math.floor(h / 24);
+  return `${d}d`;
+}
+
+interface SpeechRecognitionLike {
+  lang: string;
+  interimResults: boolean;
+  continuous: boolean;
+  start: () => void;
+  stop: () => void;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onend: (() => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+}
+
+type SpeechRecognitionConstructor = new () => SpeechRecognitionLike;
+
+interface SpeechRecognitionResultLike {
+  length: number;
+  [index: number]: { transcript: string };
+}
+
+interface SpeechRecognitionResultsLike {
+  length: number;
+  [index: number]: SpeechRecognitionResultLike;
+}
+
+interface SpeechRecognitionEvent {
+  resultIndex: number;
+  results: SpeechRecognitionResultsLike;
+}
+
+interface SpeechRecognitionErrorEvent {
+  error: string;
+}
+
+const PROMPT_GALLERY = {
+  business: {
+    label: "Business",
+    icon: Briefcase,
+    accent: "var(--color-cyan)",
+    prompts: [
+      { title: "Invoice", body: "Invoice for $4,200 to Acme Corp from Brian Z., NET 14, with itemized services and bank details." },
+      { title: "Proposal", body: "Three-page proposal for a $48k consulting engagement. Cover, scope, milestones, pricing, sign-off." },
+      { title: "Statement of Work", body: "Statement of Work for a 12-week mobile app build: scope, deliverables, milestones, acceptance criteria, payment schedule." },
+      { title: "Quarterly report", body: "Quarterly business report with KPI dashboard, highlights, financial summary, and goals for next quarter." },
+      { title: "Pitch deck cover", body: "Striking pitch-deck cover page for a Series A pre-revenue startup in climate tech. Bold typography, tagline, founder name." },
+    ],
+  },
+  legal: {
+    label: "Legal",
+    icon: Scale,
+    accent: "var(--color-violet)",
+    prompts: [
+      { title: "Mutual NDA", body: "Mutual NDA between two startups — clean, professional, 2 pages, mutual obligations, 2-year term, governed by Delaware law." },
+      { title: "Service agreement", body: "Service agreement for a $24k design retainer. Scope, IP assignment, termination, indemnity, signatures." },
+      { title: "Employment offer", body: "Employment offer letter for a senior engineer: $185k base, equity, benefits, start date, at-will language, signature block." },
+      { title: "Cease & desist", body: "Cease and desist letter regarding unauthorized use of a registered trademark. Firm, factual, 1 page, 14-day demand." },
+      { title: "Privacy policy", body: "Plain-English privacy policy for a SaaS product: data collection, use, sharing, user rights, retention, contact." },
+    ],
+  },
+  personal: {
+    label: "Personal",
+    icon: User,
+    accent: "var(--color-blue)",
+    prompts: [
+      { title: "Resume", body: "One-page resume for a senior software engineer in New York with 8 years experience. Modern, clean, ATS-friendly." },
+      { title: "Cover letter", body: "Cover letter for a product designer applying to a Series A startup. Confident, specific, 3 paragraphs, signature." },
+      { title: "Recommendation letter", body: "Letter of recommendation for a former direct report applying to graduate school. Warm, specific, 3 paragraphs." },
+      { title: "Wedding invite", body: "Elegant wedding invitation: hosts, date, venue, RSVP card, dress code, registry link. Romantic typography." },
+      { title: "Eulogy", body: "Two-page eulogy honoring a beloved grandfather: warmth, three vivid stories, a final blessing." },
+    ],
+  },
+  marketing: {
+    label: "Marketing",
+    icon: Megaphone,
+    accent: "var(--color-cyan)",
+    prompts: [
+      { title: "One-pager", body: "One-page product sheet for a B2B SaaS: hero pitch, three features, pricing, testimonial, contact." },
+      { title: "Case study", body: "Two-page customer case study: challenge, solution, results with numbers, customer quote, screenshots." },
+      { title: "Whitepaper cover", body: "Whitepaper cover and executive summary on the future of remote work. Sober, credible, footnoted." },
+      { title: "Sales sheet", body: "Single-page sales sheet with feature grid, pricing tiers, social proof, and a clear call-to-action." },
+      { title: "Brand brief", body: "Brand brief: mission, voice, audience, palette, typography choices, logo usage rules." },
+    ],
+  },
+  creative: {
+    label: "Creative",
+    icon: Palette,
+    accent: "var(--color-violet)",
+    prompts: [
+      { title: "Zine", body: "Four-page zine on the philosophy of paper in a screen age. Bold layout, varied typography, pull quotes." },
+      { title: "Recipe card", body: "Two-page recipe card for handmade pasta: ingredients, technique, plating, photo placeholders, time stamps." },
+      { title: "Travel guide", body: "Four-page weekend travel guide to Lisbon: map, day-by-day plan, three restaurants, two hidden gems." },
+      { title: "Photo book spread", body: "Two-page photo book spread: cinematic image left, short personal essay right with deckled border." },
+      { title: "Tournament bracket", body: "Single-page tournament bracket for 16 teams: clean lines, modern type, scores fillable inline." },
+    ],
+  },
+} as const;
+
+function PromptGallery({
+  category,
+  onCategory,
+  onPick,
+}: {
+  category: keyof typeof PROMPT_GALLERY;
+  onCategory: (c: keyof typeof PROMPT_GALLERY) => void;
+  onPick: (prompt: string) => void;
+}) {
+  const cats = Object.entries(PROMPT_GALLERY) as Array<[keyof typeof PROMPT_GALLERY, typeof PROMPT_GALLERY[keyof typeof PROMPT_GALLERY]]>;
+  const active = PROMPT_GALLERY[category];
+  return (
+    <div className="px-1 py-2">
+      <div className="text-center mb-3">
+        <div className="inline-flex items-center gap-2 mb-1">
+          <span className="size-8 rounded-lg grid place-items-center bg-gradient-to-br from-[var(--color-cyan)]/30 to-[var(--color-violet)]/30 ring-1 ring-[var(--color-cyan)]/40">
+            <Sparkles size={16} className="text-[var(--color-cyan)]" />
+          </span>
+        </div>
+        <h2 className="text-sm font-bold tracking-tight">What should we make?</h2>
+        <p className="text-[11px] text-[var(--color-muted)] mt-0.5">Pick a starter, or describe anything below.</p>
+      </div>
+      <div role="tablist" aria-label="Template categories" className="flex items-center gap-1 mb-3 overflow-x-auto scrollbar-thin -mx-1 px-1">
+        {cats.map(([key, val]) => {
+          const Icon = val.icon;
+          const isActive = key === category;
+          return (
+            <button
+              key={key}
+              role="tab"
+              aria-selected={isActive}
+              onClick={() => onCategory(key)}
+              className={`shrink-0 text-[11px] px-2.5 py-1.5 rounded-full inline-flex items-center gap-1.5 transition-colors ${
+                isActive
+                  ? "bg-[var(--color-cyan)]/15 text-[var(--color-cyan)] border border-[var(--color-cyan)]/40"
+                  : "border border-[var(--color-line)] text-[var(--color-muted)] hover:text-[var(--color-fg)] hover:border-[var(--color-cyan)]/30"
+              }`}
+            >
+              <Icon size={11} />
+              {val.label}
+            </button>
+          );
+        })}
+      </div>
+      <div className="flex flex-col gap-1.5">
+        {active.prompts.map((p) => (
+          <button
+            key={p.title}
+            onClick={() => onPick(p.body)}
+            className="group text-left p-2.5 rounded-lg border border-[var(--color-line)] hover:border-[var(--color-cyan)]/40 hover:bg-white/[0.025] transition-colors"
+          >
+            <div className="flex items-center justify-between gap-2 mb-0.5">
+              <span className="text-xs font-semibold text-[var(--color-fg)]">{p.title}</span>
+              <ChevronRight size={11} className="text-[var(--color-muted)] group-hover:text-[var(--color-cyan)] transition-colors shrink-0" />
+            </div>
+            <p className="text-[11px] text-[var(--color-muted)] line-clamp-2 leading-relaxed">{p.body}</p>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StagePill({ stage }: { stage: "idle" | "reading" | "planning" | "drafting" | "done" }) {
+  const labels: Record<typeof stage, string> = {
+    idle: "Idle",
+    reading: "Reading your document",
+    planning: "Planning the change",
+    drafting: "Drafting…",
+    done: "Done",
+  };
+  return (
+    <span className="inline-flex items-center gap-1 text-[10px] text-[var(--color-cyan)]/80">
+      <span className="size-1.5 rounded-full bg-[var(--color-cyan)] animate-pulse" />
+      {labels[stage]}
+    </span>
+  );
+}
+
+function StageTimeline({ stage }: { stage: "idle" | "reading" | "planning" | "drafting" | "done" }) {
+  const stages: Array<{ key: "reading" | "planning" | "drafting"; label: string; icon: typeof FileText }> = [
+    { key: "reading", label: "Reading document", icon: FileText },
+    { key: "planning", label: "Planning change", icon: LayoutTemplate },
+    { key: "drafting", label: "Drafting HTML", icon: Wand2 },
+  ];
+  const order = ["reading", "planning", "drafting"] as const;
+  const activeIdx = order.indexOf(stage as (typeof order)[number]);
+  return (
+    <div className="text-xs text-[var(--color-muted)] space-y-1">
+      {stages.map((s, i) => {
+        const Icon = s.icon;
+        const isDone = activeIdx > i;
+        const isActive = activeIdx === i;
+        return (
+          <div key={s.key} className="flex items-center gap-2">
+            <span className={`size-4 rounded-full grid place-items-center transition-colors ${
+              isDone ? "bg-green-500/20 text-green-400" : isActive ? "bg-[var(--color-cyan)]/20 text-[var(--color-cyan)] ring-1 ring-[var(--color-cyan)]/40" : "bg-white/5 text-[var(--color-muted)]"
+            }`}>
+              {isDone ? <Check size={9} /> : isActive ? <Loader2 size={9} className="animate-spin" /> : <Icon size={9} />}
+            </span>
+            <span className={isDone ? "text-[var(--color-fg)]/70 line-through opacity-60" : isActive ? "text-[var(--color-fg)]/90" : ""}>{s.label}</span>
+          </div>
+        );
+      })}
     </div>
   );
 }

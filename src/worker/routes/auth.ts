@@ -15,6 +15,7 @@ import {
   SESSION_TTL_DAYS,
 } from "../lib/auth";
 import { sendEmail } from "../lib/emails";
+import { listmonkUpsertSubscriber, listmonkConfigured } from "../lib/listmonk";
 import type { Env, Variables } from "../types";
 
 const auth = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -192,18 +193,34 @@ auth.get("/google/callback", async (c) => {
       // Fire welcome email after user is created. waitUntil keeps the response fast
       // and lets Listmonk respond on its own clock.
       const newUserId = userId;
+      const newUserEmail = claims.email;
+      const newUserName = claims.name ?? null;
       c.executionCtx.waitUntil(
-        sendEmail(c.env, {
-          userId: newUserId,
-          template: "welcome",
-          dedupKey: `welcome:${newUserId}`,
-          data: {
-            signin_method: "google",
-            dashboard_url: `${c.env.APP_URL}/dashboard`,
-          },
-        }).catch((err) => {
-          Sentry.captureException(err, { tags: { trigger: "welcome_email", userId: newUserId } });
-        })
+        Promise.allSettled([
+          sendEmail(c.env, {
+            userId: newUserId,
+            template: "welcome",
+            dedupKey: `welcome:${newUserId}`,
+            data: {
+              signin_method: "google",
+              dashboard_url: `${c.env.APP_URL}/dashboard`,
+            },
+          }).catch((err) => {
+            Sentry.captureException(err, { tags: { trigger: "welcome_email", userId: newUserId } });
+          }),
+          listmonkConfigured(c.env) && c.env.LISTMONK_LIST_ID
+            ? listmonkUpsertSubscriber(c.env, {
+                email: newUserEmail,
+                name: newUserName ?? undefined,
+                listIds: [Number(c.env.LISTMONK_LIST_ID)],
+                attribs: { source: "google_signup", user_id: newUserId },
+              }).catch((err) => {
+                Sentry.captureException(err, {
+                  tags: { trigger: "listmonk_upsert", userId: newUserId },
+                });
+              })
+            : Promise.resolve(),
+        ])
       );
     }
   }

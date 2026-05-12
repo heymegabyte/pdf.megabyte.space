@@ -78,7 +78,7 @@ export interface Me {
     email: string;
     name: string | null;
     imageUrl: string | null;
-    plan: "free" | "pro";
+    plan: "free" | "pro" | "unlimited";
   };
   usage: {
     projectCount: number;

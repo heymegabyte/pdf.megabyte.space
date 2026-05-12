@@ -1,0 +1,516 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - link "Skip to content" [ref=e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=e5]:
+      - link "Megabyte PDF home" [ref=e6] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e7]:
+          - img [ref=e8]
+          - generic [ref=e12]: MegabytePDF
+      - navigation "Main navigation" [ref=e13]:
+        - link "Sign in" [ref=e14] [cursor=pointer]:
+          - /url: /sign-in
+        - link "Get started" [ref=e15] [cursor=pointer]:
+          - /url: /sign-in
+          - text: Get started
+          - img [ref=e16]
+    - main [ref=e18]:
+      - generic [ref=e20]:
+        - paragraph [ref=e21]: Print-perfect PDFs from a chat
+        - heading "Chat your way to a printable PDF ." [level=1] [ref=e23]:
+          - text: Chat your way to a
+          - generic [ref=e24]: printable PDF
+          - text: .
+        - paragraph [ref=e25]: Prompt the AI. Watch every page render in real time at 8.5 × 11. Download a real PDF — text-selectable, print-ready, your name on it.
+        - generic [ref=e26]:
+          - link "Try it now — no signup" [ref=e27] [cursor=pointer]:
+            - /url: /guest
+            - img [ref=e28]
+            - text: Try it now — no signup
+          - link "Create an account" [ref=e30] [cursor=pointer]:
+            - /url: /sign-in
+            - text: Create an account
+            - img [ref=e31]
+        - paragraph [ref=e33]: 10 free guest prompts a day. Sign in to save, share, and download real PDFs.
+      - generic [ref=e35]:
+        - generic [ref=e36]:
+          - img [ref=e38]
+          - heading "Prompt, don't fuss" [level=3] [ref=e40]
+          - paragraph [ref=e41]: Tell the AI what you need. It writes print-ready HTML and CSS — you just review and adjust.
+        - generic [ref=e42]:
+          - img [ref=e44]
+          - heading "Every page on screen" [level=3] [ref=e48]
+          - paragraph [ref=e49]: See each page in a vertical stack at 8.5 × 11. Scroll through like a stack of paper.
+        - generic [ref=e50]:
+          - img [ref=e52]
+          - heading "Real PDFs" [level=3] [ref=e55]
+          - paragraph [ref=e56]: True PDF export — text-selectable, embedded fonts, exact page dimensions. Not a screenshot.
+        - generic [ref=e57]:
+          - img [ref=e59]
+          - heading "Edit the source" [level=3] [ref=e63]
+          - paragraph [ref=e64]: Open the code panel, tweak HTML and CSS directly, see the preview update in real time.
+      - generic [ref=e65]:
+        - paragraph [ref=e66]: Works for any document
+        - generic [ref=e67]:
+          - generic [ref=e68]: Invoice
+          - generic [ref=e69]: Resume
+          - generic [ref=e70]: Cover letter
+          - generic [ref=e71]: NDA
+          - generic [ref=e72]: Contract
+          - generic [ref=e73]: Business proposal
+          - generic [ref=e74]: Report
+          - generic [ref=e75]: Statement of work
+          - generic [ref=e76]: Meeting agenda
+          - generic [ref=e77]: Certificate
+          - generic [ref=e78]: Letterhead
+          - generic [ref=e79]: Spec sheet
+      - generic [ref=e81]:
+        - generic [ref=e82]:
+          - paragraph [ref=e83]: Trending this week
+          - heading "Featured PDFs." [level=2] [ref=e84]
+        - link "Explore all" [ref=e85] [cursor=pointer]:
+          - /url: /explore?sort=trending
+          - text: Explore all
+          - img [ref=e86]
+      - generic [ref=e119]:
+        - generic [ref=e120]:
+          - paragraph [ref=e121]: Honest comparison
+          - heading "How Megabyte PDF stacks up." [level=2] [ref=e122]
+          - paragraph [ref=e123]: Other tools want you to drag boxes around a canvas. We let you type a sentence.
+        - table [ref=e125]:
+          - rowgroup [ref=e126]:
+            - row "Capability Megabyte PDF PandaDoc DocuSign Adobe Acrobat Jasper" [ref=e127]:
+              - columnheader "Capability" [ref=e128]
+              - columnheader "Megabyte PDF" [ref=e129]
+              - columnheader "PandaDoc" [ref=e130]
+              - columnheader "DocuSign" [ref=e131]
+              - columnheader "Adobe Acrobat" [ref=e132]
+              - columnheader "Jasper" [ref=e133]
+          - rowgroup [ref=e134]:
+            - row "Chat-to-PDF (plain English prompt) Supported Not supported Not supported Not supported Supported" [ref=e135]:
+              - cell "Chat-to-PDF (plain English prompt)" [ref=e136]
+              - cell "Supported" [ref=e137]:
+                - img "Supported" [ref=e138]
+              - cell "Not supported" [ref=e140]:
+                - img "Not supported" [ref=e141]
+              - cell "Not supported" [ref=e144]:
+                - img "Not supported" [ref=e145]
+              - cell "Not supported" [ref=e148]:
+                - img "Not supported" [ref=e149]
+              - cell "Supported" [ref=e152]:
+                - img "Supported" [ref=e153]
+            - row "Live page-by-page preview (8.5×11) Supported Not supported Not supported Supported Not supported" [ref=e155]:
+              - cell "Live page-by-page preview (8.5×11)" [ref=e156]
+              - cell "Supported" [ref=e157]:
+                - img "Supported" [ref=e158]
+              - cell "Not supported" [ref=e160]:
+                - img "Not supported" [ref=e161]
+              - cell "Not supported" [ref=e164]:
+                - img "Not supported" [ref=e165]
+              - cell "Supported" [ref=e168]:
+                - img "Supported" [ref=e169]
+              - cell "Not supported" [ref=e171]:
+                - img "Not supported" [ref=e172]
+            - row "Edit raw HTML/CSS source Supported Not supported Not supported Not supported Not supported" [ref=e175]:
+              - cell "Edit raw HTML/CSS source" [ref=e176]
+              - cell "Supported" [ref=e177]:
+                - img "Supported" [ref=e178]
+              - cell "Not supported" [ref=e180]:
+                - img "Not supported" [ref=e181]
+              - cell "Not supported" [ref=e184]:
+                - img "Not supported" [ref=e185]
+              - cell "Not supported" [ref=e188]:
+                - img "Not supported" [ref=e189]
+              - cell "Not supported" [ref=e192]:
+                - img "Not supported" [ref=e193]
+            - row "Real PDF export (selectable text) Supported Supported Supported Supported Supported" [ref=e196]:
+              - cell "Real PDF export (selectable text)" [ref=e197]
+              - cell "Supported" [ref=e198]:
+                - img "Supported" [ref=e199]
+              - cell "Supported" [ref=e201]:
+                - img "Supported" [ref=e202]
+              - cell "Supported" [ref=e204]:
+                - img "Supported" [ref=e205]
+              - cell "Supported" [ref=e207]:
+                - img "Supported" [ref=e208]
+              - cell "Supported" [ref=e210]:
+                - img "Supported" [ref=e211]
+            - row "Version snapshot per AI turn Supported Not supported Not supported Not supported Not supported" [ref=e213]:
+              - cell "Version snapshot per AI turn" [ref=e214]
+              - cell "Supported" [ref=e215]:
+                - img "Supported" [ref=e216]
+              - cell "Not supported" [ref=e218]:
+                - img "Not supported" [ref=e219]
+              - cell "Not supported" [ref=e222]:
+                - img "Not supported" [ref=e223]
+              - cell "Not supported" [ref=e226]:
+                - img "Not supported" [ref=e227]
+              - cell "Not supported" [ref=e230]:
+                - img "Not supported" [ref=e231]
+            - row "Public share link Supported Supported Supported Not supported Not supported" [ref=e234]:
+              - cell "Public share link" [ref=e235]
+              - cell "Supported" [ref=e236]:
+                - img "Supported" [ref=e237]
+              - cell "Supported" [ref=e239]:
+                - img "Supported" [ref=e240]
+              - cell "Supported" [ref=e242]:
+                - img "Supported" [ref=e243]
+              - cell "Not supported" [ref=e245]:
+                - img "Not supported" [ref=e246]
+              - cell "Not supported" [ref=e249]:
+                - img "Not supported" [ref=e250]
+            - row "Anonymous trial — no signup Supported Not supported Not supported Not supported Not supported" [ref=e253]:
+              - cell "Anonymous trial — no signup" [ref=e254]
+              - cell "Supported" [ref=e255]:
+                - img "Supported" [ref=e256]
+              - cell "Not supported" [ref=e258]:
+                - img "Not supported" [ref=e259]
+              - cell "Not supported" [ref=e262]:
+                - img "Not supported" [ref=e263]
+              - cell "Not supported" [ref=e266]:
+                - img "Not supported" [ref=e267]
+              - cell "Not supported" [ref=e270]:
+                - img "Not supported" [ref=e271]
+            - row "Starts at $9/mo (or free) Supported Not supported Not supported Not supported Not supported" [ref=e274]:
+              - cell "Starts at $9/mo (or free)" [ref=e275]
+              - cell "Supported" [ref=e276]:
+                - img "Supported" [ref=e277]
+              - cell "Not supported" [ref=e279]:
+                - img "Not supported" [ref=e280]
+              - cell "Not supported" [ref=e283]:
+                - img "Not supported" [ref=e284]
+              - cell "Not supported" [ref=e287]:
+                - img "Not supported" [ref=e288]
+              - cell "Not supported" [ref=e291]:
+                - img "Not supported" [ref=e292]
+        - paragraph [ref=e295]:
+          - text: Verified against vendor docs and pricing pages, May 2026. Tell us if we got something wrong —
+          - link "hey@megabyte.space" [ref=e296] [cursor=pointer]:
+            - /url: mailto:hey@megabyte.space
+          - text: .
+      - generic [ref=e297]:
+        - generic [ref=e298]:
+          - paragraph [ref=e299]: From the Megabyte ecosystem
+          - heading "More tools, same studio." [level=2] [ref=e300]
+        - generic [ref=e301]:
+          - link "Megabyte Labs Open-source studio & engineering crew." [ref=e302] [cursor=pointer]:
+            - /url: https://megabyte.space
+            - img [ref=e304]
+            - heading "Megabyte Labs" [level=3] [ref=e307]:
+              - text: Megabyte Labs
+              - img [ref=e308]
+            - paragraph [ref=e310]: Open-source studio & engineering crew.
+          - link "Megabyte Music Generative scores & lossless web player." [ref=e311] [cursor=pointer]:
+            - /url: https://music.megabyte.space
+            - img [ref=e313]
+            - heading "Megabyte Music" [level=3] [ref=e317]:
+              - text: Megabyte Music
+              - img [ref=e318]
+            - paragraph [ref=e320]: Generative scores & lossless web player.
+          - link "Megabyte Ghost Long-form journal — engineering essays." [ref=e321] [cursor=pointer]:
+            - /url: https://ghost.megabyte.space
+            - img [ref=e323]
+            - heading "Megabyte Ghost" [level=3] [ref=e325]:
+              - text: Megabyte Ghost
+              - img [ref=e326]
+            - paragraph [ref=e328]: Long-form journal — engineering essays.
+          - link "Hello Megabyte Brian's portfolio + contact bridge." [ref=e329] [cursor=pointer]:
+            - /url: https://hello.megabyte.space
+            - img [ref=e331]
+            - heading "Hello Megabyte" [level=3] [ref=e334]:
+              - text: Hello Megabyte
+              - img [ref=e335]
+            - paragraph [ref=e337]: Brian's portfolio + contact bridge.
+      - generic [ref=e341]:
+        - generic [ref=e342]:
+          - paragraph [ref=e343]:
+            - img [ref=e344]
+            - text: The Megabyte PDF Podcast
+          - heading "How to write a prompt that prints." [level=2] [ref=e347]
+          - paragraph [ref=e348]: A short-form podcast on prompt craft, document design, and the people shipping real PDFs from chat. Episode 1 drops soon.
+          - generic "Audio waveform preview" [ref=e349]
+          - button "Play 2-second brand trailer" [ref=e350] [cursor=pointer]: ▶ Play brand chime
+          - generic [ref=e351]:
+            - generic [ref=e352]: Email address for podcast waitlist
+            - textbox "Email address for podcast waitlist" [ref=e353]:
+              - /placeholder: your@email.com
+            - button "Notify me" [ref=e354] [cursor=pointer]:
+              - text: Notify me
+              - img [ref=e355]
+        - generic [ref=e357]:
+          - img [ref=e359]
+          - paragraph [ref=e362]:
+            - text: Coming
+            - text: May 2026
+      - generic [ref=e363]:
+        - generic [ref=e364]:
+          - heading "Simple pricing." [level=2] [ref=e365]
+          - paragraph [ref=e366]: Start free. Pay when you need real PDFs.
+        - generic [ref=e367]:
+          - generic [ref=e368]:
+            - generic [ref=e369]:
+              - paragraph [ref=e370]: Guest
+              - generic [ref=e371]:
+                - generic [ref=e372]: Free
+                - generic [ref=e373]: no account needed
+            - list [ref=e374]:
+              - listitem [ref=e375]:
+                - img [ref=e376]
+                - text: 10 AI prompts per day
+              - listitem [ref=e378]:
+                - img [ref=e379]
+                - text: Live preview in browser
+              - listitem [ref=e381]:
+                - img [ref=e382]
+                - text: Sonnet model
+              - listitem [ref=e384]: Save projects
+              - listitem [ref=e386]: PDF download
+              - listitem [ref=e388]: Share links
+            - link "Try now" [ref=e390] [cursor=pointer]:
+              - /url: /guest
+          - generic [ref=e391]:
+            - generic [ref=e392]:
+              - paragraph [ref=e393]: Free
+              - generic [ref=e394]:
+                - generic [ref=e395]: $0
+                - generic [ref=e396]: sign in required
+            - list [ref=e397]:
+              - listitem [ref=e398]:
+                - img [ref=e399]
+                - text: 1 saved project
+              - listitem [ref=e401]:
+                - img [ref=e402]
+                - text: Full chat history
+              - listitem [ref=e404]:
+                - img [ref=e405]
+                - text: Sonnet model
+              - listitem [ref=e407]:
+                - img [ref=e408]
+                - text: Version snapshots
+              - listitem [ref=e410]: PDF download
+              - listitem [ref=e412]: Share links
+              - listitem [ref=e414]: Opus model
+            - link "Create account" [ref=e416] [cursor=pointer]:
+              - /url: /sign-in
+          - generic [ref=e417]:
+            - generic [ref=e418]:
+              - img [ref=e419]
+              - text: Most popular
+            - generic [ref=e421]:
+              - paragraph [ref=e422]: Pro
+              - generic [ref=e423]:
+                - generic [ref=e424]: $9
+                - generic [ref=e425]: per month
+            - list [ref=e426]:
+              - listitem [ref=e427]:
+                - img [ref=e428]
+                - text: 10 projects
+              - listitem [ref=e430]:
+                - img [ref=e431]
+                - text: PDF export (real files)
+              - listitem [ref=e433]:
+                - img [ref=e434]
+                - text: Public share links
+              - listitem [ref=e436]:
+                - img [ref=e437]
+                - text: Claude Opus 4.7
+              - listitem [ref=e439]:
+                - img [ref=e440]
+                - text: Sonnet + version history
+              - listitem [ref=e442]:
+                - img [ref=e443]
+                - text: Cancel anytime
+            - link "Upgrade to Pro" [ref=e445] [cursor=pointer]:
+              - /url: /sign-in
+              - text: Upgrade to Pro
+              - img [ref=e446]
+      - generic [ref=e448]:
+        - heading "Common questions." [level=2] [ref=e450]
+        - generic [ref=e451]:
+          - generic [ref=e452]:
+            - term [ref=e453]:
+              - button "How does Megabyte PDF work?" [ref=e454]:
+                - generic [ref=e455]: How does Megabyte PDF work?
+                - img [ref=e456]
+            - paragraph [ref=e458]: Type a prompt — "create a two-page invoice for $4,500 of consulting work" — and the AI writes the HTML and CSS for a print-ready 8.5 × 11 document. You see every page render in real time. Hit Download to get a real PDF.
+          - generic [ref=e459]:
+            - term [ref=e460]:
+              - button "Do I need an account to try it?" [ref=e461]:
+                - generic [ref=e462]: Do I need an account to try it?
+                - img [ref=e463]
+            - paragraph [ref=e465]: No. Guest mode gives you 10 AI prompts per day with live preview in your browser. Sign up (free) to save projects and build on them across sessions.
+          - generic [ref=e466]:
+            - term [ref=e467]:
+              - button "Can I download a real PDF?" [ref=e468]:
+                - generic [ref=e469]: Can I download a real PDF?
+                - img [ref=e470]
+            - paragraph [ref=e472]: Yes — Pro users ($9/mo) get true PDF exports generated by Cloudflare Browser Rendering. The file has selectable text, embedded fonts, and correct page dimensions. Guest and Free tiers see the live preview only.
+          - generic [ref=e473]:
+            - term [ref=e474]:
+              - button "What kinds of documents can it make?" [ref=e475]:
+                - generic [ref=e476]: What kinds of documents can it make?
+                - img [ref=e477]
+            - paragraph [ref=e479]: Invoices, resumes, reports, contracts, proposals, cover letters, technical specs — anything that maps to a printed page. If you can describe it in plain English, Megabyte PDF can draft it.
+          - generic [ref=e480]:
+            - term [ref=e481]:
+              - button "Can I share a document with a client?" [ref=e482]:
+                - generic [ref=e483]: Can I share a document with a client?
+                - img [ref=e484]
+            - paragraph [ref=e486]: Pro users get a public share link. Recipients see a read-only preview of your document — no account required on their end.
+          - generic [ref=e487]:
+            - term [ref=e488]:
+              - button "How do version snapshots work?" [ref=e489]:
+                - generic [ref=e490]: How do version snapshots work?
+                - img [ref=e491]
+            - paragraph [ref=e493]: Every AI response creates a snapshot. You can restore any previous version of your document with one click — handy when a prompt takes the design in the wrong direction.
+      - generic [ref=e495]:
+        - img [ref=e496]
+        - heading "Built for documents that ship." [level=2] [ref=e499]
+        - paragraph [ref=e500]: Every project has its own AI chat history. Snapshots on every turn — restore any version. Public share links when you want feedback before you print.
+        - link "Try it free" [ref=e501] [cursor=pointer]:
+          - /url: /guest
+          - text: Try it free
+          - img [ref=e502]
+    - contentinfo [ref=e504]:
+      - generic [ref=e505]:
+        - generic [ref=e506]:
+          - generic [ref=e507]:
+            - link "Megabyte PDF home" [ref=e508] [cursor=pointer]:
+              - /url: /
+              - generic [ref=e509]:
+                - img [ref=e510]
+                - generic [ref=e514]: MegabytePDF
+            - paragraph [ref=e515]: Describe a PDF in plain English. Megabyte writes the HTML and renders it. No templates, no design software.
+            - generic "Social links" [ref=e516]:
+              - link "Megabyte Labs on GitHub" [ref=e517] [cursor=pointer]:
+                - /url: https://github.com/heymegabyte
+                - img [ref=e518]
+              - link "Megabyte Labs on X" [ref=e520] [cursor=pointer]:
+                - /url: https://x.com/megabytelabs
+                - img [ref=e521]
+              - link "Megabyte Labs on LinkedIn" [ref=e523] [cursor=pointer]:
+                - /url: https://www.linkedin.com/company/megabyte-labs
+                - img [ref=e524]
+              - link "Megabyte Labs on YouTube" [ref=e526] [cursor=pointer]:
+                - /url: https://www.youtube.com/@megabytelabs
+                - img [ref=e527]
+              - link "Megabyte Labs on Instagram" [ref=e529] [cursor=pointer]:
+                - /url: https://www.instagram.com/megabytelabs
+                - img [ref=e530]
+              - link "Megabyte Labs on Facebook" [ref=e532] [cursor=pointer]:
+                - /url: https://www.facebook.com/megabytelabs
+                - img [ref=e533]
+              - link "Megabyte Labs on Reddit" [ref=e535] [cursor=pointer]:
+                - /url: https://www.reddit.com/r/megabytelabs
+                - img [ref=e536]
+              - link "Megabyte Labs on Discord" [ref=e538] [cursor=pointer]:
+                - /url: https://discord.gg/megabytelabs
+                - img [ref=e539]
+              - link "Megabyte Labs on Telegram" [ref=e541] [cursor=pointer]:
+                - /url: https://t.me/megabytelabs
+                - img [ref=e542]
+              - link "Megabyte Labs on Threads" [ref=e544] [cursor=pointer]:
+                - /url: https://www.threads.net/@megabytelabs
+                - img [ref=e545]
+              - link "Megabyte Labs on GitLab" [ref=e547] [cursor=pointer]:
+                - /url: https://gitlab.com/megabytelabs
+                - img [ref=e548]
+              - link "Megabyte Labs on npm" [ref=e550] [cursor=pointer]:
+                - /url: https://www.npmjs.com/org/megabytelabs
+                - img [ref=e551]
+              - link "Megabyte Labs on Pinterest" [ref=e553] [cursor=pointer]:
+                - /url: https://www.pinterest.com/megabytelabs
+                - img [ref=e554]
+              - link "Megabyte Labs on RSS" [ref=e556] [cursor=pointer]:
+                - /url: https://megabyte.space/rss.xml
+                - img [ref=e557]
+          - generic [ref=e559]:
+            - heading "Product" [level=3] [ref=e560]
+            - list [ref=e561]:
+              - listitem [ref=e562]:
+                - link "Dashboard" [ref=e563] [cursor=pointer]:
+                  - /url: /dashboard
+              - listitem [ref=e564]:
+                - link "Explore" [ref=e565] [cursor=pointer]:
+                  - /url: /explore?sort=trending
+              - listitem [ref=e566]:
+                - link "Templates" [ref=e567] [cursor=pointer]:
+                  - /url: /templates
+              - listitem [ref=e568]:
+                - link "Try without signup" [ref=e569] [cursor=pointer]:
+                  - /url: /guest
+          - generic [ref=e570]:
+            - heading "Company" [level=3] [ref=e571]
+            - list [ref=e572]:
+              - listitem [ref=e573]:
+                - link "Megabyte Labs" [ref=e574] [cursor=pointer]:
+                  - /url: https://megabyte.space
+              - listitem [ref=e575]:
+                - link "Contact" [ref=e576] [cursor=pointer]:
+                  - /url: mailto:hey@megabyte.space
+              - listitem [ref=e577]:
+                - link "Open source" [ref=e578] [cursor=pointer]:
+                  - /url: https://github.com/heymegabyte
+          - generic [ref=e579]:
+            - heading "Legal" [level=3] [ref=e580]
+            - list [ref=e581]:
+              - listitem [ref=e582]:
+                - link "Privacy" [ref=e583] [cursor=pointer]:
+                  - /url: /privacy
+              - listitem [ref=e584]:
+                - link "Terms" [ref=e585] [cursor=pointer]:
+                  - /url: /terms
+              - listitem [ref=e586]:
+                - link "Security" [ref=e587] [cursor=pointer]:
+                  - /url: /.well-known/security.txt
+        - generic [ref=e588]:
+          - generic [ref=e589]: © 2026 Megabyte Labs · Built in one prompt.
+          - generic [ref=e592]: pdf.megabyte.space — live
+  - button "Open AI assistant" [ref=e593]:
+    - img [ref=e594]
+    - generic [ref=e596]: Ask Megabyte
+    - generic [ref=e597]:
+      - img [ref=e598]
+      - text: K
+  - dialog "Megabyte AssistAnon":
+    - banner:
+      - img
+      - heading "Megabyte AssistAnon" [level=2]
+      - button "Threads":
+        - img
+      - button "New thread":
+        - img
+      - button "Export thread as markdown" [disabled]:
+        - img
+      - button "Close assistant":
+        - img
+    - generic:
+      - generic:
+        - generic:
+          - paragraph:
+            - text: Ask anything about
+            - strong: Megabyte PDF
+            - text: — drafting a document, exporting a real PDF, picking the right plan, or boosting your prompts.
+          - paragraph:
+            - text: "Tip: type"
+            - code: /help
+            - text: for commands.
+        - generic:
+          - paragraph: Try one
+          - button "Draft a one-page invoice for $4,500 of design work"
+          - button "Make a two-column resume for a senior backend engineer"
+          - button "Write a one-page client proposal for a logo redesign"
+          - button "Add a table of contents to my document"
+          - button "Suggest 3 layouts for a quarterly report cover"
+    - generic:
+      - generic:
+        - textbox "Message":
+          - /placeholder: Ask Megabyte… (Enter to send, Shift+Enter newline)
+        - button "Send message" [disabled]:
+          - img
+      - generic:
+        - generic:
+          - text: Sign in for higher limits ·
+          - link "Sign in":
+            - /url: /sign-in

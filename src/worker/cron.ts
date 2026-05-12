@@ -38,6 +38,7 @@ export async function runCron(env: Env, controller: ScheduledController): Promis
       results.push(await fanoutAbandonedPrompt(env, now));
       results.push(await fanoutShareExpiring(env, now));
       results.push(await fanoutAnnualSummary(env, now));
+      results.push(await fanoutOnboardDay3Stuck(env, now));
     } else if (cron === "0 15 * * 6") {
       results.push(await fanoutWeeklyDigest(env, now));
     } else if (cron === "0 13 * * 1") {
@@ -45,6 +46,8 @@ export async function runCron(env: Env, controller: ScheduledController): Promis
     } else if (cron === "30 14 * * *") {
       results.push(await fanoutWinBack30d(env, now));
       results.push(await fanoutAiBoost(env, now));
+    } else if (cron === "0 14 * * 3") {
+      results.push(await fanoutTipOfTheWeek(env, now));
     } else if (cron.startsWith("0 16 1")) {
       results.push(await fanoutPrivacyReport(env, now));
     } else {
@@ -450,4 +453,128 @@ async function fanoutAiBoost(env: Env, now: Date): Promise<CronResult> {
     else skipped++;
   }
   return { trigger: "ai-boost", scanned: candidates.length, sent, skipped };
+}
+
+/**
+ * Onboarding day-3 stuck: signed-up 72-96h ago, never created a project.
+ * Sends one nudge per user, ever.
+ */
+async function fanoutOnboardDay3Stuck(env: Env, now: Date): Promise<CronResult> {
+  const db = getDb(env.DB);
+  const cutoffOld = new Date(now.getTime() - 96 * HOUR);
+  const cutoffNew = new Date(now.getTime() - 72 * HOUR);
+
+  const candidates = await db
+    .select({ id: schema.users.id })
+    .from(schema.users)
+    .where(
+      and(
+        gte(schema.users.createdAt, cutoffOld),
+        lt(schema.users.createdAt, cutoffNew)
+      )
+    )
+    .limit(500);
+
+  let sent = 0;
+  let skipped = 0;
+  for (const u of candidates) {
+    const counts = await db
+      .select({ n: sql<number>`count(*)` })
+      .from(schema.projects)
+      .where(and(eq(schema.projects.userId, u.id), isNull(schema.projects.deletedAt)));
+    if ((counts[0]?.n ?? 0) > 0) {
+      skipped++;
+      continue;
+    }
+    const res = await sendEmail(env, {
+      userId: u.id,
+      template: "onboard-day3-stuck",
+      dedupKey: `onboard-day3:${u.id}`,
+      data: {
+        new_project_url: `${env.APP_URL}/new`,
+        explore_url: `${env.APP_URL}/explore?sort=trending`,
+        prompt_examples: [
+          "A one-page invoice with my logo, line items, and Net 30 terms",
+          "A two-column resume with skills, education, and 3 recent roles",
+          "A 4-page proposal: cover, scope, pricing, signature block",
+        ],
+        starter_template_url: `${env.APP_URL}/templates`,
+      },
+    });
+    if (res.ok) sent++;
+    else skipped++;
+  }
+  return { trigger: "onboard-day3-stuck", scanned: candidates.length, sent, skipped };
+}
+
+/**
+ * Tip of the week: every active user gets one tip every Wednesday.
+ * Tips rotate by ISO week to avoid repeats.
+ */
+const WEEKLY_TIPS: { headline: string; body1: string; body2: string; code?: string }[] = [
+  {
+    headline: "Force a page break before any element",
+    body1: "Add the CSS property below to any heading or section. The PDF renderer respects it like a print stylesheet — your H1 always starts on a fresh page.",
+    body2: "Use it sparingly: too many forced breaks turn a tight 4-pager into a sprawling 9-pager.",
+    code: "h1.chapter { page-break-before: always; }",
+  },
+  {
+    headline: "Mix fonts the right way",
+    body1: "One display face for headlines (Sora, Space Grotesk, Fraunces). One body face for paragraphs (Inter, IBM Plex Sans). One mono for code (JetBrains Mono).",
+    body2: "Pair the same x-height, vary the weight. Same x-height = visual rhythm. Different weights = hierarchy without shouting.",
+  },
+  {
+    headline: "Use @page for headers and footers",
+    body1: "Every printed PDF respects @page rules. Drop a margin-block declaration and your page numbers, footer text, or watermark render on every page automatically.",
+    body2: "Beats hand-placing footers per page and surviving any pagination shift.",
+    code: "@page { margin: 0.75in; @bottom-right { content: counter(page); } }",
+  },
+  {
+    headline: "Print at 96 DPI — design for it",
+    body1: "Web browsers render at 96 CSS pixels per inch. An 8.5×11 page is 816×1056 px. Design with that grid in mind and you'll never get surprised by margins.",
+    body2: "Want crisper images? Export PNGs at 2× (1632×2112) and downscale via CSS. The PDF will keep the higher density.",
+  },
+  {
+    headline: "Embed your fonts so they render anywhere",
+    body1: "The PDF renderer pulls webfonts from CSS — but only if you reference them with @font-face or via Google Fonts links the engine can fetch. Stick to font-display:swap to keep loads snappy.",
+    body2: "Test by exporting and opening on a clean machine without your local fonts. If it falls back, the embed broke.",
+  },
+  {
+    headline: "Use CSS columns for clean two-up layouts",
+    body1: "column-count: 2 + column-gap: 0.5in turns any block into newspaper-style columns. The PDF renderer paginates inside them automatically.",
+    body2: "Pair with break-inside: avoid on headings so titles never split mid-column.",
+    code: ".body { column-count: 2; column-gap: 0.5in; }",
+  },
+];
+
+async function fanoutTipOfTheWeek(env: Env, now: Date): Promise<CronResult> {
+  const db = getDb(env.DB);
+  const week = Math.floor(now.getTime() / (DAY * 7));
+  const tip = WEEKLY_TIPS[week % WEEKLY_TIPS.length]!;
+
+  const users = await db.query.users.findMany({
+    where: isNotNull(schema.users.email),
+    limit: 5000,
+  });
+
+  let sent = 0;
+  let skipped = 0;
+  for (const u of users) {
+    const res = await sendEmail(env, {
+      userId: u.id,
+      template: "tip-of-the-week",
+      dedupKey: `tip:${u.id}:${week}`,
+      data: {
+        tip_headline: tip.headline,
+        tip_p1: tip.body1,
+        tip_p2: tip.body2,
+        tip_code: tip.code ?? null,
+        editor_url: `${env.APP_URL}/new`,
+        archive_url: `${env.APP_URL}/blog/tips`,
+      },
+    });
+    if (res.ok) sent++;
+    else skipped++;
+  }
+  return { trigger: "tip-of-the-week", scanned: users.length, sent, skipped };
 }

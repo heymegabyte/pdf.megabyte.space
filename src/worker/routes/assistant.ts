@@ -6,6 +6,7 @@ import { optionalAuth } from "../middleware/auth";
 import { getDb, schema } from "../db";
 import { eq } from "drizzle-orm";
 import type { Env, Variables } from "../types";
+import { ASSISTANT_RATE_LIMITS, isPaid, type Plan } from "../../shared/plans";
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -25,7 +26,7 @@ const bodySchema = z.object({
 const SYSTEM = `You are Megabyte Assist, the in-product AI concierge for Megabyte PDF (https://pdf.megabyte.space) — a chat-to-PDF SaaS built on Cloudflare Workers.
 
 Your job:
-- Answer questions about Megabyte PDF features, plans (Guest, Free, Pro), and pricing ($9/mo Pro).
+- Answer questions about Megabyte PDF features, plans (Guest, Free, Pro $9/mo, Unlimited $50/mo), and pricing.
 - Help users craft better prompts for the document editor (invoices, resumes, reports, contracts, proposals, cover letters, technical specs).
 - Suggest improvements to a document the user is currently editing, if they share its HTML.
 - Explain how PDFs render (8.5×11 page, @page rules, page-break-before:always, embedded fonts).
@@ -44,9 +45,14 @@ Constraints:
 
 When the user is on a specific page or editing a document, the client may include documentContext. Use it to give targeted advice.`;
 
-const FREE_LIMIT = 30;
-const PRO_LIMIT = 300;
-const ANON_LIMIT = 5;
+const { anon: ANON_LIMIT, free: FREE_LIMIT, pro: PRO_LIMIT, unlimited: UNLIMITED_LIMIT } = ASSISTANT_RATE_LIMITS;
+
+function limitForPlan(userId: string | undefined, plan: Plan): number {
+  if (!userId) return ANON_LIMIT;
+  if (plan === "unlimited") return UNLIMITED_LIMIT;
+  if (plan === "pro") return PRO_LIMIT;
+  return FREE_LIMIT;
+}
 
 const sse = (event: string, data: unknown): string =>
   `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
@@ -58,7 +64,7 @@ app.post("/chat", optionalAuth, async (c) => {
   const { messages, documentContext } = parsed.data;
 
   const userId = c.get("userId");
-  let plan: "free" | "pro" = "free";
+  let plan: Plan = "free";
   if (userId) {
     const db = getDb(c.env.DB);
     const user = await db.query.users.findFirst({ where: eq(schema.users.id, userId) });
@@ -66,7 +72,7 @@ app.post("/chat", optionalAuth, async (c) => {
   }
 
   const day = new Date().toISOString().slice(0, 10);
-  const limit = userId ? (plan === "pro" ? PRO_LIMIT : FREE_LIMIT) : ANON_LIMIT;
+  const limit = limitForPlan(userId, plan);
   const rateId = userId || `ip:${c.req.header("CF-Connecting-IP") || "anon"}`;
   const rateKey = `ratelimit:assistant:${rateId}:${day}`;
   const used = Number((await c.env.CACHE.get(rateKey)) ?? "0");
@@ -116,7 +122,7 @@ ${documentContext.html.slice(0, 12000)}
   let stream: AsyncIterable<Anthropic.MessageStreamEvent>;
   try {
     stream = await anthropic.messages.create({
-      model: plan === "pro" ? "claude-sonnet-4-6" : "claude-haiku-4-5-20251001",
+      model: isPaid(plan) ? "claude-sonnet-4-6" : "claude-haiku-4-5-20251001",
       max_tokens: 1500,
       stream: true,
       system: [{ type: "text", text: SYSTEM, cache_control: { type: "ephemeral" } }],
@@ -187,14 +193,14 @@ ${documentContext.html.slice(0, 12000)}
 
 app.get("/quota", optionalAuth, async (c) => {
   const userId = c.get("userId");
-  let plan: "free" | "pro" = "free";
+  let plan: Plan = "free";
   if (userId) {
     const db = getDb(c.env.DB);
     const user = await db.query.users.findFirst({ where: eq(schema.users.id, userId) });
     if (user) plan = user.plan;
   }
   const day = new Date().toISOString().slice(0, 10);
-  const limit = userId ? (plan === "pro" ? PRO_LIMIT : FREE_LIMIT) : ANON_LIMIT;
+  const limit = limitForPlan(userId, plan);
   const rateId = userId || `ip:${c.req.header("CF-Connecting-IP") || "anon"}`;
   const rateKey = `ratelimit:assistant:${rateId}:${day}`;
   const used = Number((await c.env.CACHE.get(rateKey)) ?? "0");

@@ -23,7 +23,13 @@ export type EmailTemplate =
   | "share-expiring"
   | "new-follower"
   | "privacy-report"
-  | "ai-boost";
+  | "ai-boost"
+  | "onboard-day3-stuck"
+  | "first-share"
+  | "export-limit-pro"
+  | "payment-failed"
+  | "renewal-receipt"
+  | "tip-of-the-week";
 
 export type EmailCategory =
   | "transactional"
@@ -48,6 +54,12 @@ export const TEMPLATE_CATEGORIES: Record<EmailTemplate, EmailCategory> = {
   "new-follower": "community",
   "privacy-report": "transactional",
   "ai-boost": "boost",
+  "onboard-day3-stuck": "product",
+  "first-share": "community",
+  "export-limit-pro": "boost",
+  "payment-failed": "transactional",
+  "renewal-receipt": "transactional",
+  "tip-of-the-week": "digest",
 };
 
 export interface EmailPrefs {

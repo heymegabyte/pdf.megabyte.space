@@ -13,6 +13,7 @@ import { generateAiPrettier } from "../lib/ai-prettier";
 import { generateAiBlock, ALLOWED_BLOCK_KINDS, type BlockKind } from "../lib/ai-block";
 import { sendEmail } from "../lib/emails";
 import type { Env, Variables } from "../types";
+import { isPaid, projectLimit } from "../../shared/plans";
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 app.use("*", requireAuth);
@@ -82,16 +83,17 @@ app.post("/", async (c) => {
   const userId = c.get("userId");
   const user = await db.query.users.findFirst({ where: eq(schema.users.id, userId) });
   if (!user) return c.json({ error: "User not found" }, 404);
-  const limit =
-    user.plan === "pro"
-      ? Number(c.env.PAID_PROJECT_LIMIT)
-      : Number(c.env.FREE_PROJECT_LIMIT);
+  const limit = projectLimit(
+    user.plan,
+    Number(c.env.FREE_PROJECT_LIMIT),
+    Number(c.env.PAID_PROJECT_LIMIT)
+  );
   const existing = await db
     .select({ n: count() })
     .from(schema.projects)
     .where(and(eq(schema.projects.userId, userId), isNull(schema.projects.deletedAt)));
   if ((existing[0]?.n ?? 0) >= limit) {
-    if (user.plan !== "pro") {
+    if (!isPaid(user.plan)) {
       // Dedup at the limit threshold (one nudge per user, not per click).
       c.executionCtx.waitUntil(
         sendEmail(c.env, {
@@ -195,7 +197,7 @@ app.patch("/:id", zValidator("json", updateBody), async (c) => {
   const touchesContent = patch.html !== undefined || patch.css !== undefined;
   if (touchesContent) {
     const user = await db.query.users.findFirst({ where: eq(schema.users.id, userId) });
-    if (user?.plan !== "pro" && project.editCount >= FREE_EDITS_PER_PDF) {
+    if (!isPaid(user?.plan) && project.editCount >= FREE_EDITS_PER_PDF) {
       return c.json(
         {
           error: `You've used all ${FREE_EDITS_PER_PDF} free edits on this PDF. Upgrade for unlimited edits.`,
@@ -240,10 +242,11 @@ app.post("/:id/duplicate", async (c) => {
   const userId = c.get("userId");
   const user = await db.query.users.findFirst({ where: eq(schema.users.id, userId) });
   if (!user) return c.json({ error: "User not found" }, 404);
-  const limit =
-    user.plan === "pro"
-      ? Number(c.env.PAID_PROJECT_LIMIT)
-      : Number(c.env.FREE_PROJECT_LIMIT);
+  const limit = projectLimit(
+    user.plan,
+    Number(c.env.FREE_PROJECT_LIMIT),
+    Number(c.env.PAID_PROJECT_LIMIT)
+  );
   const existing = await db
     .select({ n: count() })
     .from(schema.projects)
@@ -421,7 +424,7 @@ app.post("/:id/prettier", async (c) => {
   if (!project) return c.json({ error: "Not found" }, 404);
 
   const user = await db.query.users.findFirst({ where: eq(schema.users.id, userId) });
-  if (user?.plan !== "pro" && project.editCount >= FREE_EDITS_PER_PDF) {
+  if (!isPaid(user?.plan) && project.editCount >= FREE_EDITS_PER_PDF) {
     return c.json(
       {
         error: `You've used all ${FREE_EDITS_PER_PDF} free edits on this PDF. Upgrade for unlimited edits.`,
@@ -520,7 +523,7 @@ app.post("/:id/insert", zValidator("json", insertBody), async (c) => {
   }
 
   const user = await db.query.users.findFirst({ where: eq(schema.users.id, userId) });
-  if (user?.plan !== "pro" && project.editCount >= FREE_EDITS_PER_PDF) {
+  if (!isPaid(user?.plan) && project.editCount >= FREE_EDITS_PER_PDF) {
     return c.json(
       {
         error: `You've used all ${FREE_EDITS_PER_PDF} free edits on this PDF. Upgrade for unlimited edits.`,

@@ -12,7 +12,7 @@ export const users = sqliteTable(
     googleRefreshToken: text("google_refresh_token"),
     googleAccessToken: text("google_access_token"),
     googleAccessTokenExpiresAt: integer("google_access_token_expires_at", { mode: "timestamp_ms" }),
-    plan: text("plan", { enum: ["free", "pro"] }).notNull().default("free"),
+    plan: text("plan", { enum: ["free", "pro", "unlimited"] }).notNull().default("free"),
     stripeCustomerId: text("stripe_customer_id"),
     stripeSubscriptionId: text("stripe_subscription_id"),
     editCredits: integer("edit_credits").notNull().default(0),

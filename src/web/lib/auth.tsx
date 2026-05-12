@@ -5,7 +5,7 @@ export interface AuthUser {
   email: string;
   name: string | null;
   imageUrl: string | null;
-  plan: "free" | "pro";
+  plan: "free" | "pro" | "unlimited";
   isAdmin?: boolean;
 }
 
