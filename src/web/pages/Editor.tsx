@@ -152,7 +152,6 @@ export default function Editor() {
     return (window.localStorage.getItem("megabyte-pdf:tone") as TonePreset) || "default";
   });
   const [pageTarget, setPageTarget] = useState<number | "all">("all");
-  const [showGallery, setShowGallery] = useState(false);
   const [galleryCategory, setGalleryCategory] = useState<keyof typeof PROMPT_GALLERY>("business");
   const [reactions, setReactions] = useState<Record<string, "up" | "down" | null>>({});
   const [listening, setListening] = useState(false);
@@ -1223,14 +1222,6 @@ export default function Editor() {
                 ~${costEstimate.toFixed(3)}
               </span>
             </div>
-            {data.turns.length === 0 && (
-              <button
-                onClick={() => setShowGallery((s) => !s)}
-                className="w-full text-[11px] px-2 py-1.5 rounded-md border border-dashed border-[var(--color-line)] text-[var(--color-muted)] hover:text-[var(--color-fg)] hover:border-[var(--color-cyan)]/40 inline-flex items-center justify-center gap-1"
-              >
-                <LayoutTemplate size={11} /> {showGallery ? "Hide" : "Browse"} 25 templates
-              </button>
-            )}
             {suggestions.length > 0 && message.length === 0 && !sending && data.turns.length > 0 && (
               <div className="flex flex-wrap gap-1.5" aria-label="Suggested next prompts">
                 {suggestions.map((s) => (
