@@ -126,6 +126,20 @@ Deploy with `npm run deploy`. Verify `/api/health` returns `ok` and the new feat
 6. **D1 transaction errors** → there are no transactions. Use `db.batch([...])`.
 7. **Schema CHECK constraint silently rejects writes** → if a status enum widens, recreate the table (PRAGMA foreign_keys=OFF; CREATE _new; INSERT SELECT; DROP; RENAME). See `~/.claude/rules/failed-pipeline-protocol.md`.
 
+## AI Chat side panel
+
+The floating launcher pill (bottom-right of every page) opens the in-product AI assistant — see `src/web/components/ai-chat/` and the worker route `src/worker/routes/assistant.ts`.
+
+- **Contracts are shared** — `src/shared/ai-chat.ts` defines `ChatRequest`, `ChatResponse`, `Widget`, `PageContext`, and the SSE event names. Both the worker route and the SPA component import from there.
+- **`pageContext` is captured client-side** — `usePageContext()` snapshots path / title / first 8 headings / current selection on SPA navigation; the worker schema accepts it and prepends it as a cached system note before the user transcript.
+- **Slash commands** live in `src/web/components/ai-chat/commands.ts` (`ui` / `nav` / `widget` / `prompt` kinds). Add a record and re-run `npm test -- ai-chat/commands`.
+- **Widgets** are typed payloads rendered natively by `src/web/components/ai-chat/widgets.tsx`. Every `href` flows through `isSafeUrl()` (https-only) or a tiny internal-prefix allowlist.
+- **Persistence** — `localStorage["mpdf.chat.threads.v2"]` holds up to 12 threads with `schemaVersion: 1`. Older / corrupt payloads reset to empty rather than crash.
+- **Rate limits** — KV key `ratelimit:assistant:<userId|ip:X>:<YYYY-MM-DD>`, 26h TTL. Limits per plan: anon 5, free 30, pro 300, unlimited 2000. Quota mirror at `GET /api/assistant/quota`.
+- **Streaming SSE** — events on `\n\n` boundaries: `token` (text delta), `widget` (single Widget), `done` (durationMs + token counts + remaining), `error`. Client uses `AbortController` for the Stop button.
+
+See [`docs/ai-chat.md`](docs/ai-chat.md), [`docs/ai-chat-widgets.md`](docs/ai-chat-widgets.md), and [`docs/ai-chat-commands.md`](docs/ai-chat-commands.md) for the deep dive.
+
 ## Reference docs
 
 - [`README.md`](README.md) — high-level summary + setup.
@@ -135,3 +149,6 @@ Deploy with `npm run deploy`. Verify `/api/health` returns `ok` and the new feat
 - [`docs/security.md`](docs/security.md) — CSP, auth, secrets.
 - [`docs/testing.md`](docs/testing.md) — test strategy.
 - [`docs/decisions.md`](docs/decisions.md) — ADRs.
+- [`docs/ai-chat.md`](docs/ai-chat.md) — AI Chat side panel architecture.
+- [`docs/ai-chat-widgets.md`](docs/ai-chat-widgets.md) — widget registry reference.
+- [`docs/ai-chat-commands.md`](docs/ai-chat-commands.md) — slash-command registry.

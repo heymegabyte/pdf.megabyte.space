@@ -1,0 +1,59 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "08:00"
+      timezone: America/New_York
+    open-pull-requests-limit: 5
+    versioning-strategy: increase
+    labels:
+      - dependencies
+    commit-message:
+      prefix: deps
+      include: scope
+    groups:
+      hono:
+        patterns:
+          - hono
+          - "@hono/*"
+      sentry:
+        patterns:
+          - "@sentry/*"
+      drizzle:
+        patterns:
+          - drizzle-orm
+          - drizzle-kit
+      eslint:
+        patterns:
+          - eslint
+          - "@eslint/*"
+          - "typescript-eslint"
+      vite:
+        patterns:
+          - vite
+          - "@vitejs/*"
+      vitest:
+        patterns:
+          - vitest
+          - "@vitest/*"
+      playwright:
+        patterns:
+          - "@playwright/test"
+          - playwright
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "08:00"
+      timezone: America/New_York
+    open-pull-requests-limit: 3
+    labels:
+      - ci
+    commit-message:
+      prefix: ci
+      include: scope

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/megabytelabs/megabyte-pdf/security/advisories/new
+    about: Report a security issue privately. Do NOT open a public issue.
+  - name: General discussion
+    url: https://github.com/megabytelabs/megabyte-pdf/discussions
+    about: Ask a question or propose a larger direction before writing code.

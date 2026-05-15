@@ -7,7 +7,7 @@ import { ConfigProvider } from "./lib/config";
 import { AuthProvider, useAuth } from "./lib/auth";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { attachViewTransitions } from "./lib/view-transitions";
-import { AiAssistantDrawer } from "./components/AiAssistantDrawer";
+import { AiChatPanel } from "./components/ai-chat";
 
 const SignInPage = lazy(() => import("./pages/SignIn"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -100,7 +100,7 @@ function App() {
       <AuthProvider>
         <ViewTransitionBridge />
         <AppRoutes />
-        <AiAssistantDrawer />
+        <AiChatPanel />
       </AuthProvider>
     </BrowserRouter>
   );

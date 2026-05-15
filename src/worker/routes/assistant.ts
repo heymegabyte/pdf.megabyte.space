@@ -15,9 +15,20 @@ const messageSchema = z.object({
   content: z.string().min(1).max(8000),
 });
 
+const pageContextSchema = z
+  .object({
+    path: z.string().max(200).optional(),
+    title: z.string().max(200).optional(),
+    summary: z.string().max(400).optional(),
+    headings: z.array(z.string().max(200)).max(8).optional(),
+    selection: z.string().max(2000).optional(),
+  })
+  .optional();
+
 const bodySchema = z.object({
   messages: z.array(messageSchema).min(1).max(40),
   thread: z.string().min(1).max(64).optional(),
+  pageContext: pageContextSchema,
   documentContext: z
     .object({ title: z.string().max(200).optional(), html: z.string().max(20000).optional() })
     .optional(),
@@ -43,6 +54,16 @@ Constraints:
 - If asked about competitors (PandaDoc, DocuSign, Adobe Acrobat), be honest about strengths and trade-offs.
 - Never claim "studies show" without a specific source.
 
+Slash commands the user can type in this chat (suggest one inline when it answers the question faster than prose):
+- Sales: /pricing (plans + CTAs) · /compare (vs PandaDoc/DocuSign/Adobe) · /book (talk to us) · /features (capability grid)
+- Content: /invoice · /resume · /proposal · /contract · /cover-letter · /report (each scaffolds a richer prompt)
+- Editor: /summarize · /improve · /explain · /page-break (operate on the current document)
+- Tools: /new · /clear · /export · /copy · /stop · /regenerate · /share · /settings · /feedback
+- Navigation: /home · /dashboard · /explore · /templates · /blog · /privacy · /terms
+- Account: /signin · /account · /upgrade · /billing · /signout
+- Support: /help · /faq · /docs · /status · /changelog · /shortcuts · /newsletter · /podcast · /accessibility · /support · /search
+When you mention one, write it as plain text like \`/pricing\` (single backticks). Do NOT fabricate slash commands that aren't in this list.
+
 When the user is on a specific page or editing a document, the client may include documentContext. Use it to give targeted advice.`;
 
 const { anon: ANON_LIMIT, free: FREE_LIMIT, pro: PRO_LIMIT, unlimited: UNLIMITED_LIMIT } = ASSISTANT_RATE_LIMITS;
@@ -61,7 +82,7 @@ app.post("/chat", optionalAuth, async (c) => {
   const raw = await c.req.json().catch(() => null);
   const parsed = bodySchema.safeParse(raw);
   if (!parsed.success) return c.json({ error: "Invalid request" }, 400);
-  const { messages, documentContext } = parsed.data;
+  const { messages, documentContext, pageContext } = parsed.data;
 
   const userId = c.get("userId");
   let plan: Plan = "free";
@@ -86,27 +107,44 @@ app.post("/chat", optionalAuth, async (c) => {
 
   const anthropic = new Anthropic({ apiKey: c.env.ANTHROPIC_API_KEY });
 
-  // Prepend optional document context as a user-role "system context" message.
-  const contextNote = documentContext?.html
+  // Prepend optional context as a user-role "system context" message.
+  const pageContextText = pageContext
+    ? `CURRENT PAGE CONTEXT
+Path: ${pageContext.path || "/"}
+Title: ${pageContext.title || ""}
+${pageContext.summary ? `Summary: ${pageContext.summary}\n` : ""}${
+        pageContext.headings?.length ? `Headings:\n- ${pageContext.headings.join("\n- ")}\n` : ""
+      }${pageContext.selection ? `\nUser selected text:\n"""\n${pageContext.selection}\n"""\n` : ""}`
+    : "";
+
+  const documentContextText = documentContext?.html
+    ? `CURRENT DOCUMENT CONTEXT
+Title: ${documentContext.title || "Untitled"}
+
+\`\`\`html
+${documentContext.html.slice(0, 12000)}
+\`\`\``
+    : "";
+
+  const combinedContext = [pageContextText, documentContextText].filter(Boolean).join("\n\n");
+
+  const contextNote = combinedContext
     ? [
         {
           role: "user" as const,
           content: [
             {
               type: "text" as const,
-              text: `CURRENT DOCUMENT CONTEXT
-Title: ${documentContext.title || "Untitled"}
-
-\`\`\`html
-${documentContext.html.slice(0, 12000)}
-\`\`\``,
+              text: combinedContext,
               cache_control: { type: "ephemeral" as const },
             },
           ],
         },
         {
           role: "assistant" as const,
-          content: "Got it — I see the document. Ask me anything about it.",
+          content: documentContextText
+            ? "Got it — I see the page and the document. Ask me anything."
+            : "Got it — I see what page you're on. How can I help?",
         },
       ]
     : [];
@@ -114,7 +152,14 @@ ${documentContext.html.slice(0, 12000)}
   Sentry.addBreadcrumb({
     category: "ai",
     message: "assistant.stream",
-    data: { plan, userId: userId || "anon", turns: messages.length, hasContext: !!documentContext?.html },
+    data: {
+      plan,
+      userId: userId || "anon",
+      turns: messages.length,
+      hasDocumentContext: !!documentContext?.html,
+      hasPageContext: !!pageContext,
+      path: pageContext?.path,
+    },
     level: "info",
   });
 
