@@ -50,6 +50,7 @@ import {
   FileText,
   Eraser,
   StopCircle,
+  Move,
 } from "lucide-react";
 import { useApi, useAuthFetch, ApiError } from "../lib/api";
 import { captureEvent } from "../lib/analytics";
@@ -67,6 +68,7 @@ import { suggestNext } from "../lib/suggestions";
 import { TopBar } from "../components/TopBar";
 import { PDFPicker } from "../components/PDFPicker";
 import { PublishModal } from "../components/PublishModal";
+import { WysiwygDesigner } from "../components/WysiwygDesigner";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 const CodePanel = lazy(() => import("../components/CodePanel").then((m) => ({ default: m.CodePanel })));
 const PresentMode = lazy(() => import("../components/PresentMode").then((m) => ({ default: m.PresentMode })));
@@ -139,6 +141,7 @@ export default function Editor() {
   const [fullscreen, setFullscreen] = useState(false);
   const [cinema, setCinema] = useState(false);
   const [presenting, setPresenting] = useState(false);
+  const [designMode, setDesignMode] = useState(false);
   const [localCode, setLocalCode] = useState<{ html: string; css: string } | null>(null);
   const [inlineSaved, setInlineSaved] = useState(false);
   const [showPalette, setShowPalette] = useState(false);
@@ -334,13 +337,14 @@ export default function Editor() {
         setCinema((c) => !c);
       }
       if (e.key === "Escape") {
+        if (designMode) { setDesignMode(false); return; }
         if (cinema) { setCinema(false); return; }
         if (showCode) { setShowCode(false); setLocalCode(null); }
       }
     }
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [showCode, cinema]);
+  }, [showCode, cinema, designMode]);
 
   useEffect(() => {
     if (typeof document === "undefined") return;
@@ -1386,6 +1390,17 @@ export default function Editor() {
             </span>
             <div className="flex items-center gap-1">
               <button
+                onClick={() => setDesignMode((v) => !v)}
+                className={`btn btn-ghost text-xs px-2 py-1 ${designMode ? "text-[var(--color-cyan)]" : ""}`}
+                style={{ minHeight: 28 }}
+                title="Toggle WYSIWYG design mode (drag on the page to insert or AI-populate a region)"
+                aria-label={designMode ? "Exit design mode" : "Enter design mode"}
+                aria-pressed={designMode}
+              >
+                <Move size={12} />
+                <span className="hidden sm:inline ml-1">Design</span>
+              </button>
+              <button
                 onClick={() => setPresenting(true)}
                 className="btn btn-ghost text-xs px-2 py-1 text-[var(--color-cyan)]"
                 style={{ minHeight: 28 }}
@@ -1448,13 +1463,21 @@ export default function Editor() {
                 ))}
               </nav>
             )}
-            <iframe
-              ref={iframeRef}
-              srcDoc={previewSrc}
-              title="PDF preview"
-              sandbox="allow-scripts allow-same-origin allow-modals"
-              className="flex-1 h-full bg-[#d4d4d8] block min-w-0"
-            />
+            <div className="relative flex-1 min-w-0 h-full flex">
+              <iframe
+                ref={iframeRef}
+                srcDoc={previewSrc}
+                title="PDF preview"
+                sandbox="allow-scripts allow-same-origin allow-modals"
+                className="flex-1 h-full bg-[#d4d4d8] block min-w-0"
+              />
+              <WysiwygDesigner
+                iframeRef={iframeRef}
+                active={designMode}
+                onToggleActive={() => setDesignMode((v) => !v)}
+                onAiPopulate={(prompt) => void send(prompt)}
+              />
+            </div>
             {showCode && (
               <Suspense fallback={null}>
                 <CodePanel

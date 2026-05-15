@@ -52,7 +52,8 @@ function CmEditor({
       view.destroy();
       viewRef.current = null;
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Intentionally only re-runs on language change; the editor binds to
+  // its own state and does not need React-driven dependency tracking.
   }, [language]);
 
   useEffect(() => {

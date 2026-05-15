@@ -1,6 +1,29 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Mic, ArrowRight, Check } from "lucide-react";
+import { Mic, ArrowRight, Check, Headphones, Rss, Play } from "lucide-react";
 import { captureEvent } from "../lib/analytics";
+
+interface Platform {
+  name: string;
+  href: string;
+  label: string;
+}
+
+// Pre-launch placeholders — the RSS URL is the canonical one we'll publish to.
+// Apple/Spotify/Overcast links will resolve once Episode 1 ships and we register
+// the feed with each directory. Until then they all point at the RSS source so
+// listeners can still subscribe via any reader of their choice.
+const PODCAST_PLATFORMS: readonly Platform[] = [
+  { name: "Apple", href: "/podcast/feed.xml", label: "Apple Podcasts" },
+  { name: "Spotify", href: "/podcast/feed.xml", label: "Spotify" },
+  { name: "Overcast", href: "/podcast/feed.xml", label: "Overcast" },
+  { name: "RSS", href: "/podcast/feed.xml", label: "RSS feed" },
+] as const;
+
+const EPISODE_TEASERS: readonly { num: string; title: string; eta: string }[] = [
+  { num: "Ep 01", title: "The one-prompt invoice", eta: "May 2026" },
+  { num: "Ep 02", title: "Designing PDFs in chat", eta: "June 2026" },
+  { num: "Ep 03", title: "Resumes that get read", eta: "June 2026" },
+] as const;
 
 // Procedural Web Audio "trailer chime" — 3-note brand motif (220Hz → 330Hz → 440Hz).
 // Plays only on user gesture. Visualizer reads live FFT data from the same audio graph,
@@ -224,12 +247,51 @@ export function PodcastTeaser(): React.ReactElement {
                 Confirmed — you'll get one email the day Episode 1 ships. Nothing else.
               </p>
             )}
-          </div>
-          <div className="hidden lg:flex flex-col items-center justify-center gap-2 px-4">
-            <div className="size-20 rounded-2xl bg-gradient-to-br from-[var(--color-cyan)] to-[var(--color-violet)] grid place-items-center shadow-lg">
-              <Mic size={36} className="text-[#060610]" aria-hidden="true" />
+            <div className="mt-6 pt-5 border-t border-[var(--color-line)]/60">
+              <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)] mb-3 flex items-center gap-2">
+                <Headphones size={12} aria-hidden="true" />
+                Subscribe ahead — listen where you already are
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {PODCAST_PLATFORMS.map((p) => (
+                  <a
+                    key={p.name}
+                    href={p.href}
+                    onClick={() => captureEvent("podcast_platform_click", { platform: p.name })}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--color-surface)] border border-[var(--color-line)] text-xs text-[var(--color-fg)] hover:border-[var(--color-cyan)] hover:text-[var(--color-cyan)] transition motion-reduce:transition-none"
+                    aria-label={`Subscribe via ${p.label}`}
+                  >
+                    {p.name === "RSS" ? (
+                      <Rss size={12} aria-hidden="true" />
+                    ) : (
+                      <Play size={11} aria-hidden="true" />
+                    )}
+                    {p.label}
+                  </a>
+                ))}
+              </div>
             </div>
-            <p className="text-xs text-[var(--color-muted)] text-center">Coming<br />May 2026</p>
+          </div>
+          <div className="flex flex-col items-stretch justify-between gap-4 lg:w-72">
+            <div className="hidden lg:flex flex-col items-center justify-center gap-2 px-4">
+              <div className="size-20 rounded-2xl bg-gradient-to-br from-[var(--color-cyan)] to-[var(--color-violet)] grid place-items-center shadow-lg">
+                <Mic size={36} className="text-[#060610]" aria-hidden="true" />
+              </div>
+              <p className="text-xs text-[var(--color-muted)] text-center">Coming<br />May 2026</p>
+            </div>
+            <ul className="space-y-2" aria-label="Upcoming podcast episodes">
+              {EPISODE_TEASERS.map((ep) => (
+                <li
+                  key={ep.num}
+                  className="rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)]/60 px-3 py-2 hover:border-[var(--color-violet)]/50 transition motion-reduce:transition-none"
+                >
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-violet)] font-semibold">
+                    {ep.num} <span className="text-[var(--color-muted)] tracking-normal normal-case font-normal">· {ep.eta}</span>
+                  </p>
+                  <p className="text-xs text-[var(--color-fg)] mt-0.5 text-pretty">{ep.title}</p>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </div>

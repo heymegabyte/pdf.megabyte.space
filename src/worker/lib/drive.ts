@@ -1,3 +1,13 @@
+/**
+ * Google Drive integration — OAuth token refresh + multipart PDF upload.
+ *
+ * Tokens are stored on the user row (`googleAccessToken`,
+ * `googleAccessTokenExpiresAt`, `googleRefreshToken`). The refresh token is
+ * obtained at sign-in and only rotates when Google forces a re-consent.
+ *
+ * Failures are swallowed and reported to Sentry — Drive export is opt-in and
+ * must never block the rest of the PDF flow.
+ */
 import * as Sentry from "@sentry/cloudflare";
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "../db";
@@ -13,6 +23,14 @@ interface RefreshResponse {
 
 const ACCESS_TOKEN_SLACK_MS = 60_000;
 
+/**
+ * Returns a valid Google access token for `user`, refreshing via the stored
+ * refresh token when the cached one is expired (or within 60s of expiry).
+ *
+ * Returns `null` when refresh fails or the user never granted offline access.
+ * Callers must treat `null` as "Drive export unavailable for this user" and
+ * surface a re-auth prompt rather than retrying.
+ */
 export const ensureFreshAccessToken = async (env: Env, user: User): Promise<string | null> => {
   const expires = user.googleAccessTokenExpiresAt?.getTime() ?? 0;
   if (user.googleAccessToken && expires - ACCESS_TOKEN_SLACK_MS > Date.now()) {
@@ -61,6 +79,14 @@ interface DriveUploadResult {
   webContentLink?: string;
 }
 
+/**
+ * Uploads a PDF buffer to the user's Drive root via the multipart upload API.
+ * Throws on non-2xx — callers wrap in try/catch and report to Sentry.
+ *
+ * The boundary is randomised per request to defeat any intermediate caching.
+ * Response includes `webViewLink` (browser preview) + `webContentLink`
+ * (direct download); both are stable as long as the file isn't moved.
+ */
 export const uploadPdfToDrive = async (
   accessToken: string,
   filename: string,

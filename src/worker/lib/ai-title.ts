@@ -1,6 +1,14 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { Env } from "../types";
 
+/**
+ * Generates a short, human-readable PDF title from the live HTML + chat
+ * transcript. Two-tier fallback: Workers AI (Llama 3.3) → Anthropic Haiku 4.5
+ * → preserve current title (or `"Untitled PDF"`). Always returns a string;
+ * never throws. Used by the chat route when the model emits no explicit
+ * title and by the "Improve title" toolbar button.
+ */
+
 interface TitleInput {
   html: string;
   transcript: string;
@@ -9,7 +17,14 @@ interface TitleInput {
 
 const FALLBACK = "Untitled PDF";
 
-const cleanTitle = (raw: string): string => {
+/**
+ * Strip the noise the model occasionally emits around a title:
+ * surrounding quotes/asterisks, `Title:`/`Document:`/`PDF:` prefixes,
+ * collapsed whitespace, and an ellipsis-truncation at 60 chars.
+ *
+ * Exported for unit testing — runtime callers should use {@link generateAiTitle}.
+ */
+export const cleanTitle = (raw: string): string => {
   let t = (raw ?? "").trim();
   t = t.replace(/^["'`*_]+|["'`*_]+$/g, "");
   t = t.replace(/^(Title:|Document:|PDF:)\s*/i, "");

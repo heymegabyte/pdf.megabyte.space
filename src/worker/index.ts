@@ -1,7 +1,6 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import { secureHeaders } from "hono/secure-headers";
 import * as Sentry from "@sentry/cloudflare";
 import projects from "./routes/projects";
 import chat from "./routes/chat";
@@ -14,10 +13,17 @@ import auth from "./routes/auth";
 import follows from "./routes/follows";
 import email from "./routes/email";
 import assistant from "./routes/assistant";
-import podcast from "./routes/podcast";
+import podcast, { podcastPublic } from "./routes/podcast";
+import newsletter from "./routes/newsletter";
 import { ogRoutes } from "./routes/og-template";
 import puppeteer from "@cloudflare/puppeteer";
 import { buildSharePreviewDoc, wrapDocument, pageDimensionsIn } from "./lib/templates";
+import { strictSecureHeaders, isUserRenderPath } from "./lib/security-headers";
+import {
+  corsOriginMatcher,
+  CORS_ALLOW_HEADERS,
+  CORS_ALLOW_METHODS,
+} from "./lib/cors-config";
 import { optionalAuth, requireAuth } from "./middleware/auth";
 import { getDb, schema } from "./db";
 import { eq, and, isNull, count, desc, like, sql } from "drizzle-orm";
@@ -30,87 +36,15 @@ app.use("*", logger());
 app.use(
   "/api/*",
   cors({
-    origin: (origin, c) => {
-      const appUrl = c.env?.APP_URL ?? "";
-      const allowed = [appUrl, "https://pdf.megabyte.space", "http://localhost:5173"];
-      return allowed.includes(origin) ? origin : null;
-    },
+    origin: corsOriginMatcher,
     credentials: true,
-    allowHeaders: ["Content-Type"],
-    allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allowHeaders: [...CORS_ALLOW_HEADERS],
+    allowMethods: [...CORS_ALLOW_METHODS],
   })
 );
-// PDF render endpoints (/api/public/:slug/render, /s/:slug/render) host
-// arbitrary user-authored HTML+CSS+images. They set their own permissive CSP
-// in-handler. Apply the strict global CSP to everything ELSE.
-const isUserRenderPath = (pathname: string): boolean =>
-  /^\/api\/public\/[^/]+\/render$/.test(pathname) ||
-  /^\/s\/[^/]+\/render$/.test(pathname);
-
-const strictSecureHeaders = secureHeaders({
-  xFrameOptions: false,
-  xXssProtection: false,
-  strictTransportSecurity: "max-age=63072000; includeSubDomains; preload",
-  crossOriginEmbedderPolicy: false,
-  crossOriginOpenerPolicy: false,
-  crossOriginResourcePolicy: false,
-  contentSecurityPolicy: {
-    defaultSrc: ["'self'"],
-    scriptSrc: [
-      "'self'",
-      "'unsafe-inline'",
-      "https://www.googletagmanager.com",
-      "https://js.stripe.com",
-      "https://challenges.cloudflare.com",
-      "https://us-assets.i.posthog.com",
-      "https://static.cloudflareinsights.com",
-    ],
-    connectSrc: [
-      "'self'",
-      "https://*.sentry.io",
-      "https://ingest.sentry.io",
-      "https://sentry.megabyte.space",
-      "https://us.i.posthog.com",
-      "https://us-assets.i.posthog.com",
-      "https://app.posthog.com",
-      "https://www.google-analytics.com",
-      "https://analytics.google.com",
-      "https://region1.google-analytics.com",
-      "https://www.google.com",
-      "https://www.googletagmanager.com",
-      "https://api.stripe.com",
-      "https://accounts.google.com",
-      "https://oauth2.googleapis.com",
-      "https://www.googleapis.com",
-      "https://static.cloudflareinsights.com",
-    ],
-    imgSrc: [
-      "'self'",
-      "data:",
-      "https://www.googletagmanager.com",
-      "https://www.google-analytics.com",
-      "https://lh3.googleusercontent.com",
-    ],
-    frameSrc: [
-      "'self'",
-      "https://www.googletagmanager.com",
-      "https://js.stripe.com",
-      "https://challenges.cloudflare.com",
-      "https://accounts.google.com",
-    ],
-    fontSrc: ["'self'", "https://fonts.gstatic.com"],
-    styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-    baseUri: ["'self'"],
-    objectSrc: ["'none'"],
-    reportUri: ["https://sentry.megabyte.space/api/security/?sentry_key=megabyte-pdf"],
-  },
-});
-
 app.use("*", async (c, next) => {
   const pathname = new URL(c.req.url).pathname;
   if (isUserRenderPath(pathname)) {
-    // Render endpoints set their own scoped CSP; skip the global one entirely
-    // so user PDFs with arbitrary https://… imagery aren't blocked.
     return next();
   }
   return strictSecureHeaders(c, next);
@@ -232,6 +166,7 @@ app.route("/api/follows", follows);
 app.route("/api/email", email);
 app.route("/api/assistant", assistant);
 app.route("/api/podcast", podcast);
+app.route("/api/newsletter", newsletter);
 
 // Public-PDF iframe preview (served by /p/:slug client page)
 app.get("/api/public/:slug/render", async (c) => {
@@ -619,6 +554,7 @@ app.get("/api/og/:slug", async (c) => {
 
 app.route("/s", sharePublic);
 app.route("/og", ogRoutes);
+app.route("/podcast", podcastPublic);
 
 app.onError((err, c) => {
   console.error("[worker error]", err);

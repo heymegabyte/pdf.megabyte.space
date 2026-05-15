@@ -7,6 +7,59 @@ import type { Env, Variables } from "../types";
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 
+/**
+ * Public-facing podcast routes mounted at `/podcast/*` (the clean URL
+ * pasted into Apple/Spotify/Overcast — `/api/podcast/*` would be ugly
+ * and confuse podcast directories).
+ */
+export const podcastPublic = new Hono<{ Bindings: Env; Variables: Variables }>();
+
+/**
+ * Minimal podcast RSS 2.0 feed with iTunes namespace. Ships empty (0
+ * <item> entries) so Apple/Spotify/Overcast can already validate +
+ * accept the feed pre-launch. When Episode 1 lands in R2 we slot it in
+ * here and every subscriber gets it without re-onboarding.
+ */
+podcastPublic.get("/feed.xml", (c) => {
+  const appUrl = c.env.APP_URL || "https://pdf.megabyte.space";
+  const now = new Date().toUTCString();
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>The Megabyte PDF Podcast</title>
+    <link>${appUrl}/#podcast</link>
+    <atom:link href="${appUrl}/podcast/feed.xml" rel="self" type="application/rss+xml" />
+    <description>Short conversations on prompt craft, document design, and the people shipping real PDFs from chat. Premiere May 2026.</description>
+    <language>en-us</language>
+    <lastBuildDate>${now}</lastBuildDate>
+    <copyright>© Megabyte Labs</copyright>
+    <itunes:author>Megabyte Labs</itunes:author>
+    <itunes:owner>
+      <itunes:name>Brian Zalewski</itunes:name>
+      <itunes:email>hey@megabyte.space</itunes:email>
+    </itunes:owner>
+    <itunes:summary>How to write a prompt that prints.</itunes:summary>
+    <itunes:explicit>false</itunes:explicit>
+    <itunes:category text="Technology" />
+    <itunes:category text="Business"><itunes:category text="Entrepreneurship" /></itunes:category>
+    <itunes:image href="${appUrl}/podcast/cover.png" />
+    <itunes:type>episodic</itunes:type>
+    <image>
+      <url>${appUrl}/podcast/cover.png</url>
+      <title>The Megabyte PDF Podcast</title>
+      <link>${appUrl}/#podcast</link>
+    </image>
+  </channel>
+</rss>`;
+  return new Response(xml, {
+    status: 200,
+    headers: {
+      "content-type": "application/rss+xml; charset=utf-8",
+      "cache-control": "public, max-age=600",
+    },
+  });
+});
+
 const bodySchema = z.object({
   email: z.string().email().max(254),
 });

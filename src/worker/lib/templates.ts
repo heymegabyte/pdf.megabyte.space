@@ -1,3 +1,15 @@
+/**
+ * Document template helpers — shared between the React editor preview, the
+ * headless-Chrome PDF renderer, and the public `/s/<slug>/render` iframe.
+ *
+ * `buildSharePreviewDoc` wraps user HTML/CSS for the public share page and
+ * injects the "Made with Megabyte PDF" badge (free-tier attribution).
+ * `wrapDocument` wraps for the PDF pipeline — no badge, slightly different
+ * print-CSS reset (`mode: "pdf"` in `buildPagedDocument`).
+ *
+ * All exports here are deterministic / side-effect-free — safe to import from
+ * both Workers and Vite bundle.
+ */
 import {
   buildPagedDocument,
   PAGE_DIMS,
@@ -5,6 +17,10 @@ import {
   type PageSize,
 } from "../../shared/pageLayout";
 
+/**
+ * Page-size lookup in both CSS units (for `@page`) and px (for the editor's
+ * 96-DPI preview at scale=1). Keep in sync with `PAGE_DIMS` in shared layout.
+ */
 export const PAGE_DIMENSIONS = {
   Letter: { width: "8.5in", height: "11in", widthPx: 816, heightPx: 1056 },
   A4: { width: "210mm", height: "297mm", widthPx: 794, heightPx: 1123 },
@@ -60,8 +76,19 @@ code {
 const coercePageSize = (s: string): PageSize =>
   s === "A4" || s === "Legal" || s === "Letter" ? s : "Letter";
 
+/**
+ * Free-tier attribution badge injected before `</body>` on public share
+ * previews. Inlined styles (rather than a class) so user CSS cannot override
+ * positioning, and a `?ref=made-with` UTM tag for distribution attribution.
+ * Paid plans skip injection by passing `{ badge: false }` to `buildSharePreviewDoc`.
+ */
 const MADE_WITH_BADGE = `<a href="https://pdf.megabyte.space/?ref=made-with" target="_blank" rel="noopener" style="position:fixed;bottom:14px;right:14px;z-index:9999;display:inline-flex;align-items:center;gap:6px;padding:6px 11px;background:rgba(6,6,16,0.92);color:#00E5FF;font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif;font-size:11px;font-weight:600;letter-spacing:0.02em;text-decoration:none;border:1px solid rgba(0,229,255,0.35);border-radius:999px;backdrop-filter:blur(8px);box-shadow:0 4px 14px rgba(0,0,0,0.25);transition:all .15s ease" onmouseover="this.style.background='rgba(0,229,255,0.12)';this.style.borderColor='rgba(0,229,255,0.7)'" onmouseout="this.style.background='rgba(6,6,16,0.92)';this.style.borderColor='rgba(0,229,255,0.35)'"><span style="display:inline-block;width:6px;height:6px;background:#00E5FF;border-radius:50%;box-shadow:0 0 6px #00E5FF"></span>Made with Megabyte PDF</a>`;
 
+/**
+ * Wraps user HTML/CSS into a full printable document for the public share
+ * iframe. Returns the doc with `MADE_WITH_BADGE` appended unless the caller
+ * opts out (`{ badge: false }`, paid tier).
+ */
 export const buildSharePreviewDoc = (
   html: string,
   css: string,
@@ -74,6 +101,10 @@ export const buildSharePreviewDoc = (
   return doc.includes("</body>") ? doc.replace("</body>", `${MADE_WITH_BADGE}</body>`) : doc + MADE_WITH_BADGE;
 };
 
+/**
+ * Wraps user HTML/CSS for the headless-Chrome PDF renderer. No attribution
+ * badge, print-tuned reset, exact-page-size `@page` rules.
+ */
 export const wrapDocument = (
   html: string,
   css: string,

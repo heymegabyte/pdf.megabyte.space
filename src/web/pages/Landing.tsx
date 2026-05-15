@@ -29,6 +29,7 @@ import { captureEvent } from "../lib/analytics";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { Footer } from "../components/Footer";
 import { PodcastTeaser } from "../components/PodcastTeaser";
+import { NewsletterSignup } from "../components/NewsletterSignup";
 
 interface Reference {
   id: string;
@@ -585,6 +586,9 @@ export default function Landing() {
             ))}
           </dl>
         </section>
+
+        {/* Newsletter */}
+        <NewsletterSignup source="landing_newsletter" />
 
         {/* APA References */}
         <ReferencesSection />

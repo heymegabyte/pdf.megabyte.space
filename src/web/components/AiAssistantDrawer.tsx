@@ -253,7 +253,7 @@ export function AiAssistantDrawer() {
         title: baseThread.messages.length === 0 ? threadTitle([userMsg]) : baseThread.title,
         updatedAt: Date.now(),
       };
-      let nextStore: ThreadStore = {
+      const nextStore: ThreadStore = {
         threads: { ...storeAfterEnsure.threads, [tid]: withUser },
         order: storeAfterEnsure.order,
       };

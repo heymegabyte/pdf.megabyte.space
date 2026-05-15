@@ -1,6 +1,14 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { Env } from "../types";
 
+/**
+ * "Beautify" pass for an existing PDF document — rewrites the HTML+CSS for
+ * print-safe typography, hierarchy, spacing, and color without changing the
+ * document's content or structure. Uses Claude Sonnet 4.6 with a 45 s
+ * timeout. Returns null on any failure so the caller can fall back to the
+ * current document instead of partially-rewritten output.
+ */
+
 interface PrettierInput {
   html: string;
   css: string;
@@ -18,6 +26,14 @@ const extractCodeBlock = (text: string, lang: string): string | null => {
   return m && m[1] ? m[1].trim() : null;
 };
 
+/**
+ * Parse the model's response into the two expected fenced code blocks
+ * (` ```html ... ``` ` then ` ```css ... ``` `). Returns null when neither
+ * block is found so the caller can treat the response as malformed.
+ *
+ * Tolerant: missing one block returns `{html:"", css:"..."}` (or vice
+ * versa) — the caller decides whether to keep the original or fail.
+ */
 export const parsePrettierOutput = (raw: string): AiPrettierResult | null => {
   const html = extractCodeBlock(raw, "html");
   const css = extractCodeBlock(raw, "css");

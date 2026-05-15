@@ -33,6 +33,7 @@ export interface Env {
   LISTMONK_FROM_NAME?: string;
   LISTMONK_LIST_ID?: string;
   LISTMONK_PODCAST_LIST_ID?: string;
+  LISTMONK_NEWSLETTER_LIST_ID?: string;
   EMAIL_UNSUB_SECRET?: string;
   ADMIN_EMAIL?: string;
   CRON_SECRET?: string;

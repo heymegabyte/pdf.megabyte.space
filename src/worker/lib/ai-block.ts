@@ -1,6 +1,14 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { Env } from "../types";
 
+/**
+ * "Insert block" tool — generates a single self-contained `<section>` for
+ * one of the {@link ALLOWED_BLOCK_KINDS} (cover, ToC, signature block, etc.)
+ * that the user can splice into an existing document. Uses Claude Haiku 4.5
+ * with a 20 s timeout. Returns the raw `<section>...</section>` string or
+ * null on any failure.
+ */
+
 export type BlockKind =
   | "cover"
   | "toc"
@@ -69,6 +77,13 @@ REQUIREMENTS:
 
 Output the <section>...</section> markup ONLY. Nothing before, nothing after.`;
 
+/**
+ * Pull the first `<section>...</section>` element out of a model response,
+ * tolerating optional ```html / ``` fences around it. Returns null when no
+ * section is present so the caller can treat the response as malformed.
+ *
+ * Exported for unit testing — runtime callers should use {@link generateAiBlock}.
+ */
 export const extractSection = (raw: string): string | null => {
   const text = raw.trim().replace(/^```(?:html)?\s*|\s*```$/g, "");
   const m = text.match(/<section[\s\S]*?<\/section>/i);
