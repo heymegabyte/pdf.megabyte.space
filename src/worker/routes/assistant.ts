@@ -7,6 +7,7 @@ import { getDb, schema } from "../db";
 import { eq } from "drizzle-orm";
 import type { Env, Variables } from "../types";
 import { ASSISTANT_RATE_LIMITS, isPaid, type Plan } from "../../shared/plans";
+import { RENDER_WIDGET_TOOL, validateWidget, WidgetValidationError } from "../lib/widget-schema";
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -64,7 +65,9 @@ Slash commands the user can type in this chat (suggest one inline when it answer
 - Support: /help · /faq · /docs · /status · /changelog · /shortcuts · /newsletter · /podcast · /accessibility · /support · /search
 When you mention one, write it as plain text like \`/pricing\` (single backticks). Do NOT fabricate slash commands that aren't in this list.
 
-When the user is on a specific page or editing a document, the client may include documentContext. Use it to give targeted advice.`;
+When the user is on a specific page or editing a document, the client may include documentContext + pageContext. Treat pageContext.path as ground truth for where the user is right now and tailor every answer to that route. Examples: on \`/p/<id>\` (the editor) lean on \`/improve\`, \`/summarize\`, \`/page-break\`; on \`/dashboard\` lean on \`/upgrade\`, \`/billing\`, \`/templates\`; on \`/templates*\` lean on \`/invoice\`, \`/resume\`, \`/contract\`; on \`/explore\` or \`/c/<slug>\` lean on \`/search\`, \`/templates\`; on \`/blog*\` or \`/podcast*\` lean on \`/newsletter\`, \`/podcast\`; on \`/sign-in\` or \`/guest\` lean on \`/signin\`, \`/compare\`. Never recommend a route the user is already on.
+
+Rich widgets (PREFERRED for structured answers): you have a \`render_widget\` tool. Call it instead of writing markdown when the answer is structured — pricing tables, FAQs, link lists, step-by-step guides, stat grids, comparison tables, CTAs, callouts, search results. The widget renders inline below any prose you've already streamed. Available kinds: text, markdown, callout, cta, link-list, card, card-grid, pricing, feature-grid, faq, table, code, stat-grid, checklist, steps, photo, gallery, video, quote, person, sources, suggestions, shortcommands, chart, timeline, rating, status, form, search-results, alert, breadcrumb, multi-choice, before-after, document. Rules: (1) write a one-sentence intro before calling the tool so the user knows what's coming. (2) use absolute URLs for external links, root-relative for internal (\`/pricing\`, \`/templates\`). (3) never invent prices, plans, or features — Free, Pro $9/mo, Unlimited $50/mo are the only plans. (4) at most ONE \`render_widget\` call per turn — pick the highest-signal widget for the question.`;
 
 const { anon: ANON_LIMIT, free: FREE_LIMIT, pro: PRO_LIMIT, unlimited: UNLIMITED_LIMIT } = ASSISTANT_RATE_LIMITS;
 
@@ -172,6 +175,7 @@ ${documentContext.html.slice(0, 12000)}
       stream: true,
       system: [{ type: "text", text: SYSTEM, cache_control: { type: "ephemeral" } }],
       messages: [...contextNote, ...messages],
+      tools: [RENDER_WIDGET_TOOL],
     });
   } catch (err) {
     Sentry.captureException(err);
@@ -187,11 +191,41 @@ ${documentContext.html.slice(0, 12000)}
       let fullText = "";
       let inputTokens = 0;
       let outputTokens = 0;
+      let widgetsEmitted = 0;
+      const toolBlocks = new Map<number, { name: string; jsonBuffer: string }>();
       try {
         for await (const event of stream) {
-          if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-            fullText += event.delta.text;
-            controller.enqueue(encoder.encode(sse("token", { text: event.delta.text })));
+          if (event.type === "content_block_start") {
+            if (event.content_block.type === "tool_use") {
+              toolBlocks.set(event.index, { name: event.content_block.name, jsonBuffer: "" });
+            }
+          } else if (event.type === "content_block_delta") {
+            if (event.delta.type === "text_delta") {
+              fullText += event.delta.text;
+              controller.enqueue(encoder.encode(sse("token", { text: event.delta.text })));
+            } else if (event.delta.type === "input_json_delta") {
+              const block = toolBlocks.get(event.index);
+              if (block) block.jsonBuffer += event.delta.partial_json;
+            }
+          } else if (event.type === "content_block_stop") {
+            const block = toolBlocks.get(event.index);
+            if (block && block.name === "render_widget" && widgetsEmitted < 3) {
+              try {
+                const raw = block.jsonBuffer.trim() ? JSON.parse(block.jsonBuffer) : {};
+                const widget = validateWidget(raw);
+                controller.enqueue(encoder.encode(sse("widget", widget)));
+                widgetsEmitted++;
+              } catch (err) {
+                Sentry.captureException(err, {
+                  tags: { route: "assistant", subroute: "render_widget" },
+                  extra: {
+                    jsonBuffer: block.jsonBuffer.slice(0, 1000),
+                    issues: err instanceof WidgetValidationError ? err.issues.slice(0, 5) : undefined,
+                  },
+                });
+              }
+              toolBlocks.delete(event.index);
+            }
           } else if (event.type === "message_start") {
             inputTokens = event.message.usage?.input_tokens ?? 0;
           } else if (event.type === "message_delta") {

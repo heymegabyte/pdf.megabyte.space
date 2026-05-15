@@ -27,6 +27,7 @@ import { usePageContext } from "./usePageContext";
 import { WidgetList } from "./widgets";
 import { Composer } from "./Composer";
 import { filterCommands, type Command, type UiCommand } from "./commands";
+import { chipsForPath } from "./empty-state-chips";
 import type { Message, Thread } from "./types";
 
 const SHORTCUT_KEY = "k";
@@ -386,7 +387,7 @@ export function AiChatPanel() {
 
         <div className="aichat-body" ref={messageListRef}>
           {!chat.active || chat.active.messages.length === 0 ? (
-            <EmptyState onRunCommand={onRunCommandName} onPrompt={onPromptChip} />
+            <EmptyState path={page.path} onRunCommand={onRunCommandName} onPrompt={onPromptChip} />
           ) : (
             <ul className="aichat-messages" aria-label="Chat messages">
               {chat.active.messages.map((m) => (
@@ -464,7 +465,16 @@ export function AiChatPanel() {
   );
 }
 
-function EmptyState({ onRunCommand, onPrompt }: { onRunCommand: (cmd: string) => void; onPrompt: (p: string) => void }) {
+function EmptyState({
+  path,
+  onRunCommand,
+  onPrompt,
+}: {
+  path: string | undefined;
+  onRunCommand: (cmd: string) => void;
+  onPrompt: (p: string) => void;
+}) {
+  const chips = chipsForPath(path);
   return (
     <div className="aichat-empty">
       <Sparkles size={22} className="aichat-empty-icon" aria-hidden="true" />
@@ -472,15 +482,8 @@ function EmptyState({ onRunCommand, onPrompt }: { onRunCommand: (cmd: string) =>
       <p>
         Ask about Megabyte PDF, draft a document, or browse the site by command.
       </p>
-      <div className="aichat-empty-chips">
-        {[
-          { label: "Show pricing", cmd: "/pricing" },
-          { label: "Compare plans", cmd: "/compare" },
-          { label: "Draft an invoice", cmd: "/invoice" },
-          { label: "Draft a resume", cmd: "/resume" },
-          { label: "FAQ", cmd: "/faq" },
-          { label: "All commands", cmd: "/shortcommands" },
-        ].map((c) => (
+      <div className="aichat-empty-chips" role="group" aria-label="Suggested starters">
+        {chips.map((c) => (
           <button key={c.cmd} type="button" className="aichat-chip" onClick={() => onRunCommand(c.cmd)}>
             {c.label}
           </button>

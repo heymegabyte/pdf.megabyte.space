@@ -43,6 +43,19 @@ The client `POST`s to `/api/assistant/chat` with `{ messages, thread?, pageConte
 
 Stop is wired via `AbortController` — `useChat.stop()` aborts the in-flight `fetch`, the partial transcript is preserved with a `stopped` chip.
 
+## Server-emitted widgets
+
+The model can render rich widgets natively via the `render_widget` tool — no slash command required. The flow:
+
+1. Worker passes the `RENDER_WIDGET_TOOL` definition (from `src/worker/lib/widget-schema.ts`) on every `messages.create` call.
+2. SYSTEM prompt teaches the model to call `render_widget` instead of writing markdown when the answer is structured (pricing tables, FAQs, link lists, step-by-step guides, stat grids, comparison tables).
+3. Anthropic streams a `tool_use` content block: `content_block_start` (kind=`tool_use`, name=`render_widget`) → repeated `content_block_delta` (`input_json_delta` with `partial_json` chunks) → `content_block_stop`.
+4. The stream loop in `src/worker/routes/assistant.ts` accumulates the partial JSON, parses on stop, validates with Zod (`validateWidget`), and emits an SSE `widget` event identical to the shape produced by client-side widget commands.
+5. Invalid payloads are dropped (with Sentry capture); the user still sees the prose the model already streamed.
+6. Cap: at most **3** server-emitted widgets per turn — defends against runaway tool calls.
+
+`src/worker/lib/widget-schema.ts` is the single source of truth for the discriminated Zod union covering all 34 `WidgetKind`s. Bundle stays web-side bundle-free — Zod only runs in the Worker.
+
 ## Plans + rate limits
 
 `ASSISTANT_RATE_LIMITS = { anon: 5, free: 30, pro: 300, unlimited: 2000 }` (turns / day / user-or-IP). KV key: `ratelimit:assistant:<userId|ip:X>:<YYYY-MM-DD>`, 26-hour TTL. Quota mirror lives at `GET /api/assistant/quota`.
