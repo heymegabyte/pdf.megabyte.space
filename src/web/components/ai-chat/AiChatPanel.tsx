@@ -67,6 +67,7 @@ export function AiChatPanel() {
   const headingId = useId();
   const [open, setOpen] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [historyQuery, setHistoryQuery] = useState("");
   const chat = useChat();
   const page = usePageContext();
   const launcherRef = useRef<HTMLButtonElement | null>(null);
@@ -245,6 +246,26 @@ export function AiChatPanel() {
     [chat.store]
   );
 
+  const filteredThreads = useMemo<Thread[]>(() => {
+    const q = historyQuery.trim().toLowerCase();
+    if (!q) return threads;
+    return threads.filter((t) => {
+      if (t.title.toLowerCase().includes(q)) return true;
+      return t.messages.some((m) => m.content.toLowerCase().includes(q));
+    });
+  }, [threads, historyQuery]);
+
+  const activeStats = useMemo(() => {
+    if (!chat.active) return null;
+    let totalMs = 0;
+    let replies = 0;
+    for (const m of chat.active.messages) {
+      if (m.role === "assistant" && (m.content || m.widgets?.length)) replies++;
+      if (m.durationMs) totalMs += m.durationMs;
+    }
+    return { totalMs, replies };
+  }, [chat.active]);
+
   return (
     <>
       <button
@@ -278,6 +299,15 @@ export function AiChatPanel() {
             <div className="aichat-brand">
               <Sparkles size={14} aria-hidden="true" />
               <span id={headingId}>Megabyte Assist</span>
+              {activeStats && activeStats.replies > 0 ? (
+                <span
+                  className="aichat-brand-stats"
+                  title={`${activeStats.replies} ${activeStats.replies === 1 ? "reply" : "replies"} · ${(activeStats.totalMs / 1000).toFixed(1)}s total`}
+                  aria-label={`${activeStats.replies} replies, ${(activeStats.totalMs / 1000).toFixed(1)} seconds total`}
+                >
+                  · {activeStats.replies}↩ · {(activeStats.totalMs / 1000).toFixed(1)}s
+                </span>
+              ) : null}
             </div>
             <button
               type="button"
@@ -337,11 +367,23 @@ export function AiChatPanel() {
               <Plus size={12} aria-hidden="true" />
               <span>New chat</span>
             </button>
+            {threads.length > 0 ? (
+              <input
+                type="search"
+                value={historyQuery}
+                onChange={(e) => setHistoryQuery(e.target.value)}
+                placeholder="Search chats…"
+                aria-label="Search saved chats"
+                className="aichat-history-search"
+              />
+            ) : null}
             {threads.length === 0 ? (
               <p className="aichat-history-empty">No saved chats yet.</p>
+            ) : filteredThreads.length === 0 ? (
+              <p className="aichat-history-empty">No chats match “{historyQuery.trim()}”.</p>
             ) : (
               <ul>
-                {threads.map((t) => (
+                {filteredThreads.map((t) => (
                   <li
                     key={t.id}
                     className={`aichat-history-item ${t.id === chat.activeId ? "is-active" : ""}`}
@@ -351,6 +393,7 @@ export function AiChatPanel() {
                       onClick={() => {
                         chat.openThread(t.id);
                         setShowHistory(false);
+                        setHistoryQuery("");
                       }}
                       className="aichat-history-pick"
                     >

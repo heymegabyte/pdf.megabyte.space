@@ -185,20 +185,39 @@ export function useChat(): UseChatResult {
         return bumpThread(s, { ...t, messages: [...t.messages, msg], updatedAt: Date.now() });
       });
 
-      let res: Response;
+      const body = JSON.stringify({
+        messages: thread.messages
+          .filter((m) => m.content)
+          .map((m) => ({ role: m.role, content: m.content })),
+        thread: thread.id,
+        pageContext,
+      });
+
+      const attemptFetch = async (): Promise<Response | { networkError: true }> => {
+        try {
+          return await fetch(ENDPOINT, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
+            body,
+            signal: ctrl.signal,
+          });
+        } catch (err) {
+          if ((err as Error).name === "AbortError") throw err;
+          return { networkError: true };
+        }
+      };
+
+      let res: Response | { networkError: true };
       try {
-        res = await fetch(ENDPOINT, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
-          body: JSON.stringify({
-            messages: thread.messages
-              .filter((m) => m.content)
-              .map((m) => ({ role: m.role, content: m.content })),
-            thread: thread.id,
-            pageContext,
-          }),
-          signal: ctrl.signal,
-        });
+        res = await attemptFetch();
+        const isTransient =
+          (res as { networkError?: true }).networkError === true ||
+          ((res as Response).status >= 500 && (res as Response).status < 600);
+        if (isTransient) {
+          await new Promise((r) => setTimeout(r, 800));
+          if (ctrl.signal.aborted) return;
+          res = await attemptFetch();
+        }
       } catch (err) {
         if ((err as Error).name === "AbortError") return;
         setError("Network error. Try again.");
@@ -206,10 +225,17 @@ export function useChat(): UseChatResult {
         return;
       }
 
-      if (!res.ok || !res.body) {
+      if ((res as { networkError?: true }).networkError === true) {
+        setError("Network error. Try again.");
+        setPhase("errored");
+        return;
+      }
+
+      const response = res as Response;
+      if (!response.ok || !response.body) {
         let msg = "Assistant unavailable.";
         try {
-          const j = (await res.json()) as { error?: string };
+          const j = (await response.json()) as { error?: string };
           if (j?.error) msg = j.error;
         } catch {
           // ignore
@@ -228,7 +254,7 @@ export function useChat(): UseChatResult {
       }
 
       setPhase("streaming");
-      const reader = res.body.getReader();
+      const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buf = "";
       let fullText = "";

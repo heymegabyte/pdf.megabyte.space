@@ -6,7 +6,7 @@ In-product AI concierge for Megabyte PDF. Lives at `src/web/components/ai-chat/`
 
 - **Launcher** — floating gradient pill (bottom-right). Cmd/Ctrl+K toggles. Fades in ~1.2s after first paint so it never competes with the hero.
 - **Panel** — slide-in `<aside role="dialog">`, 440px desktop, full-screen mobile. Escape closes and restores focus to the launcher.
-- **Header** — History toggle · New chat · Export current thread (.json) · Close.
+- **Header** — Brand + running session stats (`N↩ · Ss` reply count + cumulative stream duration for the active thread) · History toggle · New chat · Export current thread (.json) · Close.
 - **Body** — empty state with chip suggestions, or the streamed conversation (user / assistant bubbles, widgets, error / stopped chips).
 - **Footer** — toolbar (Commands · Regenerate · Copy last · Stop) and the composer.
 - **Composer** — auto-resizing textarea, slash-menu, Send / Stop button. `Enter` sends, `Shift+Enter` newlines, `/` opens the slash palette, arrow keys navigate it, `Enter`/`Tab` picks, `Esc` dismisses.
@@ -38,10 +38,12 @@ The client `POST`s to `/api/assistant/chat` with `{ messages, thread?, pageConte
 | -------- | -------------------------------------------------------------------- |
 | `token`  | `{ text: string }` — append to the current assistant message.        |
 | `widget` | `Widget` (discriminated union) — push a rendered widget onto the message. |
-| `done`   | `{ durationMs, inputTokens, outputTokens, limit, remaining }`         |
+| `done`   | `{ durationMs, inputTokens, outputTokens, widgetsEmitted, limit, remaining }` |
 | `error`  | `{ message: string }` — surface inline, mark message as `errored`.   |
 
 Stop is wired via `AbortController` — `useChat.stop()` aborts the in-flight `fetch`, the partial transcript is preserved with a `stopped` chip.
+
+Transient-error recovery: `runStream` retries the initial fetch **once** with an 800ms backoff when the network call throws or the response is 5xx. 4xx responses (rate limits, validation) skip the retry. The retry is silent — the user sees the placeholder spinner until either response succeeds.
 
 ## Server-emitted widgets
 
@@ -67,7 +69,7 @@ Model routing:
 
 ## Persistence
 
-- Threads: `localStorage["mpdf.chat.threads.v2"]` (`ThreadStore` with `schemaVersion: 1`; up to 12 threads, LRU-trimmed).
+- Threads: `localStorage["mpdf.chat.threads.v2"]` (`ThreadStore` with `schemaVersion: 1`; up to 12 threads, LRU-trimmed). The History view has a search input that filters threads by title and message content as you type.
 - Active thread id: `localStorage["mpdf.chat.active.v2"]`.
 - Corrupt JSON or older payloads (`v1` or no `schemaVersion`) reset to an empty store rather than crash.
 

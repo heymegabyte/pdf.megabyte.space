@@ -67,7 +67,32 @@ When you mention one, write it as plain text like \`/pricing\` (single backticks
 
 When the user is on a specific page or editing a document, the client may include documentContext + pageContext. Treat pageContext.path as ground truth for where the user is right now and tailor every answer to that route. Examples: on \`/p/<id>\` (the editor) lean on \`/improve\`, \`/summarize\`, \`/page-break\`; on \`/dashboard\` lean on \`/upgrade\`, \`/billing\`, \`/templates\`; on \`/templates*\` lean on \`/invoice\`, \`/resume\`, \`/contract\`; on \`/explore\` or \`/c/<slug>\` lean on \`/search\`, \`/templates\`; on \`/blog*\` or \`/podcast*\` lean on \`/newsletter\`, \`/podcast\`; on \`/sign-in\` or \`/guest\` lean on \`/signin\`, \`/compare\`. Never recommend a route the user is already on.
 
-Rich widgets (PREFERRED for structured answers): you have a \`render_widget\` tool. Call it instead of writing markdown when the answer is structured — pricing tables, FAQs, link lists, step-by-step guides, stat grids, comparison tables, CTAs, callouts, search results. The widget renders inline below any prose you've already streamed. Available kinds: text, markdown, callout, cta, link-list, card, card-grid, pricing, feature-grid, faq, table, code, stat-grid, checklist, steps, photo, gallery, video, quote, person, sources, suggestions, shortcommands, chart, timeline, rating, status, form, search-results, alert, breadcrumb, multi-choice, before-after, document. Rules: (1) write a one-sentence intro before calling the tool so the user knows what's coming. (2) use absolute URLs for external links, root-relative for internal (\`/pricing\`, \`/templates\`). (3) never invent prices, plans, or features — Free, Pro $9/mo, Unlimited $50/mo are the only plans. (4) at most ONE \`render_widget\` call per turn — pick the highest-signal widget for the question.`;
+Rich widgets (PREFERRED for structured answers): you have a \`render_widget\` tool. Call it instead of writing markdown when the answer is structured — pricing tables, FAQs, link lists, step-by-step guides, stat grids, comparison tables, CTAs, callouts, search results. The widget renders inline below any prose you've already streamed. Available kinds: text, markdown, callout, cta, link-list, card, card-grid, pricing, feature-grid, faq, table, code, stat-grid, checklist, steps, photo, gallery, video, quote, person, sources, suggestions, shortcommands, chart, timeline, rating, status, form, search-results, alert, breadcrumb, multi-choice, before-after, document. Rules: (1) write a one-sentence intro before calling the tool so the user knows what's coming. (2) use absolute URLs for external links, root-relative for internal (\`/pricing\`, \`/templates\`). (3) never invent prices, plans, or features — Free, Pro $9/mo, Unlimited $50/mo are the only plans. (4) at most ONE \`render_widget\` call per turn — pick the highest-signal widget for the question.
+
+Few-shot examples (do these — they're the right shape):
+
+Q: "What do the plans cost?"
+A: One-sentence intro then \`render_widget\` with:
+\`\`\`json
+{"kind":"pricing","title":"Megabyte PDF plans","payload":{"plans":[
+  {"name":"Free","price":"$0","period":"/mo","features":["10 PDFs/mo","Watermark","Community templates"],"ctaLabel":"Start free","ctaHref":"/sign-up"},
+  {"name":"Pro","price":"$9","period":"/mo","features":["Unlimited PDFs","No watermark","Priority AI"],"ctaLabel":"Go Pro","ctaHref":"/upgrade","highlight":true},
+  {"name":"Unlimited","price":"$50","period":"/mo","features":["Team seats","API access","White-label"],"ctaLabel":"Talk to us","ctaHref":"mailto:hey@megabyte.space"}
+]}}
+\`\`\`
+
+Q: "How do page breaks work?"
+A: One-sentence intro then \`render_widget\` with:
+\`\`\`json
+{"kind":"faq","title":"Page breaks","payload":{"items":[
+  {"q":"How do I force a new page?","a":"Add CSS \`page-break-before: always\` (or \`break-before: page\` in modern browsers) on the element that should start a fresh page."},
+  {"q":"Can I size the page differently?","a":"Yes — use \`@page { size: A4; }\` or \`@page { size: letter landscape; }\` in your CSS."},
+  {"q":"Why is my last page blank?","a":"Trailing whitespace or a forced break at the very end. Remove a final empty paragraph or drop the break on the last child."}
+]}}
+\`\`\`
+
+Q: "How does this compare to PandaDoc?"
+A: One-sentence intro then \`render_widget\` with a \`table\` widget contrasting price + speed + features.`;
 
 const { anon: ANON_LIMIT, free: FREE_LIMIT, pro: PRO_LIMIT, unlimited: UNLIMITED_LIMIT } = ASSISTANT_RATE_LIMITS;
 
@@ -239,6 +264,7 @@ ${documentContext.html.slice(0, 12000)}
               durationMs: duration,
               inputTokens,
               outputTokens,
+              widgetsEmitted,
               limit,
               remaining: Math.max(0, limit - used - 1),
             })
@@ -247,7 +273,15 @@ ${documentContext.html.slice(0, 12000)}
         Sentry.addBreadcrumb({
           category: "ai",
           message: "assistant.stream.success",
-          data: { durationMs: duration, inputTokens, outputTokens, plan },
+          data: {
+            durationMs: duration,
+            inputTokens,
+            outputTokens,
+            widgetsEmitted,
+            plan,
+            path: pageContext?.path,
+            chars: fullText.length,
+          },
           level: "info",
         });
       } catch (err) {
